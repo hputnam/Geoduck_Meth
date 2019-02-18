@@ -616,14 +616,14 @@ time.amb.meth <- rbind(epi.41,epi.42,epi.43,epi.44,
                        epi.181,epi.182,epi.184,epi.185)
 
 colnames(time.amb.meth) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
-time.amb.meth <- merge(time.amb.meth,sample.info, by="Sample.ID")
-time.amb.meth <- time.amb.meth[,c(1,2,3,5,6,9,14)]
+timepoint.amb.meth <- merge(time.amb.meth,sample.info, by="Sample.ID")
+time.amb.meth <- timepoint.amb.meth[,c(1,2,3,5,6,9,14)]
 colnames(time.amb.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "treatment")
 
 #time.mod <- glm(cbind(meth, unmeth) ~ TimePoint, data=time.amb.meth, family = "binomial")
 #summary(time.mod)
 
-sams <- aggregate(per.meth~Sample.ID, data=time.amb.meth, FUN=mean)
+sams <- aggregate(per.meth~Sample.ID, data=timepoint.amb.meth, FUN=mean)
 sams <- merge(sams, sample.info, by="Sample.ID")
 time.amb.means <- aggregate(per.meth~TimePoint, data=sams, FUN=mean)
 time.amb.se <- aggregate(per.meth~TimePoint, data=sams, FUN=std.error)
@@ -847,8 +847,150 @@ load_meth_table <- function(path)
 do_GLM_gene <- function(meth_table, min_cpg=2)
 {
   # define constants
-  MINMETHP   <- 0.1
-  MAXCOV     <- 100
+  MINMETHP   <- 0.01
+  MAXCOV     <- 1000
+  TREATMENTS <- unique(meth_table$treatment)
+  REPLICATES <- 4
+  
+  p.value.treatment <- c()
+  p.value.inter     <- c()
+  n_cpgs_orig       <- c()
+  n_cpgs            <- c()
+  treatment.ratio   <- c()
+  converged         <- c()
+  unique_genes      <- unique(meth_table$gene)
+  
+  counter <- 0
+  for (g in unique_genes)
+  {
+    # progress bar
+    counter = counter + 1
+    cat (counter, '/', length(unique_genes), '; ', g, '\n')
+    
+    # get rows corresponding to gene g
+    cpgs        <- meth_table[meth_table$gene == g, ]
+    n_cpgs_orig <- c(n_cpgs_orig, length(unique(cpgs$position)))
+    
+    # sanity checks:
+    # 1. retain positions where at least one treatment has all three 
+    #    replicates with methylation ratio of > MINMETHP.
+    # 2. retain positions where ALL replicates has coverage less than
+    #    or equals MAXCOV.
+    sane_rows <- c()
+    for (p in unique(cpgs$position))
+    {
+      sliced_cpgs <- cpgs[cpgs$position == p, ]
+      if (nrow(sliced_cpgs[sliced_cpgs$meth + sliced_cpgs$unmeth <= MAXCOV, ]) < length(TREATMENTS) * REPLICATES)
+      {
+        # criteria 2: skip position if not all replicates are under
+        # coverage cutoff
+        next
+      }
+      
+      for (q in TREATMENTS)
+      {
+        if (nrow(sliced_cpgs[sliced_cpgs$treatment == q & sliced_cpgs$meth / (sliced_cpgs$meth + sliced_cpgs$unmeth) > MINMETHP, ]) == REPLICATES)
+        {
+          # at least a treatment has all replicates with MINMETHP
+          sane_rows <- c(sane_rows, row.names(cpgs[cpgs$position == p, ]))
+          break
+        }
+      }
+    }
+    cpgs <- cpgs[sane_rows, ]
+    n_cpgs <- c(n_cpgs, length(unique(cpgs$position)))
+    
+    if (length(unique(cpgs$position)) < min_cpg)
+    {
+      p.value.treatment  <- c(p.value.treatment, 1)
+      p.value.inter      <- c(p.value.inter,     1)
+      treatment.ratio    <- c(treatment.ratio,   1)
+      converged          <- c(converged,         0)
+      next
+    }
+    
+    # temp arrays that will be fed into GLM
+    treat <- c()
+    pos   <- c()
+    freq  <- c()
+    me    <- c()
+    un    <- c()
+    for (j in 1:nrow(cpgs))
+    {
+      rr    <- cpgs[j, ]
+      pos   <- c(pos, rr$position)
+      me    <- c(me, rr$meth)
+      un    <- c(un, rr$unmeth)
+      treat <- c(treat, rr$treatment)
+    }
+    treat <- factor(treat)
+    pos   <- factor(pos)
+    contrasts(treat) <- "contr.sum"
+    contrasts(pos)   <- "contr.sum"
+    d  <- data.frame(meth=me,
+                     unmeth=un,
+                     treatment=treat,
+                     position=pos)
+    l <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment * position, 
+             data=d, family=binomial)
+    s <- step(l, trace=0)
+    a <- anova(s, test="Chisq")
+    t <- labels(terms(s))
+    if (s$converged)
+    {
+      if ("treatment" %in% t)
+      {
+        p.value.treatment <- c(p.value.treatment, a["treatment", "Pr(>Chi)"])
+        tmp.coef          <- coef(s)
+        tmp.ratio         <- unlogit(tmp.coef[['(Intercept)']] + tmp.coef[['treatment1']]) / unlogit(tmp.coef[['(Intercept)']] - tmp.coef[['treatment1']])
+        treatment.ratio   <- c(treatment.ratio, tmp.ratio)
+      }
+      else
+      {
+        p.value.treatment <- c(p.value.treatment, 1)
+        treatment.ratio   <- c(treatment.ratio,   1)
+      }
+      
+      if ("treatment:position" %in% t)
+      {
+        p.value.inter <- c(p.value.inter, a["treatment:position", "Pr(>Chi)"])
+      }
+      else
+      {
+        p.value.inter <- c(p.value.inter, 1)
+      }
+      converged <- c(converged, 1)
+    }
+    else
+    {
+      treatment.ratio   <- c(treatment.ratio,   1)
+      converged         <- c(converged,         0)
+      p.value.treatment <- c(p.value.treatment, 1)
+      p.value.inter     <- c(p.value.inter,     1)
+    }
+  }
+  genes <- data.frame(gene=as.vector(unique_genes),
+                      ncpgs_orig=n_cpgs_orig,
+                      ncpgs=n_cpgs,
+                      treatment.ratio=treatment.ratio,
+                      converged=converged,
+                      p.value.treatment=p.value.treatment,
+                      p.value.inter=p.value.inter)
+  genes <- genes[genes$ncpgs >= min_cpg, ]
+  genes <- cbind(genes,
+                 adj.p.value.treatment=p.adjust(genes$p.value.treatment, method='BH'),
+                 adj.p.value.inter=p.adjust(genes$p.value.inter, method='BH'))
+  genes
+}
+
+
+#### 3 way GLM ####
+
+do_3wGLM_gene <- function(meth_table, min_cpg=2)
+{
+  # define constants
+  MINMETHP   <- 0.01
+  MAXCOV     <- 1000
   TREATMENTS <- unique(meth_table$treatment)
   REPLICATES <- 4
   
@@ -988,108 +1130,93 @@ do_GLM_gene <- function(meth_table, min_cpg=2)
 meth_table  <- time.amb.meth
 
 sub_meth_table <- meth_table[meth_table$treatment == 'Day0' | meth_table$treatment == 'Day10' | meth_table$treatment == 'Day135' | meth_table$treatment == 'Day145', ]
-genes <- do_GLM_gene(sub_meth_table, min_cpg=5)
+genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
 write.table(genes, 'Output/AvLvSL.tsv', sep='\t', row.names=FALSE)
 
 meth_table  <- D10.trt.meth
 
 sub_meth_table <- meth_table[meth_table$treatment == 'Ambient' | meth_table$treatment == 'Low' | meth_table$treatment == 'Super.Low', ]
-genes <- do_GLM_gene(sub_meth_table, min_cpg=5)
+genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
 write.table(genes, 'Output/Day10_trt.tsv', sep='\t', row.names=FALSE)
 
 meth_table  <- D135.trt.meth
 
 sub_meth_table <- meth_table[meth_table$treatment == 'Ambient' | meth_table$treatment == 'Low' | meth_table$treatment == 'Super.Low', ]
-genes <- do_GLM_gene(sub_meth_table, min_cpg=5)
+genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
 write.table(genes, 'Output/Day135_trt.tsv', sep='\t', row.names=FALSE)
 
 
 meth_table  <- sec.meth
 
-sub_meth_table <- meth_table[meth_table$treatment == "Low_Ambient" | meth_table$treatment == "Ambient_Ambient" | meth_table$treatment == "Super.Low_Ambient"
-                             | meth_table$treatment == "Ambient_Low" | meth_table$treatment == "Low_Low" | meth_table$treatment == "Super.Low_Low", ]
-genes <- do_GLM_gene(sub_meth_table, min_cpg=5)
+sub_meth_table <- meth_table[meth_table$treatment1 == "Ambient" | meth_table$treatment1 == "Low" | meth_table$treatment1 == "Super.Low"
+                             | meth_table$treatment2 == "Ambient" | meth_table$treatment2 == "Low", ]
+genes <- do_3wGLM_gene(sub_meth_table, min_cpg=2)
 write.table(genes, 'Output/secondary.tsv', sep='\t', row.names=FALSE)
 
 
-DMG <- as.numeric(which(D135.trt.meth$gene == "ID=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0;Name=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0"))
-X <- D135.trt.meth[c(DMG),]
-X$per.meth <- (X$meth/(X$meth+X$unmeth))*100 
+#DMG <- as.numeric(which(D135.trt.meth$gene == "ID=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0;Name=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0"))
+#X <- D135.trt.meth[c(DMG),]
+#X$per.meth <- (X$meth/(X$meth+X$unmeth))*100 
   
-Xmeans <- aggregate(per.meth ~ treatment * gene*position, data=X, FUN=mean)
+#Xmeans <- aggregate(per.meth ~ treatment * gene*position, data=X, FUN=mean)
 
+##### PCA #####
 
-
-##### PCA
-
-data.pca <- sec.meth[,c(1,2,13)]
-#data.pca <- data.pca[1:33799,]
-data.pca <- reshape(data.pca, timevar = "Sample.ID", 
-                    idvar=c("scaffold"), direction="wide")
-data.pca <- na.omit(data.pca)
-data.pca <- data.pca[ rowSums(data.pca[,2:25])!=0, ]
-
-
-row.names(data.pca) <- data.pca$scaffold
-data.pca <- data.pca[,-1]
-data.pca <- t(data.pca)
-#data.pca <- as.matrix(data.pca)
-
-dist <- vegdist(data.pca, method="euclidean") #calculate distance matrix 
-
-PCA.color <- princomp(dist) #run principal components Analysis
-summary(PCA.color) # view variance explained by PCs
-scr <- as.data.frame(PCA.color$scores)
-
-scr$Sample.ID <- substring(rownames(scr), 10)
-PCs <- merge(scr, sample.info, by="Sample.ID")
-PCs$group <- paste0(PCs$Initial.Treatment, "_", PCs$Secondary.Treatment)
-plot(PCs$Comp.1, PCs$Comp.2, col=PCs$group)
-
-qplot(
-  x = Comp.1,
-  y = Comp.2,
-  data = PCs,
-  color = PCs$group, # color by factor color
-  cex=2
-)
-
-pca3d(PCA.color, group=PCs$group, show.ellipses=TRUE,
-      ellipse.ci=0.99, show.plane=FALSE, legend="bottomleft")
-snapshotPCA3d(file="ellipses.png")
-
-
-data.pca <- t(data.pca)
-col.order <- c( "per.meth.EPI_181", "per.meth.EPI_182","per.meth.EPI_184","per.meth.EPI_185",
-                "per.meth.EPI_205", "per.meth.EPI_206","per.meth.EPI_226", "per.meth.EPI_227",
-                "per.meth.EPI_175", "per.meth.EPI_176",  "per.meth.EPI_193", "per.meth.EPI_194",
-                "per.meth.EPI_208", "per.meth.EPI_209", "per.meth.EPI_229", "per.meth.EPI_230",
-                "per.meth.EPI_187", "per.meth.EPI_188", "per.meth.EPI_199", "per.meth.EPI_200",
-                "per.meth.EPI_214", "per.meth.EPI_215", "per.meth.EPI_220", "per.meth.EPI_221")
-data.pca <- data.pca[,col.order]
-df <- as.data.frame(c( "A-A","A-A","A-A","A-A","A-L","A-L","A-L","A-L","L-A","L-A","L-A","L-A", 
-                       "L-L","L-L","L-L","L-L","SL-A","SL-A","SL-A","SL-A","SL-L","SL-L","SL-L","SL-L"))
-#data.pca <- data.pca[,1:8]
-pdf(file="Output/Heatmap.pdf")
-pheatmap(data.pca,   clustering_method = "average", 
-         clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=F,
-         show_colnames =T) #plot heatmap  by group
-dev.off()
-
-
-# meth <- rbind(EPI_41,EPI_42,EPI_43,EPI_44,EPI_103,
-#               EPI_104,EPI_111,EPI_113,EPI_119,EPI_120,
-#               EPI_127,EPI_128,EPI_135,EPI_136,EPI_143,
-#               EPI_145,EPI_151,EPI_152,EPI_153,EPI_154,
-#               EPI_159,EPI_160,EPI_161,EPI_162,EPI_167,
-#               EPI_168,EPI_169,EPI_170,EPI_175,EPI_176,
-#               EPI_181,EPI_182,EPI_184,EPI_185,EPI_187,
-#               EPI_188,EPI_193,EPI_194,EPI_199,EPI_200,
-#               EPI_205,EPI_206,EPI_208,EPI_209,EPI_214,
-#               EPI_215,EPI_220,EPI_221,EPI_226,EPI_227,
-#               EPI_229,EPI_230)
+# data.pca <- sec.meth[,c(1,2,13)]
+# #data.pca <- data.pca[1:33799,]
+# data.pca <- reshape(data.pca, timevar = "Sample.ID", 
+#                     idvar=c("scaffold"), direction="wide")
+# data.pca <- na.omit(data.pca)
+# data.pca <- data.pca[ rowSums(data.pca[,2:25])!=0, ]
 # 
 # 
-# glm(methylated, non methylated ~ pH, data=data, family = "binomial")
+# row.names(data.pca) <- data.pca$scaffold
+# data.pca <- data.pca[,-1]
+# data.pca <- t(data.pca)
+# #data.pca <- as.matrix(data.pca)
+# 
+# dist <- vegdist(data.pca, method="euclidean") #calculate distance matrix 
+# 
+# PCA.color <- princomp(dist) #run principal components Analysis
+# summary(PCA.color) # view variance explained by PCs
+# scr <- as.data.frame(PCA.color$scores)
+# 
+# scr$Sample.ID <- substring(rownames(scr), 10)
+# PCs <- merge(scr, sample.info, by="Sample.ID")
+# PCs$group <- paste0(PCs$Initial.Treatment, "_", PCs$Secondary.Treatment)
+# plot(PCs$Comp.1, PCs$Comp.2, col=PCs$group)
+# 
+# qplot(
+#   x = Comp.1,
+#   y = Comp.2,
+#   data = PCs,
+#   color = PCs$group, # color by factor color
+#   cex=2
+# )
+# 
+# pca3d(PCA.color, group=PCs$group, show.ellipses=TRUE,
+#       ellipse.ci=0.99, show.plane=FALSE, legend="bottomleft")
+# snapshotPCA3d(file="ellipses.png")
+# 
+# 
+# data.pca <- t(data.pca)
+# col.order <- c( "per.meth.EPI_181", "per.meth.EPI_182","per.meth.EPI_184","per.meth.EPI_185",
+#                 "per.meth.EPI_205", "per.meth.EPI_206","per.meth.EPI_226", "per.meth.EPI_227",
+#                 "per.meth.EPI_175", "per.meth.EPI_176",  "per.meth.EPI_193", "per.meth.EPI_194",
+#                 "per.meth.EPI_208", "per.meth.EPI_209", "per.meth.EPI_229", "per.meth.EPI_230",
+#                 "per.meth.EPI_187", "per.meth.EPI_188", "per.meth.EPI_199", "per.meth.EPI_200",
+#                 "per.meth.EPI_214", "per.meth.EPI_215", "per.meth.EPI_220", "per.meth.EPI_221")
+# data.pca <- data.pca[,col.order]
+# df <- as.data.frame(c( "A-A","A-A","A-A","A-A","A-L","A-L","A-L","A-L","L-A","L-A","L-A","L-A", 
+#                        "L-L","L-L","L-L","L-L","SL-A","SL-A","SL-A","SL-A","SL-L","SL-L","SL-L","SL-L"))
+# #data.pca <- data.pca[,1:8]
+# pdf(file="Output/Heatmap.pdf")
+# pheatmap(data.pca,   clustering_method = "average", 
+#          clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=F,
+#          show_colnames =T) #plot heatmap  by group
+# dev.off()
+
+
+
 
 
