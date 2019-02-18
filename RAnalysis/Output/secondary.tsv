@@ -1,0 +1,6 @@
+"gene"	"ncpgs_orig"	"ncpgs"	"treatment.ratio"	"converged"	"p.value.treatment"	"p.value.inter"	"adj.p.value.treatment"	"adj.p.value.inter"
+"ID=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0;Name=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0"	5	5	0.886810007312839	1	0.0561482839211739	0.000102832769380273	0.0935804732019565	0.000514163846901367
+"ID=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_protein2genome-gene-76.4;Name=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_protein2genome-gene-76.4"	8	8	0.969239190422178	1	6.33119649338507e-05	1	0.000316559824669254	1
+"ID=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_est2genome-gene-137.0;Name=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_est2genome-gene-137.0"	5	5	1	1	1	1	1	1
+"ID=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_protein2genome-gene-421.2;Name=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_protein2genome-gene-421.2"	5	5	1	1	1	1	1	1
+"ID=maker-PGA_scaffold4__129_contigs__length_65288255-exonerate_est2genome-gene-644.2;Name=maker-PGA_scaffold4__129_contigs__length_65288255-exonerate_est2genome-gene-644.2"	7	7	1.02923668741516	1	0.00306289466579174	1	0.00765723666447936	1

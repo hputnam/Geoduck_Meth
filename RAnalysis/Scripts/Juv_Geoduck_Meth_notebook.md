@@ -154,11 +154,32 @@ EPI-221.10x.cov.CpG EPI-226.10x.cov.CpG EPI-227.10x.cov.CpG EPI-229.10x.cov.CpG 
 cat all.10x.bed | awk '$4 ==52' > filtered.52.all.10x.bed
 
 
-### Extract regions common to all at 5X and 10x cov
+### Extract regions common to all at 10x cov
 Done in R
 
 
+## Calculate number of CpG in the genome
 
+```grep -v '>' ~/MyProjects/Geoduck_Meth/RAnalysis/Data/Genome/Pgenerosa_v070.fa | grep -o -i 'CG' | wc -l```
+
+* number of CG's in the assembled genome
+39,577,254 /2 = 19,788,627
+
+Number of CpG sequenced at least 10x
+```wc -l filtered.52.all.10x.bed```
+6007 filtered.52.all.10x.bed
+
+### Compare regions common to all at 10x cov against gene regions
+
+* Intersect the gene track with the 10x methylation track
+intersectBed -a ~/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/filtered.52.all.10x.bed  -b ~/MyProjects/Geoduck_Meth/RAnalysis/Data/Genome/Pgenerosa_v070.a.makergene.gff > 10x.meth.genes.intersect
+
+wc -l 10x.meth.genes.intersect
+483 10x.meth.genes.intersect
+
+
+
+~/MyProjects/Geoduck_Meth/RAnalysis/Data/Genome/Pgenerosa_v070.fa
 
 
 

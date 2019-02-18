@@ -1,0 +1,4 @@
+"gene"	"ncpgs_orig"	"ncpgs"	"treatment.ratio"	"converged"	"p.value.treatment"	"p.value.inter"	"adj.p.value.treatment"	"adj.p.value.inter"
+"ID=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_protein2genome-gene-131.2;Name=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_protein2genome-gene-131.2"	12	9	1.08738623564841	1	0.0138659674457792	0.00664887260040455	0.0415979023373375	0.0199466178012137
+"ID=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_est2genome-gene-137.0;Name=maker-PGA_scaffold3__111_contigs__length_57743597-exonerate_est2genome-gene-137.0"	5	5	1	1	1	1	1	1
+"ID=maker-PGA_scaffold4__129_contigs__length_65288255-exonerate_est2genome-gene-644.2;Name=maker-PGA_scaffold4__129_contigs__length_65288255-exonerate_est2genome-gene-644.2"	7	7	1	1	1	1	1	1
