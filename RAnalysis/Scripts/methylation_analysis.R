@@ -1028,7 +1028,7 @@ load_meth_table <- function(path)
 do_3wGLM_gene <- function(meth_table, min_cpg=2)
 {
   # define constants
-  MINMETHP   <- 0.01
+  MINMETHP   <- 0.01 # at least a treatment has all replicates with MINMETHP
   MAXCOV     <- 1000
   REPLICATES <- 4
   TRT1 <- unique(meth_table$treatment1) # extract all unique treatment combos
@@ -1074,6 +1074,7 @@ do_3wGLM_gene <- function(meth_table, min_cpg=2)
         next
       }
       
+      #commented this out, as I filtered prior to loading the table
       #for (q in TREATMENTS)
       #{
       #  if (nrow(sliced_cpgs[sliced_cpgs$treatment == q & sliced_cpgs$meth / (sliced_cpgs$meth + sliced_cpgs$unmeth) > MINMETHP, ]) == REPLICATES)
