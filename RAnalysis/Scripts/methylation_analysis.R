@@ -22,6 +22,9 @@ setwd("~/MyProjects/Geoduck_Meth/RAnalysis/") #set working
 
 sample.info <- read.csv("Data/Sample.Info.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F)
 
+samp <- sample.info$Sample.ID
+samp <- gsub("[_]", "-", samp)
+
 Data <- read.csv("Data/Extracted/10x.meth.genes.intersect", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 Data <- Data[,1:3]
 colnames(Data) <- c("scaffold", "start", "stop")
@@ -34,23 +37,21 @@ colnames(Genes) <- c("scaffold", "start", "stop", "gene")
 Genes$start <-as.numeric(Genes$start)
 Genes$stop <-as.numeric(Genes$stop)
 
+# #Need to rename the df differently each time
+# 
+# for(i in 1:length(sample.info$Sample.ID)){
+#   epi <- read.csv(paste0("Data/Extracted/",samp[i],".10x.cov.CpG"), header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+#   epi <- epi[,-3]
+#   colnames(epi) <- c("scaffold", "position","per.meth","meth","unmeth")
+#   epi$position <- as.numeric(epi$position)
+#   epi <- full_join(epi, Genes, by="scaffold") %>% filter(position >= start & position <= stop)
+#   epi$Sample.ID <- sample.info$Sample.ID[i]
+#   epi$merger <- paste0(epi$scaffold,"_", epi$position)
+#   epi <- merge(Data, epi, by="merger")
+#   epi <- epi[,6:14]
+#   colnames(epi) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
+# }
 
-for(i in 1:length(sample.info$Sample.ID)){
-  epi <- read.csv(paste0("Data/Extracted/",sample.info$Sample.ID[i],".10x.cov.CpG"), header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
-  epi <- epi[,-3]
-  colnames(epi) <- c("scaffold", "position","per.meth","meth","unmeth")
-  epi$position <- as.numeric(epi$position)
-  epi <- full_join(epi, Genes, by="scaffold") %>% filter(position >= start & position <= stop)
-  epi$Sample.ID <- sample.info$Sample.ID[i]
-  epi$merger <- paste0(epi$scaffold,"_", epi$position)
-  epi <- merge(Data, epi, by="merger")
-  epi <- epi[,6:14]
-  colnames(epi) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
-  
-}
-
-  
-  
 
 ##### Load in methylation counts #####
 epi.41 <- read.csv("Data/Extracted/EPI-41.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
@@ -626,9 +627,8 @@ epi.230 <- epi.230[,6:14]
 colnames(epi.230) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
 
-##### Statistical comparisons of methylation #####
-
-# Compare Ambient Treatments through time #####
+##### Plotting mean percent methylation #####
+# Plot Ambient Treatments through time #####
 time.amb.meth <- rbind(epi.41,epi.42,epi.43,epi.44,
                        epi.119,epi.120,epi.135,epi.136,
                        epi.151,epi.152,epi.153,epi.154,
@@ -671,7 +671,7 @@ Fig.time.amb.per.meth <- ggplot(time.amb.meth.per, aes(x=TimePoint, y=mean)) +
 Fig.time.amb.per.meth
 
 
-#Compare treatments after 10 days of exposure  #####
+# Plot treatments after 10 days of exposure  #####
 D10.trt.meth <- rbind(epi.103,epi.104,epi.111,epi.113,
                       epi.119,epi.120,epi.127,epi.127,
                       epi.135,epi.136,epi.143,epi.145)
@@ -715,7 +715,7 @@ Fig.D10.per.meth <- ggplot(D10.meth.per, aes(x=Initial.Treatment, y=mean, group=
 Fig.D10.per.meth
 
 
-#Compare treatments after common garden
+# Plot D135 treatments after common garden #####
 D135.trt.meth <- rbind(epi.151,epi.152,epi.153,epi.154,
                        epi.159,epi.160,epi.161,epi.162,
                        epi.167,epi.168,epi.169,epi.170)
@@ -761,7 +761,7 @@ Fig.D135.per.meth <- ggplot(D135.meth.per, aes(x=Initial.Treatment, y=mean, grou
 Fig.D135.per.meth
 
 
-#Compare secondary exposure
+# Plot secondary exposure #####
 sec.meth <- rbind(epi.175,epi.176,epi.181,epi.182,
                   epi.184,epi.185,epi.187,epi.188,
                   epi.193,epi.194,epi.199,epi.200,
@@ -773,7 +773,6 @@ sec.meth <- merge(sec.meth,sample.info, by="Sample.ID")
 sec.meth <- sec.meth[,c(1,2,3,5,6,9,12,13)]
 colnames(sec.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "treatment1", "treatment2")
 
-#####
 
 sec.meth$per.meth <- (sec.meth$meth/(sec.meth$meth+sec.meth$unmeth))*100
 sams <- aggregate(per.meth~Sample.ID, data=sec.meth, FUN=mean)
@@ -810,8 +809,7 @@ Fig.D145.per.meth <- ggplot(D145.meth.per, aes(x=Secondary.Treatment, y=mean, gr
                                   hjust = 0))
 Fig.D145.per.meth
 
-
-
+# save plots #
 
 Meth.Level <- arrangeGrob(Fig.time.amb.per.meth,
                           Fig.D10.per.meth, Fig.D135.per.meth, Fig.D145.per.meth, ncol=2)
@@ -835,7 +833,8 @@ write.table(D10.trt.meth, 'Output/D10.tsv', sep='\t', row.names=FALSE)
 write.table(D135.trt.meth, 'Output/D135.tsv', sep='\t', row.names=FALSE)
 write.table(sec.meth, 'Output/sec.meth.tsv', sep='\t', row.names=FALSE)
 
-##### One way tests #####
+##### Statistical comparisons of methylation #####
+# One way tests #####
 
 # TIME
 
@@ -1007,7 +1006,7 @@ D135.sig <- results[order(results$adj.pval.treatment),]
 D135.sig <- D135.sig[ which(D135.sig$adj.pval.treatment <0.05), ]
 write.table(D135.sig, 'Output/D135_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
-##### Secondary Interaction Test #####
+# Secondary Interaction Test #####
 
 meth_table <- read.csv("Output/sec.meth.tsv", header=T, sep="\t", na.string="NA", stringsAsFactors = F)
 sub_meth_table <- meth_table[meth_table$treatment1 == "Ambient" | meth_table$treatment1 == "Low" | meth_table$treatment1 == "Super.Low"
