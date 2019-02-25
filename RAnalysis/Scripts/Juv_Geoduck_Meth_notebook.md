@@ -136,9 +136,13 @@ EPI-162.5x.cov.CpG EPI-167.5x.cov.CpG EPI-168.5x.cov.CpG EPI-169.5x.cov.CpG EPI-
 EPI-176.5x.cov.CpG EPI-181.5x.cov.CpG EPI-182.5x.cov.CpG EPI-184.5x.cov.CpG EPI-185.5x.cov.CpG EPI-187.5x.cov.CpG \
 EPI-188.5x.cov.CpG EPI-193.5x.cov.CpG EPI-194.5x.cov.CpG EPI-199.5x.cov.CpG EPI-200.5x.cov.CpG EPI-205.5x.cov.CpG \
 EPI-206.5x.cov.CpG EPI-208.5x.cov.CpG EPI-209.5x.cov.CpG EPI-214.5x.cov.CpG EPI-215.5x.cov.CpG EPI-220.5x.cov.CpG \
-EPI-221.5x.cov.CpG EPI-226.5x.cov.CpG EPI-227.5x.cov.CpG EPI-229.5x.cov.CpG EPI-230.5x.cov.CpG > all.bed
+EPI-221.5x.cov.CpG EPI-226.5x.cov.CpG EPI-227.5x.cov.CpG EPI-229.5x.cov.CpG EPI-230.5x.cov.CpG > all.5x.bed
 
-cat all.bed | awk '$4 ==52' > filtered.52.all.bed
+cat all.5x.bed | awk '$4 ==52' > filtered.52.5x.bed
+
+Number of CpG sequenced at least 5x
+```wc -l filtered.52.all.5x.bed```
+16937 filtered.52.all.5x.bed
 
 ### Identify regions common to all at 10X cov
 multiIntersectBed -i EPI-41.10x.cov.CpG EPI-42.10x.cov.CpG EPI-43.10x.cov.CpG EPI-44.10x.cov.CpG EPI-103.10x.cov.CpG \
@@ -177,11 +181,15 @@ intersectBed -a ~/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/filtered.52.a
 wc -l 10x.meth.genes.intersect
 483 10x.meth.genes.intersect
 
-
-
 ~/MyProjects/Geoduck_Meth/RAnalysis/Data/Genome/Pgenerosa_v070.fa
 
+### Compare regions common to all at 5x cov against gene regions
 
+* Intersect the gene track with the 5x methylation track
+intersectBed -a ~/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/filtered.52.all.5x.bed  -b ~/MyProjects/Geoduck_Meth/RAnalysis/Data/Genome/Pgenerosa_v070.a.makergene.gff > 5x.meth.genes.intersect
+
+wc -l 5x.meth.genes.intersect
+1588 5x.meth.genes.intersect
 
 
 

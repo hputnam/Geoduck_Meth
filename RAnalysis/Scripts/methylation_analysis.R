@@ -15,6 +15,7 @@ library(vegan)
 library(pca3d)
 library(pheatmap)
 library(dplyr)
+library(tidyverse)
 
 # Set Working Directory:
 setwd("~/MyProjects/Geoduck_Meth/RAnalysis/") #set working
@@ -32,6 +33,24 @@ Genes <- Genes[,c(1,4,5,9)]
 colnames(Genes) <- c("scaffold", "start", "stop", "gene")
 Genes$start <-as.numeric(Genes$start)
 Genes$stop <-as.numeric(Genes$stop)
+
+
+for(i in 1:length(sample.info$Sample.ID)){
+  epi <- read.csv(paste0("Data/Extracted/",sample.info$Sample.ID[i],".10x.cov.CpG"), header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+  epi <- epi[,-3]
+  colnames(epi) <- c("scaffold", "position","per.meth","meth","unmeth")
+  epi$position <- as.numeric(epi$position)
+  epi <- full_join(epi, Genes, by="scaffold") %>% filter(position >= start & position <= stop)
+  epi$Sample.ID <- sample.info$Sample.ID[i]
+  epi$merger <- paste0(epi$scaffold,"_", epi$position)
+  epi <- merge(Data, epi, by="merger")
+  epi <- epi[,6:14]
+  colnames(epi) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
+  
+}
+
+  
+  
 
 ##### Load in methylation counts #####
 epi.41 <- read.csv("Data/Extracted/EPI-41.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
@@ -620,9 +639,6 @@ timepoint.amb.meth <- merge(time.amb.meth,sample.info, by="Sample.ID")
 time.amb.meth <- timepoint.amb.meth[,c(1,2,3,5,6,9,14)]
 colnames(time.amb.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "treatment")
 
-#time.mod <- glm(cbind(meth, unmeth) ~ TimePoint, data=time.amb.meth, family = "binomial")
-#summary(time.mod)
-
 sams <- aggregate(per.meth~Sample.ID, data=timepoint.amb.meth, FUN=mean)
 sams <- merge(sams, sample.info, by="Sample.ID")
 time.amb.means <- aggregate(per.meth~TimePoint, data=sams, FUN=mean)
@@ -813,493 +829,275 @@ ggsave(file="Output/D135.trt.pdf", D135, width =6, height = 6, units = c("in"))
 D145 <- arrangeGrob(Fig.D145.per.meth, ncol=1)
 ggsave(file="Output/D145.trt.pdf", D145, width =6, height = 6, units = c("in"))
 
+# Save data tables #
+write.table(time.amb.meth, 'Output/Time.tsv', sep='\t', row.names=FALSE)
+write.table(D10.trt.meth, 'Output/D10.tsv', sep='\t', row.names=FALSE)
+write.table(D135.trt.meth, 'Output/D135.tsv', sep='\t', row.names=FALSE)
+write.table(sec.meth, 'Output/sec.meth.tsv', sep='\t', row.names=FALSE)
 
+##### One way tests #####
 
-### GLMs #####
-#treatment * position
+# TIME
 
-unlogit <- function(x)
-{
-  exp(x) / (1 + exp(x))
-}
-
-load_meth_table <- function(path)
-{
-  
-  d          <- read.delim(path, header=FALSE)
-  names(d)   <- c("scaffold", "position", "meth", "unmeth", "gene", "treatment")
-  
-  # Sanity checks
-  #MINMETHN   <- 2
-  #MINMETHP   <- 0.1
-  #MINCOV     <- 4
-  #MAXCOV     <- 100
-  #d          <- d[(d$qm >= MINMETHN) | (d$wm >= MINMETHN), ]
-  #d          <- d[(d$qm + d$qu > MINCOV) & (d$wm + d$wu > MINCOV), ]
-  #d          <- d[(d$qm + d$qu < MAXCOV) & (d$wm + d$wu < MAXCOV), ]
-  #d          <- d[(d$qm / (d$qm + d$qu) > MINMETHP) | (d$wm / (d$wm + d$wu) > MINMETHP), ]
-  #d$position <- d$position + 1
-  
-  d
-}
-
-do_GLM_gene <- function(meth_table, min_cpg=2)
-{
-  # define constants
-  MINMETHP   <- 0.01
-  MAXCOV     <- 1000
-  TREATMENTS <- unique(meth_table$treatment)
-  REPLICATES <- 4
-  
-  p.value.treatment <- c()
-  p.value.inter     <- c()
-  n_cpgs_orig       <- c()
-  n_cpgs            <- c()
-  treatment.ratio   <- c()
-  converged         <- c()
-  unique_genes      <- unique(meth_table$gene)
-  
-  counter <- 0
-  for (g in unique_genes)
-  {
-    # progress bar
-    counter = counter + 1
-    cat (counter, '/', length(unique_genes), '; ', g, '\n')
-    
-    # get rows corresponding to gene g
-    cpgs        <- meth_table[meth_table$gene == g, ]
-    n_cpgs_orig <- c(n_cpgs_orig, length(unique(cpgs$position)))
-    
-    # sanity checks:
-    # 1. retain positions where at least one treatment has all three 
-    #    replicates with methylation ratio of > MINMETHP.
-    # 2. retain positions where ALL replicates has coverage less than
-    #    or equals MAXCOV.
-    sane_rows <- c()
-    for (p in unique(cpgs$position))
-    {
-      sliced_cpgs <- cpgs[cpgs$position == p, ]
-      if (nrow(sliced_cpgs[sliced_cpgs$meth + sliced_cpgs$unmeth <= MAXCOV, ]) < length(TREATMENTS) * REPLICATES)
-      {
-        # criteria 2: skip position if not all replicates are under
-        # coverage cutoff
-        next
-      }
-      
-      for (q in TREATMENTS)
-      {
-        if (nrow(sliced_cpgs[sliced_cpgs$treatment == q & sliced_cpgs$meth / (sliced_cpgs$meth + sliced_cpgs$unmeth) > MINMETHP, ]) == REPLICATES)
-        {
-          # at least a treatment has all replicates with MINMETHP
-          sane_rows <- c(sane_rows, row.names(cpgs[cpgs$position == p, ]))
-          break
-        }
-      }
-    }
-    cpgs <- cpgs[sane_rows, ]
-    n_cpgs <- c(n_cpgs, length(unique(cpgs$position)))
-    
-    if (length(unique(cpgs$position)) < min_cpg)
-    {
-      p.value.treatment  <- c(p.value.treatment, 1)
-      p.value.inter      <- c(p.value.inter,     1)
-      treatment.ratio    <- c(treatment.ratio,   1)
-      converged          <- c(converged,         0)
-      next
-    }
-    
-    # temp arrays that will be fed into GLM
-    treat <- c()
-    pos   <- c()
-    freq  <- c()
-    me    <- c()
-    un    <- c()
-    for (j in 1:nrow(cpgs))
-    {
-      rr    <- cpgs[j, ]
-      pos   <- c(pos, rr$position)
-      me    <- c(me, rr$meth)
-      un    <- c(un, rr$unmeth)
-      treat <- c(treat, rr$treatment)
-    }
-    treat <- factor(treat)
-    pos   <- factor(pos)
-    contrasts(treat) <- "contr.sum"
-    contrasts(pos)   <- "contr.sum"
-    d  <- data.frame(meth=me,
-                     unmeth=un,
-                     treatment=treat,
-                     position=pos)
-    l <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment * position, 
-             data=d, family=binomial)
-    s <- step(l, trace=0)
-    a <- anova(s, test="Chisq")
-    t <- labels(terms(s))
-    if (s$converged)
-    {
-      if ("treatment" %in% t)
-      {
-        p.value.treatment <- c(p.value.treatment, a["treatment", "Pr(>Chi)"])
-        tmp.coef          <- coef(s)
-        tmp.ratio         <- unlogit(tmp.coef[['(Intercept)']] + tmp.coef[['treatment1']]) / unlogit(tmp.coef[['(Intercept)']] - tmp.coef[['treatment1']])
-        treatment.ratio   <- c(treatment.ratio, tmp.ratio)
-      }
-      else
-      {
-        p.value.treatment <- c(p.value.treatment, 1)
-        treatment.ratio   <- c(treatment.ratio,   1)
-      }
-      
-      if ("treatment:position" %in% t)
-      {
-        p.value.inter <- c(p.value.inter, a["treatment:position", "Pr(>Chi)"])
-      }
-      else
-      {
-        p.value.inter <- c(p.value.inter, 1)
-      }
-      converged <- c(converged, 1)
-    }
-    else
-    {
-      treatment.ratio   <- c(treatment.ratio,   1)
-      converged         <- c(converged,         0)
-      p.value.treatment <- c(p.value.treatment, 1)
-      p.value.inter     <- c(p.value.inter,     1)
-    }
-  }
-  genes <- data.frame(gene=as.vector(unique_genes),
-                      ncpgs_orig=n_cpgs_orig,
-                      ncpgs=n_cpgs,
-                      treatment.ratio=treatment.ratio,
-                      converged=converged,
-                      p.value.treatment=p.value.treatment,
-                      p.value.inter=p.value.inter)
-  genes <- genes[genes$ncpgs >= min_cpg, ]
-  genes <- cbind(genes,
-                 adj.p.value.treatment=p.adjust(genes$p.value.treatment, method='BH'),
-                 adj.p.value.inter=p.adjust(genes$p.value.inter, method='BH'))
-  genes
-}
-
-meth_table  <- time.amb.meth
-
+meth_table  <- read.csv("Output/Time.tsv", header=T, sep="\t", na.string="NA", stringsAsFactors = F)
 sub_meth_table <- meth_table[meth_table$treatment == 'Day0' | meth_table$treatment == 'Day10' | meth_table$treatment == 'Day135' | meth_table$treatment == 'Day145', ]
-genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
-write.table(genes, 'Output/AvLvSL.tsv', sep='\t', row.names=FALSE)
-
-meth_table  <- D10.trt.meth
-
-sub_meth_table <- meth_table[meth_table$treatment == 'Ambient' | meth_table$treatment == 'Low' | meth_table$treatment == 'Super.Low', ]
-genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
-write.table(genes, 'Output/Day10_trt.tsv', sep='\t', row.names=FALSE)
-
-meth_table  <- D135.trt.meth
-
-sub_meth_table <- meth_table[meth_table$treatment == 'Ambient' | meth_table$treatment == 'Low' | meth_table$treatment == 'Super.Low', ]
-genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
-write.table(genes, 'Output/Day135_trt.tsv', sep='\t', row.names=FALSE)
+#genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
+#write.table(genes, 'Output/Time_Liew.tsv', sep='\t', row.names=FALSE)
 
 
-#### 3 way GLM ####
-### meth table function ####
-load_meth_table <- function(path)
-{
+# HP Model
+# create data frame to store results
+results <- data.frame()
+gs <- unique(sub_meth_table$gene)
+
+#first subset the unique dataframes and second run the GLMs
+for(i in 1:length(sub_meth_table$gene)){
   
-  d          <- read.delim(path, header=FALSE)
-  names(d)   <- c("scaffold", "position", "meth", "unmeth", "gene", "treatment1", "treatment2")
+  #subset the dataframe gene by gene
+  sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
   
-  # Sanity checks
-  #MINMETHN   <- 2
-  #MINMETHP   <- 0.1
-  #MINCOV     <- 4
-  #MAXCOV     <- 100
-  #d          <- d[(d$qm >= MINMETHN) | (d$wm >= MINMETHN), ]
-  #d          <- d[(d$qm + d$qu > MINCOV) & (d$wm + d$wu > MINCOV), ]
-  #d          <- d[(d$qm + d$qu < MAXCOV) & (d$wm + d$wu < MAXCOV), ]
-  #d          <- d[(d$qm / (d$qm + d$qu) > MINMETHP) | (d$wm / (d$wm + d$wu) > MINMETHP), ]
-  #d$position <- d$position + 1
+  #if(length(unique(sub_meth_table1$position)) >1){
   
-  d
+  # fit glm position model
+  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment * position, 
+             data=sub_meth_table1, family=binomial)
+  #} else {
+  #  # fit glm model
+  #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2, 
+  #             data=sub_meth_table1, family=binomial)
+  #}
+  #s <- step(fit, trace=0)
+  a <- anova(fit, test="LRT")
+  a
+  # capture summary stats to data frame
+  df <- data.frame(gene = sub_meth_table1[1,6],
+                   pval.treatment = a$`Pr(>Chi)`[2],
+                   pval.position = a$`Pr(>Chi)`[3],
+                   pval.treatment_x_position = a$`Pr(>Chi)`[4],
+                   stringsAsFactors = F)
+  
+  # bind rows of temporary data frame to the results data frame
+  results <- rbind(results, df)
+  
 }
 
-##### 3-way GLM function #####
+results[is.na(results)] <- 0
 
-do_3wGLM_gene <- function(meth_table, min_cpg=2)
-{
-  # define constants
-  MINMETHP   <- 0.01 # at least a treatment has all replicates with MINMETHP
-  MAXCOV     <- 1000
-  REPLICATES <- 4
-  TRT1 <- unique(meth_table$treatment1) # extract all unique treatment combos
-  TRT2 <- unique(meth_table$treatment2) # extract all unique treatment combos
-  unique_genes <- unique(meth_table$gene)
-  counter <- 0
+results$adj.pval.treatment <- p.adjust(results$pval.treatment, method='BH')
+results$adj.pval.position <- p.adjust(results$pval.position, method='BH')
+results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH')
+
+write.table(results, 'Output/Time_HP_GLM.tsv', sep='\t', row.names=FALSE)
+
+time.sig <- results[order(results$adj.pval.treatment),]
+time.sig <- time.sig[ which(time.sig$adj.pval.treatment <0.05), ]
+write.table(time.sig, 'Output/time_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
+
+
+
+# Day10
+
+meth_table  <- read.csv("Output/D10.tsv", header=T, sep="\t", na.string="NA", stringsAsFactors = F)
+sub_meth_table <- meth_table[meth_table$treatment == 'Ambient' | meth_table$treatment == 'Low' | meth_table$treatment == 'Super.Low', ]
+#genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
+#write.table(genes, 'Output/Time_Liew.tsv', sep='\t', row.names=FALSE)
+
+
+# HP Model
+# create data frame to store results
+results <- data.frame()
+gs <- unique(sub_meth_table$gene)
+
+#first subset the unique dataframes and second run the GLMs
+for(i in 1:length(sub_meth_table$gene)){
   
-  p.value.treatment1    <- c()
-  p.value.treatment2    <- c()
-  p.value.inter_t1_t2   <- c()
-  p.value.inter_t1_p    <- c()
-  p.value.inter_t2_p    <- c()
-  p.value.inter_t1_t2_p <- c()
-  n_cpgs_orig <- c()
-  n_cpgs <- c()
-  treatment.ratio1   <- c()
-  treatment.ratio2   <- c()
-  converged         <- c()
+  #subset the dataframe gene by gene
+  sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
   
-  for (g in unique_genes)
-  {
-    # progress bar
-    counter = counter + 1
-    cat (counter, '/', length(unique_genes), '; ', g, '\n')
-    
-    # get rows corresponding to gene g
-    cpgs        <- meth_table[meth_table$gene == g, ]
-    n_cpgs_orig <- c(n_cpgs_orig, length(unique(cpgs$position)))
-    
-    # sanity checks:
-    # 1. retain positions where at least one treatment has all three 
-    #    replicates with methylation ratio of > MINMETHP.
-    # 2. retain positions where ALL replicates has coverage less than
-    #    or equals MAXCOV.
-    sane_rows <- c()
-    for (p in unique(cpgs$position))
-    {
-      sliced_cpgs <- cpgs[cpgs$position == p, ]
-      if (nrow(sliced_cpgs[sliced_cpgs$meth + sliced_cpgs$unmeth <= MAXCOV, ]) < (length(TRT1)+length(TRT2)) * REPLICATES)
-      {
-        # criteria 2: skip position if not all replicates are under
-        # coverage cutoff
-        next
-      }
-      
-      #commented this out, as I filtered prior to loading the table
-      #for (q in TREATMENTS)
-      #{
-      #  if (nrow(sliced_cpgs[sliced_cpgs$treatment == q & sliced_cpgs$meth / (sliced_cpgs$meth + sliced_cpgs$unmeth) > MINMETHP, ]) == REPLICATES)
-      #  {
-      #    # at least a treatment has all replicates with MINMETHP
-      #    sane_rows <- c(sane_rows, row.names(cpgs[cpgs$position == p, ]))
-      #    break
-      #  }
-      #}
-    }
-    #cpgs <- cpgs[sane_rows, ]
-    n_cpgs <- c(n_cpgs, length(unique(cpgs$position)))
-    min_cpg <- 2
-    if (length(unique(cpgs$position)) < min_cpg)
-    {
-      p.value.treatment1  <- c(p.value.treatment1, 1)
-      p.value.treatment2  <- c(p.value.treatment2, 1)
-      p.value.inter_t1_t2      <- c(p.value.inter_t1_t2,     1)
-      p.value.inter_t1_p      <- c(p.value.inter_t1_p,     1)
-      p.value.inter_t2_p      <- c(p.value.inter_t2_p,     1)
-      p.value.inter_t1_t2_p      <- c(p.value.inter_t1_t2_p,     1)
-      treatment.ratio1    <- c(treatment.ratio1,   1)
-      treatment.ratio2    <- c(treatment.ratio2,   1)
-      converged          <- c(converged,         0)
-      next
-    }
-    
-    # temp arrays that will be fed into GLM
-    treat1 <- c()
-    treat2 <- c()
-    pos   <- c()
-    freq  <- c()
-    me    <- c()
-    un    <- c()
-    for (j in 1:nrow(cpgs))
-    {
-      rr    <- cpgs[j, ]
-      pos   <- c(pos, rr$position)
-      me    <- c(me, rr$meth)
-      un    <- c(un, rr$unmeth)
-      treat1 <- c(treat1, rr$treatment1)
-      treat2 <- c(treat2, rr$treatment2)
-    }
-    treat1 <- factor(treat1)
-    treat2 <- factor(treat2)
-    pos   <- factor(pos)
-    #contrasts(treat1) <- "contr.sum1"
-    #contrasts(treat2) <- "contr.sum2"
-    #contrasts(pos)   <- "contr.sum"
-    d  <- data.frame(meth=me,
-                     unmeth=un,
-                     treatment1=treat1,
-                     treatment2=treat2,
-                     position=pos)
-    l <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2 * position, 
-             data=d, family=binomial)
-    s <- step(l, trace=0)
-    a <- anova(s, test="Chisq")
-    t <- labels(terms(s))
-     if (s$converged)
-     {
-       if ("treatment" %in% t)
-       {
-         p.value.treatment1 <- c(p.value.treatment1, a["treatment1", "Pr(>Chi)"])
-         p.value.treatment2 <- c(p.value.treatment1, a["treatment2", "Pr(>Chi)"])
-         tmp.coef          <- coef(s)
-         tmp.ratio1         <- unlogit(tmp.coef[['(Intercept)']] + tmp.coef[['treatment1']]) / unlogit(tmp.coef[['(Intercept)']] - tmp.coef[['treatment1']])
-         tmp.ratio2         <- unlogit(tmp.coef[['(Intercept)']] + tmp.coef[['treatment2']]) / unlogit(tmp.coef[['(Intercept)']] - tmp.coef[['treatment2']])
-         treatment.ratio1   <- c(treatment.ratio1, tmp.ratio1)
-         treatment.ratio2   <- c(treatment.ratio2, tmp.ratio2)
-       }
-       else
-       {
-         p.value.treatment1 <- c(p.value.treatment1, 1)
-         p.value.treatment2 <- c(p.value.treatment2, 1)
-         treatment.ratio1   <- c(treatment.ratio1,   1)
-         treatment.ratio2   <- c(treatment.ratio2,   1)
-       }
-       
-       if ("treatment1:treatment2" %in% t)
-       {
-         p.value.inter_t1_t2 <- c(p.value.inter_t1_t2, a["treatment1:treatment2", "Pr(>Chi)"])
-       }
-       else
-       {
-         p.value.inter_t1_t2 <- c(p.value.inter_t1_t2, 1)
-       }
-       
-       if ("treatment1:position" %in% t)
-       {
-         p.value.inter_t1_p <- c(p.value.inter_t1_p, a["treatment1:position", "Pr(>Chi)"])
-       }
-       else
-       {
-         p.value.inter_t1_p <- c(p.value.inter_t1_p, 1)
-       }
-       
-       if ("treatment2:position" %in% t)
-       {
-         p.value.inter_t2_p <- c(p.value.inter_t2_p, a["treatment2:position", "Pr(>Chi)"])
-       }
-       else
-       {
-         p.value.inter_t2_p <- c(p.value.inter_t2_p, 1)
-       }
-       
-       if ("treatment1:treatment2:position" %in% t)
-       {
-         p.value.inter_t1_t2_p <- c(p.value.inter_t1_t2_p, a["treatment1:treatment2:position", "Pr(>Chi)"])
-       }
-       else
-       {
-         p.value.inter_t1_t2_p <- c(p.value.inter_t1_t2_p, 1)
-       }
-       converged <- c(converged, 1)
-     }
-     else
-     {
-       treatment.ratio1   <- c(treatment.ratio1,   1)
-       treatment.ratio2   <- c(treatment.ratio2,   1)
-       converged         <- c(converged,         0)
-       p.value.treatment1 <- c(p.value.treatment1, 1)
-       p.value.treatment2 <- c(p.value.treatment2, 1)
-       p.value.inter_t1_t2     <- c(p.value.inter_t1_t2,     1)
-       p.value.inter_t1_p <- c(p.value.inter_t1_p,     1)
-       p.value.inter_t2_p <- c(p.value.inter_t2_p,     1)
-       p.value.inter_t1_t2_p <- c(p.value.inter_t1_t2_p,     1)
-     }
-  }
-  genes <- data.frame(gene=as.vector(unique_genes),
-                      ncpgs_orig=n_cpgs_orig,
-                      ncpgs=n_cpgs,
-                      treatment.ratio1=treatment.ratio1,
-                      treatment.ratio2=treatment.ratio2,
-                      converged=converged,
-                      p.value.treatment1=p.value.treatment1,
-                      p.value.treatment2=p.value.treatment2,
-                      p.value.inter_t1_t2=p.value.inter_t1_t2,
-                      p.value.inter_t1_p=p.value.inter_t1_p,
-                      p.value.inter_t2_p=p.value.inter_t2_p,
-                      p.value.inter_t1_t2_p=p.value.inter_t1_t2_p)
-  genes <- genes[genes$ncpgs >= min_cpg, ]
-  genes <- cbind(genes,
-                 adj.p.value.treatment1=p.adjust(genes$p.value.treatment1, method='BH'),
-                 adj.p.value.treatment2=p.adjust(genes$p.value.treatment2, method='BH'),
-                 adj.p.value.inter_t1_t2=p.adjust(genes$p.value.inter_t1_t2, method='BH'),
-                 adj.p.value.inter_t1_p=p.adjust(genes$p.value.inter_t1_p, method='BH'),
-                 adj.p.value.inter_t2_p=p.adjust(genes$p.value.inter_t2_p, method='BH'),
-                 adj.p.value.inter_t1_t2_p=p.adjust(genes$p.value.inter_t1_t2_p, method='BH'))
-  genes
+  #if(length(unique(sub_meth_table1$position)) >1){
+  
+  # fit glm position model
+  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment * position, 
+             data=sub_meth_table1, family=binomial)
+  #} else {
+  #  # fit glm model
+  #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2, 
+  #             data=sub_meth_table1, family=binomial)
+  #}
+  #s <- step(fit, trace=0)
+  a <- anova(fit, test="LRT")
+  a
+  # capture summary stats to data frame
+  df <- data.frame(gene = sub_meth_table1[1,6],
+                   pval.treatment = a$`Pr(>Chi)`[2],
+                   pval.position = a$`Pr(>Chi)`[3],
+                   pval.treatment_x_position = a$`Pr(>Chi)`[4],
+                   stringsAsFactors = F)
+  
+  # bind rows of temporary data frame to the results data frame
+  results <- rbind(results, df)
+  
 }
 
-##### Tests #####
+results[is.na(results)] <- 0
 
-meth_table  <- sec.meth
+results$adj.pval.treatment <- p.adjust(results$pval.treatment, method='BH')
+results$adj.pval.position <- p.adjust(results$pval.position, method='BH')
+results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH')
 
+write.table(results, 'Output/D10_HP_GLM.tsv', sep='\t', row.names=FALSE)
+
+D10.sig <- results[order(results$adj.pval.treatment),]
+D10.sig <- D10.sig[ which(D10.sig$adj.pval.treatment <0.05), ]
+write.table(D10.sig, 'Output/D10_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
+
+
+# Day135
+meth_table  <- read.csv("Output/D135.tsv", header=T, sep="\t", na.string="NA", stringsAsFactors = F)
+sub_meth_table <- meth_table[meth_table$treatment == 'Ambient' | meth_table$treatment == 'Low' | meth_table$treatment == 'Super.Low', ]
+#genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
+#write.table(genes, 'Output/Time_Liew.tsv', sep='\t', row.names=FALSE)
+
+
+# HP Model
+# create data frame to store results
+results <- data.frame()
+gs <- unique(sub_meth_table$gene)
+
+#first subset the unique dataframes and second run the GLMs
+for(i in 1:length(sub_meth_table$gene)){
+  
+  #subset the dataframe gene by gene
+  sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
+  
+  #if(length(unique(sub_meth_table1$position)) >1){
+  
+  # fit glm position model
+  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment * position, 
+             data=sub_meth_table1, family=binomial)
+  #} else {
+  #  # fit glm model
+  #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2, 
+  #             data=sub_meth_table1, family=binomial)
+  #}
+  #s <- step(fit, trace=0)
+  a <- anova(fit, test="LRT")
+  a
+  # capture summary stats to data frame
+  df <- data.frame(gene = sub_meth_table1[1,6],
+                   pval.treatment = a$`Pr(>Chi)`[2],
+                   pval.position = a$`Pr(>Chi)`[3],
+                   pval.treatment_x_position = a$`Pr(>Chi)`[4],
+                   stringsAsFactors = F)
+  
+  # bind rows of temporary data frame to the results data frame
+  results <- rbind(results, df)
+  
+}
+
+results[is.na(results)] <- 0
+
+results$adj.pval.treatment <- p.adjust(results$pval.treatment, method='BH')
+results$adj.pval.position <- p.adjust(results$pval.position, method='BH')
+results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH')
+
+write.table(results, 'Output/D135_HP_GLM.tsv', sep='\t', row.names=FALSE)
+
+D135.sig <- results[order(results$adj.pval.treatment),]
+D135.sig <- D135.sig[ which(D135.sig$adj.pval.treatment <0.05), ]
+write.table(D135.sig, 'Output/D135_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
+
+##### Secondary Interaction Test #####
+
+meth_table <- read.csv("Output/sec.meth.tsv", header=T, sep="\t", na.string="NA", stringsAsFactors = F)
 sub_meth_table <- meth_table[meth_table$treatment1 == "Ambient" | meth_table$treatment1 == "Low" | meth_table$treatment1 == "Super.Low"
                              | meth_table$treatment2 == "Ambient" | meth_table$treatment2 == "Low", ]
-genes <- do_3wGLM_gene(sub_meth_table, min_cpg=2)
-write.table(genes, 'Output/secondary.tsv', sep='\t', row.names=FALSE)
+
+# create data frame to store results
+results <- data.frame()
+gs <- unique(sub_meth_table$gene)
+
+#first subset the unique dataframes and second run the GLMs
+for(i in 1:length(sub_meth_table$gene)){
+    
+    #subset the dataframe gene by gene
+    sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
+    
+    #if(length(unique(sub_meth_table1$position)) >1){
+      
+    # fit glm position model
+    fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2 * position, 
+               data=sub_meth_table1, family=binomial)
+    #} else {
+    #  # fit glm model
+    #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2, 
+    #             data=sub_meth_table1, family=binomial)
+    #}
+    #s <- step(fit, trace=0)
+    a <- anova(fit, test="LRT")
+    a
+    # capture summary stats to data frame
+    df <- data.frame(gene = sub_meth_table1[1,6],
+                     pval.treatment1 = a$`Pr(>Chi)`[2],
+                     pval.treatment2 = a$`Pr(>Chi)`[3],
+                     position = a$`Pr(>Chi)`[4], 
+                     pval.treatment1_x_treatment2 = a$`Pr(>Chi)`[5],
+                     pval.treatment1_x_position = a$`Pr(>Chi)`[6],
+                     pval.treatment2_x_position = a$`Pr(>Chi)`[7],
+                     pval.treatment1_x_pval.treatment2_x_position = a$`Pr(>Chi)`[8],
+                     stringsAsFactors = F)
+
+    # bind rows of temporary data frame to the results data frame
+    results <- rbind(results, df)
+    
+  }
+
+results[is.na(results)] <- 0
+
+results$adj.pval.treatment1 <- p.adjust(results$pval.treatment1, method='BH')
+results$adj.pval.treatment2 <- p.adjust(results$pval.treatment2, method='BH')
+results$adj.pval.treatment1_x_treatment2 <- p.adjust(results$pval.treatment1_x_treatment2, method='BH')
+results$adj.pval.treatment1_x_position <- p.adjust(results$pval.treatment1_x_position, method='BH')
+results$adj.pval.treatment2_x_position <- p.adjust(results$pval.treatment2_x_position, method='BH')
+results$adj.pval.treatment1_x_pval.treatment2_x_position <- p.adjust(results$pval.treatment1_x_pval.treatment2_x_position, method='BH')
+
+write.table(results, 'Output/sec.meth_HP_GLM.all.tsv', sep='\t', row.names=FALSE)
+
+sec.data.sig.int <- results[order(results$adj.pval.treatment1_x_treatment2),]
+sec.data.sig.int <- subset(sec.data.sig.int, by=adj.pval.treatment1_x_treatment2<0.05)
+sec.data.sig.int <- sec.data.sig.int[ which(sec.data.sig.int$adj.pval.treatment1_x_treatment2 <0.05), ]
+write.table(sec.data.sig.int, 'Output/sec.meth_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
 
-#DMG <- as.numeric(which(D135.trt.meth$gene == "ID=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0;Name=maker-PGA_scaffold12__71_contigs__length_50438331-exonerate_est2genome-gene-465.0"))
-#X <- D135.trt.meth[c(DMG),]
-#X$per.meth <- (X$meth/(X$meth+X$unmeth))*100 
-  
-#Xmeans <- aggregate(per.meth ~ treatment * gene*position, data=X, FUN=mean)
+for (i in 1:length(sec.data.sig.int$gene)){
+inter.gene <- subset(sub_meth_table, gene ==sec.data.sig.int$gene[i])
+means <- aggregate(per.meth ~ treatment1*treatment2*position, data=inter.gene, FUN=mean)
 
-##### PCA #####
+temp_plot <- ggplot(means, aes(x=treatment2, y=per.meth, fill=treatment1)) +
+  geom_violin(aes(fill = treatment1), trim = FALSE) +
+  geom_boxplot(width = 0.1, position = position_dodge(0.9), color="black")+
+  scale_fill_manual(values = c("blue", "purple", "red"))+
+  theme_bw()
 
-# data.pca <- sec.meth[,c(1,2,13)]
-# #data.pca <- data.pca[1:33799,]
-# data.pca <- reshape(data.pca, timevar = "Sample.ID", 
-#                     idvar=c("scaffold"), direction="wide")
-# data.pca <- na.omit(data.pca)
-# data.pca <- data.pca[ rowSums(data.pca[,2:25])!=0, ]
-# 
-# 
-# row.names(data.pca) <- data.pca$scaffold
-# data.pca <- data.pca[,-1]
-# data.pca <- t(data.pca)
-# #data.pca <- as.matrix(data.pca)
-# 
-# dist <- vegdist(data.pca, method="euclidean") #calculate distance matrix 
-# 
-# PCA.color <- princomp(dist) #run principal components Analysis
-# summary(PCA.color) # view variance explained by PCs
-# scr <- as.data.frame(PCA.color$scores)
-# 
-# scr$Sample.ID <- substring(rownames(scr), 10)
-# PCs <- merge(scr, sample.info, by="Sample.ID")
-# PCs$group <- paste0(PCs$Initial.Treatment, "_", PCs$Secondary.Treatment)
-# plot(PCs$Comp.1, PCs$Comp.2, col=PCs$group)
-# 
-# qplot(
-#   x = Comp.1,
-#   y = Comp.2,
-#   data = PCs,
-#   color = PCs$group, # color by factor color
-#   cex=2
-# )
-# 
-# pca3d(PCA.color, group=PCs$group, show.ellipses=TRUE,
-#       ellipse.ci=0.99, show.plane=FALSE, legend="bottomleft")
-# snapshotPCA3d(file="ellipses.png")
-# 
-# 
-# data.pca <- t(data.pca)
-# col.order <- c( "per.meth.EPI_181", "per.meth.EPI_182","per.meth.EPI_184","per.meth.EPI_185",
-#                 "per.meth.EPI_205", "per.meth.EPI_206","per.meth.EPI_226", "per.meth.EPI_227",
-#                 "per.meth.EPI_175", "per.meth.EPI_176",  "per.meth.EPI_193", "per.meth.EPI_194",
-#                 "per.meth.EPI_208", "per.meth.EPI_209", "per.meth.EPI_229", "per.meth.EPI_230",
-#                 "per.meth.EPI_187", "per.meth.EPI_188", "per.meth.EPI_199", "per.meth.EPI_200",
-#                 "per.meth.EPI_214", "per.meth.EPI_215", "per.meth.EPI_220", "per.meth.EPI_221")
-# data.pca <- data.pca[,col.order]
-# df <- as.data.frame(c( "A-A","A-A","A-A","A-A","A-L","A-L","A-L","A-L","L-A","L-A","L-A","L-A", 
-#                        "L-L","L-L","L-L","L-L","SL-A","SL-A","SL-A","SL-A","SL-L","SL-L","SL-L","SL-L"))
-# #data.pca <- data.pca[,1:8]
-# pdf(file="Output/Heatmap.pdf")
-# pheatmap(data.pca,   clustering_method = "average", 
-#          clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=F,
-#          show_colnames =T) #plot heatmap  by group
-# dev.off()
+ggsave(temp_plot, file=paste0("Output/plot_", i,".png"), width = 14, height = 10, units = "cm")
+}
 
 
+#heatmap of mean expression across all positions within a gene
+inter.genes <- merge(sec.data.sig.int, sub_meth_table, by="gene")
+all.means <- aggregate(per.meth ~ treatment1*treatment2*gene*Sample.ID, data=inter.genes, FUN=mean)
 
-
+wide <- spread(all.means,  key=c("gene"), value=per.meth)
+rownames(wide) <- wide$Sample.ID
+annot <- wide[,1:2]
+#annot$group <- paste0(annot$treatment1, "_", annot$treatment2)
+mat <- wide[,c(4:length(wide))] #make an expression object
+mat <- t(mat)
+#mat <- mat - rowMeans(mat) #difference in expression compared to average across all samples
+#ann_colors <- list(CO2 = c(Ambient="blue", Low="purple", Low="red")) #manually set colors
+#jpeg(file="/Output/Heatmap.DMG.sec.meth.jpg") #save file
+pheatmap(mat, annotation = annot,
+         show_rownames =F, cluster_cols = FALSE,
+         show_colnames =TRUE) #plot heatmap of all DEG by group
+#dev.off()
 
