@@ -13,7 +13,7 @@ library(ggplot2)
 library(gridExtra)
 #library(vegan)
 #library(pca3d)
-#library(pheatmap)
+library(pheatmap)
 library(dplyr)
 library(tidyverse)
 
@@ -858,20 +858,12 @@ for(i in 1:length(sub_meth_table$gene)){
   
   #subset the dataframe gene by gene
   sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
-  
-  #if(length(unique(sub_meth_table1$position)) >1){
-  
+
   # fit glm position model
   fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment * position, 
              data=sub_meth_table1, family=binomial)
-  #} else {
-  #  # fit glm model
-  #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2, 
-  #             data=sub_meth_table1, family=binomial)
-  #}
-  #s <- step(fit, trace=0)
   a <- anova(fit, test="LRT")
-  a
+  
   # capture summary stats to data frame
   df <- data.frame(gene = sub_meth_table1[1,6],
                    pval.treatment = a$`Pr(>Chi)`[2],
@@ -937,19 +929,11 @@ for(i in 1:length(sub_meth_table$gene)){
   #subset the dataframe gene by gene
   sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
   
-  #if(length(unique(sub_meth_table1$position)) >1){
-  
   # fit glm position model
   fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment * position, 
              data=sub_meth_table1, family=binomial)
-  #} else {
-  #  # fit glm model
-  #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2, 
-  #             data=sub_meth_table1, family=binomial)
-  #}
-  #s <- step(fit, trace=0)
   a <- anova(fit, test="LRT")
-  a
+  
   # capture summary stats to data frame
   df <- data.frame(gene = sub_meth_table1[1,6],
                    pval.treatment = a$`Pr(>Chi)`[2],
@@ -1089,19 +1073,12 @@ for(i in 1:length(sub_meth_table$gene)){
     #subset the dataframe gene by gene
     sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
     
-    #if(length(unique(sub_meth_table1$position)) >1){
-      
     # fit glm position model
     fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2 * position, 
                data=sub_meth_table1, family=binomial)
-    #} else {
-    #  # fit glm model
-    #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ treatment1 * treatment2, 
-    #             data=sub_meth_table1, family=binomial)
-    #}
-    #s <- step(fit, trace=0)
+
     a <- anova(fit, test="LRT")
-    a
+    
     # capture summary stats to data frame
     df <- data.frame(gene = sub_meth_table1[1,6],
                      pval.treatment1 = a$`Pr(>Chi)`[2],
