@@ -11,31 +11,37 @@ rm(list=ls()) #clears workspace
 library(plotrix) 
 library(ggplot2)
 library(gridExtra)
-library(vegan)
-library(pca3d)
-library(pheatmap)
+#library(vegan)
+#library(pca3d)
+#library(pheatmap)
 library(dplyr)
 library(tidyverse)
 
 # Set Working Directory:
 setwd("~/MyProjects/Geoduck_Meth/RAnalysis/") #set working
 
+#load sample information
 sample.info <- read.csv("Data/Sample.Info.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F)
-
 samp <- sample.info$Sample.ID
 samp <- gsub("[_]", "-", samp)
 
+#load data with coverage cutoff for all positions
 Data <- read.csv("Data/Extracted/10x.meth.genes.intersect", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 Data <- Data[,1:3]
 colnames(Data) <- c("scaffold", "start", "stop")
 Data$location <- Data$start +1
 Data$merger <- paste0(Data$scaffold,"_", Data$location)
 
+#load genes gff
 Genes <- read.csv("Data/Genome/Pgenerosa_v070.a.makergene.gff", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 Genes <- Genes[,c(1,4,5,9)]
 colnames(Genes) <- c("scaffold", "start", "stop", "gene")
 Genes$start <-as.numeric(Genes$start)
 Genes$stop <-as.numeric(Genes$stop)
+
+#Load annotation file
+Annot <- read.csv("Data/Genome/blast-annot.tab", header=F, sep="\t", na.string="NA", stringsAsFactors = F)
+colnames(Annot) <- c("search", "uniprot.id", "blastx.eval", "prot.name", "GO1", "GO2", "GO3", "GO4", "GO5")
 
 # #Need to rename the df differently each time
 # 
@@ -840,8 +846,6 @@ write.table(sec.meth, 'Output/sec.meth.tsv', sep='\t', row.names=FALSE)
 
 meth_table  <- read.csv("Output/Time.tsv", header=T, sep="\t", na.string="NA", stringsAsFactors = F)
 sub_meth_table <- meth_table[meth_table$treatment == 'Day0' | meth_table$treatment == 'Day10' | meth_table$treatment == 'Day135' | meth_table$treatment == 'Day145', ]
-#genes <- do_GLM_gene(sub_meth_table, min_cpg=2)
-#write.table(genes, 'Output/Time_Liew.tsv', sep='\t', row.names=FALSE)
 
 
 # HP Model
@@ -892,7 +896,27 @@ time.sig <- results[order(results$adj.pval.treatment),]
 time.sig <- time.sig[ which(time.sig$adj.pval.treatment <0.05), ]
 write.table(time.sig, 'Output/time_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
+sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
 
+# Annotation of Time DMG 
+time.sig <- merge(Genes, time.sig, by="gene")
+time.sig$search <- paste0(time.sig$scaffold, ":", time.sig$start-1)
+Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
+time.sig.annot <- merge(time.sig, Annot, by="search")
+write.table(time.sig.annot, 'Output/Time_sig_annot.tsv', sep='\t', row.names=FALSE)
+
+for (i in 1:length(time.sig.annot$gene)){
+  sig.gene <- subset(sub_meth_table, gene ==time.sig.annot$gene[i])
+  means <- aggregate(per.meth ~ treatment*gene*position, data=sig.gene, FUN=mean)
+  
+  temp_plot <- ggplot(means, aes(x=treatment, y=per.meth, fill=treatment)) +
+    geom_violin(aes(fill = treatment), trim = FALSE) +
+    geom_boxplot(width = 0.1, position = position_dodge(0.9), color="black")+
+    scale_fill_manual(values = c("blue", "blue", "blue", "blue"))+
+    theme_bw()
+  
+  ggsave(temp_plot, file=paste0("Output/Time_Plots/plot_", time.sig.annot$prot.name[i],".png"), width = 14, height = 10, units = "cm")
+}
 
 # Day10
 
@@ -950,6 +974,27 @@ D10.sig <- results[order(results$adj.pval.treatment),]
 D10.sig <- D10.sig[ which(D10.sig$adj.pval.treatment <0.05), ]
 write.table(D10.sig, 'Output/D10_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
+sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
+
+# Annotation of D10 DMG 
+D10.sig <- merge(Genes, D10.sig, by="gene")
+D10.sig$search <- paste0(D10.sig$scaffold, ":", D10.sig$start-1)
+#Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
+D10.sig.annot <- merge(D10.sig, Annot, by="search")
+write.table(D10.sig.annot, 'Output/D10_sig_annot.tsv', sep='\t', row.names=FALSE)
+
+for (i in 1:length(D10.sig.annot$gene)){
+  sig.gene <- subset(sub_meth_table, gene ==D10.sig.annot$gene[i])
+  means <- aggregate(per.meth ~ treatment*gene*position, data=sig.gene, FUN=mean)
+  
+  temp_plot <- ggplot(means, aes(x=treatment, y=per.meth, fill=treatment)) +
+    geom_violin(aes(fill = treatment), trim = FALSE) +
+    geom_boxplot(width = 0.1, position = position_dodge(0.9), color="black")+
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+  
+  ggsave(temp_plot, file=paste0("Output/D10_Plots/plot_", D10.sig.annot$prot.name[i],".png"), width = 14, height = 10, units = "cm")
+}
 
 # Day135
 meth_table  <- read.csv("Output/D135.tsv", header=T, sep="\t", na.string="NA", stringsAsFactors = F)
@@ -1005,6 +1050,28 @@ write.table(results, 'Output/D135_HP_GLM.tsv', sep='\t', row.names=FALSE)
 D135.sig <- results[order(results$adj.pval.treatment),]
 D135.sig <- D135.sig[ which(D135.sig$adj.pval.treatment <0.05), ]
 write.table(D135.sig, 'Output/D135_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
+
+sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
+
+# Annotation of D135 DMG 
+D135.sig <- merge(Genes, D135.sig, by="gene")
+D135.sig$search <- paste0(D135.sig$scaffold, ":", D135.sig$start-1)
+#Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
+D135.sig.annot <- merge(D135.sig, Annot, by="search")
+write.table(D135.sig.annot, 'Output/D135_sig_annot.tsv', sep='\t', row.names=FALSE)
+
+for (i in 1:length(D135.sig.annot$gene)){
+  sig.gene <- subset(sub_meth_table, gene ==D135.sig.annot$gene[i])
+  means <- aggregate(per.meth ~ treatment*gene*position, data=sig.gene, FUN=mean)
+  
+  temp_plot <- ggplot(means, aes(x=treatment, y=per.meth, fill=treatment)) +
+    geom_violin(aes(fill = treatment), trim = FALSE) +
+    geom_boxplot(width = 0.1, position = position_dodge(0.9), color="black")+
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+  
+  ggsave(temp_plot, file=paste0("Output/D135_Plots/D135_plot_", D135.sig.annot$prot.name[i],".png"), width = 14, height = 10, units = "cm")
+}
 
 # Secondary Interaction Test #####
 
@@ -1067,9 +1134,16 @@ sec.data.sig.int <- subset(sec.data.sig.int, by=adj.pval.treatment1_x_treatment2
 sec.data.sig.int <- sec.data.sig.int[ which(sec.data.sig.int$adj.pval.treatment1_x_treatment2 <0.05), ]
 write.table(sec.data.sig.int, 'Output/sec.meth_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
+# Annotation of Secondary Exposure Interaction DMG 
+sec.data.sig.int <- merge(Genes, sec.data.sig.int, by="gene")
+sec.data.sig.int$search <- paste0(sec.data.sig.int$scaffold, ":", sec.data.sig.int$start-1)
+#Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
+sec.data.sig.int.sig.annot <- merge(sec.data.sig.int, Annot, by="search")
+write.table(sec.data.sig.int.sig.annot, 'Output/Sec_Int_sig_annot.tsv', sep='\t', row.names=FALSE)
 
-for (i in 1:length(sec.data.sig.int$gene)){
-inter.gene <- subset(sub_meth_table, gene ==sec.data.sig.int$gene[i])
+
+for (i in 1:length(sec.data.sig.int.sig.annot$gene)){
+inter.gene <- subset(sub_meth_table, gene ==sec.data.sig.int.sig.annot$gene[i])
 means <- aggregate(per.meth ~ treatment1*treatment2*position, data=inter.gene, FUN=mean)
 
 temp_plot <- ggplot(means, aes(x=treatment2, y=per.meth, fill=treatment1)) +
@@ -1078,7 +1152,7 @@ temp_plot <- ggplot(means, aes(x=treatment2, y=per.meth, fill=treatment1)) +
   scale_fill_manual(values = c("blue", "purple", "red"))+
   theme_bw()
 
-ggsave(temp_plot, file=paste0("Output/plot_", i,".png"), width = 14, height = 10, units = "cm")
+ggsave(temp_plot, file=paste0("Output/Sec_Int_Plots/plot_", sec.data.sig.int.sig.annot$prot.name[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 
