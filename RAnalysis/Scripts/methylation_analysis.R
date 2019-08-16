@@ -33,15 +33,20 @@ Data$location <- Data$start +1
 Data$merger <- paste0(Data$scaffold,"_", Data$location)
 
 #load genes gff
-Genes <- read.csv("Data/Genome/Pgenerosa_v070.a.makergene.gff", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+Genes <- read.csv("Data/Genome/Pgenerosa_v074.gene.gff", header=F, sep="\t", na.string="NA", skip=1, stringsAsFactors = F) #read in data file
 Genes <- Genes[,c(1,4,5,9)]
 colnames(Genes) <- c("scaffold", "start", "stop", "gene")
 Genes$start <-as.numeric(Genes$start)
 Genes$stop <-as.numeric(Genes$stop)
+Genes$gene <- gsub(";.*","",Genes$gene)
+Genes$gene <- gsub("ID=","",Genes$gene)
 
 #Load annotation file
-Annot <- read.csv("Data/Genome/blast-annot.tab", header=F, sep="\t", na.string="NA", stringsAsFactors = F)
-colnames(Annot) <- c("search", "uniprot.id", "blastx.eval", "prot.name", "GO1", "GO2", "GO3", "GO4", "GO5")
+Annot <- read.csv("Data/Genome/blastp.outfmt6", header=F, sep="\t", na.string="NA", stringsAsFactors = F)
+Annot <- Annot[,c(1,2,11,12)]
+colnames(Annot) <- c("gene", "uniprot.id", "blastx.eval", "score")
+Annot$gene <- gsub("-RA","",Annot$gene)
+
 
 # #Need to rename the df differently each time
 # 
@@ -60,7 +65,7 @@ colnames(Annot) <- c("search", "uniprot.id", "blastx.eval", "prot.name", "GO1", 
 
 
 ##### Load in methylation counts #####
-epi.41 <- read.csv("Data/Extracted/EPI-41.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.41 <- read.csv("Data/Extracted/EPI-41_S38_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.41 <- epi.41[,-3]
 colnames(epi.41) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.41$position <- as.numeric(epi.41$position)
@@ -71,7 +76,7 @@ epi.41 <- merge(Data, epi.41, by="merger")
 epi.41 <- epi.41[,6:14]
 colnames(epi.41) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.42 <- read.csv("Data/Extracted/EPI-42.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.42 <- read.csv("Data/Extracted/EPI-42_S39_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.42 <- epi.42[,-3]
 colnames(epi.42) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.42$position <- as.numeric(epi.42$position)
@@ -82,7 +87,7 @@ epi.42 <- merge(Data, epi.42, by="merger")
 epi.42 <- epi.42[,6:14]
 colnames(epi.42) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.43 <- read.csv("Data/Extracted/EPI-43.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.43 <- read.csv("Data/Extracted/EPI-43_S40_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.43 <- epi.43[,-3]
 colnames(epi.43) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.43$position <- as.numeric(epi.43$position)
@@ -93,7 +98,7 @@ epi.43 <- merge(Data, epi.43, by="merger")
 epi.43 <- epi.43[,6:14]
 colnames(epi.43) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.44 <- read.csv("Data/Extracted/EPI-44.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.44 <- read.csv("Data/Extracted/EPI-44_S41_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.44 <- epi.44[,-3]
 colnames(epi.44) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.44$position <- as.numeric(epi.44$position)
@@ -104,7 +109,7 @@ epi.44 <- merge(Data, epi.44, by="merger")
 epi.44 <- epi.44[,6:14]
 colnames(epi.44) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.103 <- read.csv("Data/Extracted/EPI-103.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.103 <- read.csv("Data/Extracted/EPI-103_S27_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.103 <- epi.103[,-3]
 colnames(epi.103) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.103$position <- as.numeric(epi.103$position)
@@ -115,7 +120,7 @@ epi.103 <- merge(Data, epi.103, by="merger")
 epi.103 <- epi.103[,6:14]
 colnames(epi.103) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.104 <- read.csv("Data/Extracted/EPI-104.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.104 <- read.csv("Data/Extracted/EPI-104_S28_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.104 <- epi.104[,-3]
 colnames(epi.104) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.104$position <- as.numeric(epi.104$position)
@@ -126,7 +131,7 @@ epi.104 <- merge(Data, epi.104, by="merger")
 epi.104 <- epi.104[,6:14]
 colnames(epi.104) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.111 <- read.csv("Data/Extracted/EPI-111.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.111 <- read.csv("Data/Extracted/EPI-111_S29_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.111 <- epi.111[,-3]
 colnames(epi.111) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.111$position <- as.numeric(epi.111$position)
@@ -137,7 +142,7 @@ epi.111 <- merge(Data, epi.111, by="merger")
 epi.111 <- epi.111[,6:14]
 colnames(epi.111) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.113 <- read.csv("Data/Extracted/EPI-113.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.113 <- read.csv("Data/Extracted/EPI-113_S30_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.113 <- epi.113[,-3]
 colnames(epi.113) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.113$position <- as.numeric(epi.113$position)
@@ -148,7 +153,7 @@ epi.113 <- merge(Data, epi.113, by="merger")
 epi.113 <- epi.113[,6:14]
 colnames(epi.113) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.119 <- read.csv("Data/Extracted/EPI-119.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.119 <- read.csv("Data/Extracted/EPI-119_S31_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.119 <- epi.119[,-3]
 colnames(epi.119) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.119$position <- as.numeric(epi.119$position)
@@ -159,7 +164,7 @@ epi.119 <- merge(Data, epi.119, by="merger")
 epi.119 <- epi.119[,6:14]
 colnames(epi.119) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.120 <- read.csv("Data/Extracted/EPI-120.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.120 <- read.csv("Data/Extracted/EPI-120_S32_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.120 <- epi.120[,-3]
 colnames(epi.120) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.120$position <- as.numeric(epi.120$position)
@@ -170,7 +175,7 @@ epi.120 <- merge(Data, epi.120, by="merger")
 epi.120 <- epi.120[,6:14]
 colnames(epi.120) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.127 <- read.csv("Data/Extracted/EPI-127.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.127 <- read.csv("Data/Extracted/EPI-127_S33_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.127 <- epi.127[,-3]
 colnames(epi.127) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.127$position <- as.numeric(epi.127$position)
@@ -181,7 +186,7 @@ epi.127 <- merge(Data, epi.127, by="merger")
 epi.127 <- epi.127[,6:14]
 colnames(epi.127) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.128 <- read.csv("Data/Extracted/EPI-128.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.128 <- read.csv("Data/Extracted/EPI-128_S34_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.128 <- epi.128[,-3]
 colnames(epi.128) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.128$position <- as.numeric(epi.128$position)
@@ -192,7 +197,7 @@ epi.128 <- merge(Data, epi.128, by="merger")
 epi.128 <- epi.128[,6:14]
 colnames(epi.128) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.135 <- read.csv("Data/Extracted/EPI-135.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.135 <- read.csv("Data/Extracted/EPI-135_S35_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.135 <- epi.135[,-3]
 colnames(epi.135) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.135$position <- as.numeric(epi.135$position)
@@ -203,7 +208,7 @@ epi.135 <- merge(Data, epi.135, by="merger")
 epi.135 <- epi.135[,6:14]
 colnames(epi.135) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.136 <- read.csv("Data/Extracted/EPI-136.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.136 <- read.csv("Data/Extracted/EPI-136_S36_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.136 <- epi.136[,-3]
 colnames(epi.136) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.136$position <- as.numeric(epi.136$position)
@@ -214,7 +219,7 @@ epi.136 <- merge(Data, epi.136, by="merger")
 epi.136 <- epi.136[,6:14]
 colnames(epi.136) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.143 <- read.csv("Data/Extracted/EPI-143.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.143 <- read.csv("Data/Extracted/EPI-143_S37_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.143 <- epi.143[,-3]
 colnames(epi.143) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.143$position <- as.numeric(epi.143$position)
@@ -225,7 +230,7 @@ epi.143 <- merge(Data, epi.143, by="merger")
 epi.143 <- epi.143[,6:14]
 colnames(epi.143) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.145 <- read.csv("Data/Extracted/EPI-145.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.145 <- read.csv("Data/Extracted/EPI-145_S38_L005_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.145 <- epi.145[,-3]
 colnames(epi.145) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.145$position <- as.numeric(epi.145$position)
@@ -236,7 +241,7 @@ epi.145 <- merge(Data, epi.145, by="merger")
 epi.145 <- epi.145[,6:14]
 colnames(epi.145) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.151 <- read.csv("Data/Extracted/EPI-151.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.151 <- read.csv("Data/Extracted/EPI-151_S2_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.151 <- epi.151[,-3]
 colnames(epi.151) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.151$position <- as.numeric(epi.151$position)
@@ -247,7 +252,7 @@ epi.151 <- merge(Data, epi.151, by="merger")
 epi.151 <- epi.151[,6:14]
 colnames(epi.151) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.152 <- read.csv("Data/Extracted/EPI-152.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.152 <- read.csv("Data/Extracted/EPI-152_S3_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.152 <- epi.152[,-3]
 colnames(epi.152) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.152$position <- as.numeric(epi.152$position)
@@ -258,7 +263,7 @@ epi.152 <- merge(Data, epi.152, by="merger")
 epi.152 <- epi.152[,6:14]
 colnames(epi.152) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.153 <- read.csv("Data/Extracted/EPI-153.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.153 <- read.csv("Data/Extracted/EPI-153_S4_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.153 <- epi.153[,-3]
 colnames(epi.153) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.153$position <- as.numeric(epi.153$position)
@@ -269,7 +274,7 @@ epi.153 <- merge(Data, epi.153, by="merger")
 epi.153 <- epi.153[,6:14]
 colnames(epi.153) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.154 <- read.csv("Data/Extracted/EPI-154.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.154 <- read.csv("Data/Extracted/EPI-154_S5_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.154 <- epi.154[,-3]
 colnames(epi.154) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.154$position <- as.numeric(epi.154$position)
@@ -280,7 +285,7 @@ epi.154 <- merge(Data, epi.154, by="merger")
 epi.154 <- epi.154[,6:14]
 colnames(epi.154) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.159 <- read.csv("Data/Extracted/EPI-159.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.159 <- read.csv("Data/Extracted/EPI-159_S6_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.159 <- epi.159[,-3]
 colnames(epi.159) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.159$position <- as.numeric(epi.159$position)
@@ -291,7 +296,7 @@ epi.159 <- merge(Data, epi.159, by="merger")
 epi.159 <- epi.159[,6:14]
 colnames(epi.159) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.160 <- read.csv("Data/Extracted/EPI-160.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.160 <- read.csv("Data/Extracted/EPI-160_S7_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.160 <- epi.160[,-3]
 colnames(epi.160) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.160$position <- as.numeric(epi.160$position)
@@ -302,7 +307,7 @@ epi.160 <- merge(Data, epi.160, by="merger")
 epi.160 <- epi.160[,6:14]
 colnames(epi.160) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.161 <- read.csv("Data/Extracted/EPI-161.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.161 <- read.csv("Data/Extracted/EPI-161_S8_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.161 <- epi.161[,-3]
 colnames(epi.161) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.161$position <- as.numeric(epi.161$position)
@@ -313,7 +318,7 @@ epi.161 <- merge(Data, epi.161, by="merger")
 epi.161 <- epi.161[,6:14]
 colnames(epi.161) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.162 <- read.csv("Data/Extracted/EPI-162.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.162 <- read.csv("Data/Extracted/EPI-162_S9_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.162 <- epi.162[,-3]
 colnames(epi.162) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.162$position <- as.numeric(epi.162$position)
@@ -324,7 +329,7 @@ epi.162 <- merge(Data, epi.162, by="merger")
 epi.162 <- epi.162[,6:14]
 colnames(epi.162) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.167 <- read.csv("Data/Extracted/EPI-167.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.167 <- read.csv("Data/Extracted/EPI-167_S10_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.167 <- epi.167[,-3]
 colnames(epi.167) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.167$position <- as.numeric(epi.167$position)
@@ -335,7 +340,7 @@ epi.167 <- merge(Data, epi.167, by="merger")
 epi.167 <- epi.167[,6:14]
 colnames(epi.167) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.168 <- read.csv("Data/Extracted/EPI-168.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.168 <- read.csv("Data/Extracted/EPI-168_S11_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.168 <- epi.168[,-3]
 colnames(epi.168) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.168$position <- as.numeric(epi.168$position)
@@ -346,7 +351,7 @@ epi.168 <- merge(Data, epi.168, by="merger")
 epi.168 <- epi.168[,6:14]
 colnames(epi.168) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.169 <- read.csv("Data/Extracted/EPI-169.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.169 <- read.csv("Data/Extracted/EPI-169_S12_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.169 <- epi.169[,-3]
 colnames(epi.169) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.169$position <- as.numeric(epi.169$position)
@@ -357,7 +362,7 @@ epi.169 <- merge(Data, epi.169, by="merger")
 epi.169 <- epi.169[,6:14]
 colnames(epi.169) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.170 <- read.csv("Data/Extracted/EPI-170.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.170 <- read.csv("Data/Extracted/EPI-170_S13_L002_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.170 <- epi.170[,-3]
 colnames(epi.170) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.170$position <- as.numeric(epi.170$position)
@@ -368,7 +373,7 @@ epi.170 <- merge(Data, epi.170, by="merger")
 epi.170 <- epi.170[,6:14]
 colnames(epi.170) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.175 <- read.csv("Data/Extracted/EPI-175.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.175 <- read.csv("Data/Extracted/EPI-175_S14_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.175 <- epi.175[,-3]
 colnames(epi.175) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.175$position <- as.numeric(epi.175$position)
@@ -379,7 +384,7 @@ epi.175 <- merge(Data, epi.175, by="merger")
 epi.175 <- epi.175[,6:14]
 colnames(epi.175) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.176 <- read.csv("Data/Extracted/EPI-176.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.176 <- read.csv("Data/Extracted/EPI-176_S15_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.176 <- epi.176[,-3]
 colnames(epi.176) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.176$position <- as.numeric(epi.176$position)
@@ -390,7 +395,7 @@ epi.176 <- merge(Data, epi.176, by="merger")
 epi.176 <- epi.176[,6:14]
 colnames(epi.176) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.181 <- read.csv("Data/Extracted/EPI-181.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.181 <- read.csv("Data/Extracted/EPI-181_S16_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.181 <- epi.181[,-3]
 colnames(epi.181) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.181$position <- as.numeric(epi.181$position)
@@ -401,7 +406,7 @@ epi.181 <- merge(Data, epi.181, by="merger")
 epi.181 <- epi.181[,6:14]
 colnames(epi.181) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.182 <- read.csv("Data/Extracted/EPI-182.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.182 <- read.csv("Data/Extracted/EPI-182_S17_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.182 <- epi.182[,-3]
 colnames(epi.182) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.182$position <- as.numeric(epi.182$position)
@@ -412,7 +417,7 @@ epi.182 <- merge(Data, epi.182, by="merger")
 epi.182 <- epi.182[,6:14]
 colnames(epi.182) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.184 <- read.csv("Data/Extracted/EPI-184.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.184 <- read.csv("Data/Extracted/EPI-184_S18_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.184 <- epi.184[,-3]
 colnames(epi.184) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.184$position <- as.numeric(epi.184$position)
@@ -423,7 +428,7 @@ epi.184 <- merge(Data, epi.184, by="merger")
 epi.184 <- epi.184[,6:14]
 colnames(epi.184) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.185 <- read.csv("Data/Extracted/EPI-185.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.185 <- read.csv("Data/Extracted/EPI-185_S19_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.185 <- epi.185[,-3]
 colnames(epi.185) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.185$position <- as.numeric(epi.185$position)
@@ -434,7 +439,7 @@ epi.185 <- merge(Data, epi.185, by="merger")
 epi.185 <- epi.185[,6:14]
 colnames(epi.185) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.187 <- read.csv("Data/Extracted/EPI-187.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.187 <- read.csv("Data/Extracted/EPI-187_S20_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.187 <- epi.187[,-3]
 colnames(epi.187) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.187$position <- as.numeric(epi.187$position)
@@ -445,7 +450,7 @@ epi.187 <- merge(Data, epi.187, by="merger")
 epi.187 <- epi.187[,6:14]
 colnames(epi.187) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.188 <- read.csv("Data/Extracted/EPI-188.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.188 <- read.csv("Data/Extracted/EPI-188_S21_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.188 <- epi.188[,-3]
 colnames(epi.188) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.188$position <- as.numeric(epi.188$position)
@@ -456,7 +461,7 @@ epi.188 <- merge(Data, epi.188, by="merger")
 epi.188 <- epi.188[,6:14]
 colnames(epi.188) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.193 <- read.csv("Data/Extracted/EPI-193.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.193 <- read.csv("Data/Extracted/EPI-193_S22_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.193 <- epi.193[,-3]
 colnames(epi.193) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.193$position <- as.numeric(epi.193$position)
@@ -467,7 +472,7 @@ epi.193 <- merge(Data, epi.193, by="merger")
 epi.193 <- epi.193[,6:14]
 colnames(epi.193) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.194 <- read.csv("Data/Extracted/EPI-194.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.194 <- read.csv("Data/Extracted/EPI-194_S23_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.194 <- epi.194[,-3]
 colnames(epi.194) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.194$position <- as.numeric(epi.194$position)
@@ -478,7 +483,7 @@ epi.194 <- merge(Data, epi.194, by="merger")
 epi.194 <- epi.194[,6:14]
 colnames(epi.194) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.199 <- read.csv("Data/Extracted/EPI-199.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.199 <- read.csv("Data/Extracted/EPI-199_S24_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.199 <- epi.199[,-3]
 colnames(epi.199) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.199$position <- as.numeric(epi.199$position)
@@ -489,7 +494,7 @@ epi.199 <- merge(Data, epi.199, by="merger")
 epi.199 <- epi.199[,6:14]
 colnames(epi.199) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.200 <- read.csv("Data/Extracted/EPI-200.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.200 <- read.csv("Data/Extracted/EPI-200_S25_L003_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.200 <- epi.200[,-3]
 colnames(epi.200) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.200$position <- as.numeric(epi.200$position)
@@ -500,7 +505,7 @@ epi.200 <- merge(Data, epi.200, by="merger")
 epi.200 <- epi.200[,6:14]
 colnames(epi.200) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.205 <- read.csv("Data/Extracted/EPI-205.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.205 <- read.csv("Data/Extracted/EPI-205_S26_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.205 <- epi.205[,-3]
 colnames(epi.205) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.205$position <- as.numeric(epi.205$position)
@@ -511,7 +516,7 @@ epi.205 <- merge(Data, epi.205, by="merger")
 epi.205 <- epi.205[,6:14]
 colnames(epi.205) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.206 <- read.csv("Data/Extracted/EPI-206.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.206 <- read.csv("Data/Extracted/EPI-206_S27_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.206 <- epi.206[,-3]
 colnames(epi.206) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.206$position <- as.numeric(epi.206$position)
@@ -522,7 +527,7 @@ epi.206 <- merge(Data, epi.206, by="merger")
 epi.206 <- epi.206[,6:14]
 colnames(epi.206) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.208 <- read.csv("Data/Extracted/EPI-208.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.208 <- read.csv("Data/Extracted/EPI-208_S28_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.208 <- epi.208[,-3]
 colnames(epi.208) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.208$position <- as.numeric(epi.208$position)
@@ -533,7 +538,7 @@ epi.208 <- merge(Data, epi.208, by="merger")
 epi.208 <- epi.208[,6:14]
 colnames(epi.208) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.209 <- read.csv("Data/Extracted/EPI-209.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.209 <- read.csv("Data/Extracted/EPI-209_S29_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.209 <- epi.209[,-3]
 colnames(epi.209) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.209$position <- as.numeric(epi.209$position)
@@ -544,7 +549,7 @@ epi.209 <- merge(Data, epi.209, by="merger")
 epi.209 <- epi.209[,6:14]
 colnames(epi.209) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.214 <- read.csv("Data/Extracted/EPI-214.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.214 <- read.csv("Data/Extracted/EPI-214_S30_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.214 <- epi.214[,-3]
 colnames(epi.214) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.214$position <- as.numeric(epi.214$position)
@@ -555,7 +560,7 @@ epi.214 <- merge(Data, epi.214, by="merger")
 epi.214 <- epi.214[,6:14]
 colnames(epi.214) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.215 <- read.csv("Data/Extracted/EPI-215.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.215 <- read.csv("Data/Extracted/EPI-215_S31_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.215 <- epi.215[,-3]
 colnames(epi.215) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.215$position <- as.numeric(epi.215$position)
@@ -566,7 +571,7 @@ epi.215 <- merge(Data, epi.215, by="merger")
 epi.215 <- epi.215[,6:14]
 colnames(epi.215) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.220 <- read.csv("Data/Extracted/EPI-220.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.220 <- read.csv("Data/Extracted/EPI-220_S32_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.220 <- epi.220[,-3]
 colnames(epi.220) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.220$position <- as.numeric(epi.220$position)
@@ -577,7 +582,7 @@ epi.220 <- merge(Data, epi.220, by="merger")
 epi.220 <- epi.220[,6:14]
 colnames(epi.220) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.221 <- read.csv("Data/Extracted/EPI-221.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.221 <- read.csv("Data/Extracted/EPI-221_S33_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.221 <- epi.221[,-3]
 colnames(epi.221) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.221$position <- as.numeric(epi.221$position)
@@ -588,7 +593,7 @@ epi.221 <- merge(Data, epi.221, by="merger")
 epi.221 <- epi.221[,6:14]
 colnames(epi.221) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.226 <- read.csv("Data/Extracted/EPI-226.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.226 <- read.csv("Data/Extracted/EPI-226_S34_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.226 <- epi.226[,-3]
 colnames(epi.226) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.226$position <- as.numeric(epi.226$position)
@@ -599,7 +604,7 @@ epi.226 <- merge(Data, epi.226, by="merger")
 epi.226 <- epi.226[,6:14]
 colnames(epi.226) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.227 <- read.csv("Data/Extracted/EPI-227.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.227 <- read.csv("Data/Extracted/EPI-227_S35_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.227 <- epi.227[,-3]
 colnames(epi.227) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.227$position <- as.numeric(epi.227$position)
@@ -610,7 +615,7 @@ epi.227 <- merge(Data, epi.227, by="merger")
 epi.227 <- epi.227[,6:14]
 colnames(epi.227) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.229 <- read.csv("Data/Extracted/EPI-229.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.229 <- read.csv("Data/Extracted/EPI-229_S36_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.229 <- epi.229[,-3]
 colnames(epi.229) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.229$position <- as.numeric(epi.229$position)
@@ -621,7 +626,7 @@ epi.229 <- merge(Data, epi.229, by="merger")
 epi.229 <- epi.229[,6:14]
 colnames(epi.229) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
 
-epi.230 <- read.csv("Data/Extracted/EPI-230.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
+epi.230 <- read.csv("Data/Extracted/EPI-230_S37_L004_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.10x.cov.CpG", header=F, sep="", na.string="NA", stringsAsFactors = F) #read in data file
 epi.230 <- epi.230[,-3]
 colnames(epi.230) <- c("scaffold", "position","per.meth","meth","unmeth")
 epi.230$position <- as.numeric(epi.230$position)
@@ -676,6 +681,9 @@ Fig.time.amb.per.meth <- ggplot(time.amb.meth.per, aes(x=TimePoint, y=mean)) +
                                   hjust = 0))
 Fig.time.amb.per.meth
 
+sams
+time.mod <- lm(per.meth ~TimePoint, data=sams)
+summary(aov(time.mod))
 
 # Plot treatments after 10 days of exposure  #####
 D10.trt.meth <- rbind(epi.103,epi.104,epi.111,epi.113,
@@ -720,6 +728,9 @@ Fig.D10.per.meth <- ggplot(D10.meth.per, aes(x=Initial.Treatment, y=mean, group=
                                   hjust = 0))
 Fig.D10.per.meth
 
+sams
+D10.mod <- lm(per.meth ~Initial.Treatment, data=sams)
+summary(aov(D10.mod))
 
 # Plot D135 treatments after common garden #####
 D135.trt.meth <- rbind(epi.151,epi.152,epi.153,epi.154,
@@ -766,6 +777,9 @@ Fig.D135.per.meth <- ggplot(D135.meth.per, aes(x=Initial.Treatment, y=mean, grou
                                   hjust = 0))
 Fig.D135.per.meth
 
+sams
+D135.mod <- lm(per.meth ~Initial.Treatment, data=sams)
+summary(aov(D135.mod))
 
 # Plot secondary exposure #####
 sec.meth <- rbind(epi.175,epi.176,epi.181,epi.182,
@@ -814,6 +828,10 @@ Fig.D145.per.meth <- ggplot(D145.meth.per, aes(x=Secondary.Treatment, y=mean, gr
                                   size = 12, 
                                   hjust = 0))
 Fig.D145.per.meth
+
+sams
+D145.mod <- lm(per.meth ~Initial.Treatment*Secondary.Treatment, data=sams)
+summary(aov(D145.mod))
 
 # save plots #
 
@@ -881,24 +899,25 @@ results[is.na(results)] <- 0
 results$adj.pval.treatment <- p.adjust(results$pval.treatment, method='BH')
 results$adj.pval.position <- p.adjust(results$pval.position, method='BH')
 results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH')
-
+Genes$gene <- gsub(";.*","",Genes$gene)
+Genes$gene <- gsub("ID=","",Genes$gene)
 write.table(results, 'Output/Time_HP_GLM.tsv', sep='\t', row.names=FALSE)
 
 time.sig <- results[order(results$adj.pval.treatment),]
 time.sig <- time.sig[ which(time.sig$adj.pval.treatment <0.05), ]
+time.sig$gene <- gsub(";.*","",time.sig$gene)
+time.sig$gene <- gsub("ID=","",time.sig$gene)
 write.table(time.sig, 'Output/time_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
 
 # Annotation of Time DMG 
 time.sig <- merge(Genes, time.sig, by="gene")
-time.sig$search <- paste0(time.sig$scaffold, ":", time.sig$start-1)
-Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
-time.sig.annot <- merge(time.sig, Annot, by="search")
-write.table(time.sig.annot, 'Output/Time_sig_annot.tsv', sep='\t', row.names=FALSE)
+time.sig.annot <- merge(time.sig, Annot, by="gene", all.x=TRUE)
+write.table(time.sig.annot, 'Output/Table_S1_Time_sig_annot.tsv', sep='\t', row.names=FALSE)
 
 for (i in 1:length(time.sig.annot$gene)){
-  sig.gene <- subset(sub_meth_table, gene ==time.sig.annot$gene[i])
+  sig.gene <- subset(sub_meth_table, gene ==time.sig$gene[i])
   means <- aggregate(per.meth ~ treatment*gene*position, data=sig.gene, FUN=mean)
   
   temp_plot <- ggplot(means, aes(x=treatment, y=per.meth, fill=treatment)) +
@@ -956,16 +975,17 @@ write.table(results, 'Output/D10_HP_GLM.tsv', sep='\t', row.names=FALSE)
 
 D10.sig <- results[order(results$adj.pval.treatment),]
 D10.sig <- D10.sig[ which(D10.sig$adj.pval.treatment <0.05), ]
+D10.sig$gene <- gsub(";.*","",D10.sig$gene)
+D10.sig$gene <- gsub("ID=","",D10.sig$gene)
+
 write.table(D10.sig, 'Output/D10_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
 
 # Annotation of D10 DMG 
 D10.sig <- merge(Genes, D10.sig, by="gene")
-D10.sig$search <- paste0(D10.sig$scaffold, ":", D10.sig$start-1)
-#Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
-D10.sig.annot <- merge(D10.sig, Annot, by="search")
-write.table(D10.sig.annot, 'Output/D10_sig_annot.tsv', sep='\t', row.names=FALSE)
+D10.sig.annot <- merge(D10.sig, Annot, by="gene", all.x=TRUE)
+write.table(D10.sig.annot, 'Output/Table_S2_D10_sig_annot.tsv', sep='\t', row.names=FALSE)
 
 for (i in 1:length(D10.sig.annot$gene)){
   sig.gene <- subset(sub_meth_table, gene ==D10.sig.annot$gene[i])
@@ -1033,16 +1053,16 @@ write.table(results, 'Output/D135_HP_GLM.tsv', sep='\t', row.names=FALSE)
 
 D135.sig <- results[order(results$adj.pval.treatment),]
 D135.sig <- D135.sig[ which(D135.sig$adj.pval.treatment <0.05), ]
+D135.sig$gene <- gsub(";.*","",D135.sig$gene)
+D135.sig$gene <- gsub("ID=","",D135.sig$gene)
 write.table(D135.sig, 'Output/D135_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
 
 # Annotation of D135 DMG 
 D135.sig <- merge(Genes, D135.sig, by="gene")
-D135.sig$search <- paste0(D135.sig$scaffold, ":", D135.sig$start-1)
-#Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
-D135.sig.annot <- merge(D135.sig, Annot, by="search")
-write.table(D135.sig.annot, 'Output/D135_sig_annot.tsv', sep='\t', row.names=FALSE)
+D135.sig.annot <- merge(D135.sig, Annot, by="gene", all.x=TRUE)
+write.table(D135.sig.annot, 'Output/Table_S3_D135_sig_annot.tsv', sep='\t', row.names=FALSE)
 
 for (i in 1:length(D135.sig.annot$gene)){
   sig.gene <- subset(sub_meth_table, gene ==D135.sig.annot$gene[i])
@@ -1109,14 +1129,14 @@ write.table(results, 'Output/sec.meth_HP_GLM.all.tsv', sep='\t', row.names=FALSE
 sec.data.sig.int <- results[order(results$adj.pval.treatment1_x_treatment2),]
 sec.data.sig.int <- subset(sec.data.sig.int, by=adj.pval.treatment1_x_treatment2<0.05)
 sec.data.sig.int <- sec.data.sig.int[ which(sec.data.sig.int$adj.pval.treatment1_x_treatment2 <0.05), ]
+sec.data.sig.int$gene <- gsub(";.*","",sec.data.sig.int$gene)
+sec.data.sig.int$gene <- gsub("ID=","",sec.data.sig.int$gene)
 write.table(sec.data.sig.int, 'Output/sec.meth_HP_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
 # Annotation of Secondary Exposure Interaction DMG 
 sec.data.sig.int <- merge(Genes, sec.data.sig.int, by="gene")
-sec.data.sig.int$search <- paste0(sec.data.sig.int$scaffold, ":", sec.data.sig.int$start-1)
-#Annot$search <- sapply(strsplit(Annot$search, "-"),`[`,1)
-sec.data.sig.int.sig.annot <- merge(sec.data.sig.int, Annot, by="search")
-write.table(sec.data.sig.int.sig.annot, 'Output/Sec_Int_sig_annot.tsv', sep='\t', row.names=FALSE)
+sec.data.sig.int.sig.annot <- merge(sec.data.sig.int, Annot, by="gene", all.x=TRUE)
+write.table(sec.data.sig.int.sig.annot, 'Output/Table_S4_Sec_Int_sig_annot.tsv', sep='\t', row.names=FALSE)
 
 
 for (i in 1:length(sec.data.sig.int.sig.annot$gene)){
