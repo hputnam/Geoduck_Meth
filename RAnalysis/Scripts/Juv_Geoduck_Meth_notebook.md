@@ -33,13 +33,19 @@ wget -r \
 -A deduplicated.bismark.cov.gz  https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/0809-005/
 
 
+### Merge strand information
+for ID in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*bismark.cov
+do
+perl /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Scripts/formatting_merging_gff.pl ${ID} \
+	> ${ID}_merge.cov
+done
 
 ### Extract regions with 5x seq coverage
 
 #### Number of CpG sequenced at least 5x
 
 
-for file in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*.cov
+for file in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*_merge.cov
 do
 cat $file | awk '($5+$6 > 5)' > ${file}.5x.cov.CpG
 done
@@ -47,7 +53,7 @@ done
 
 #### Number of CpG sequenced at least 10x
 
-for file in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*.cov
+for file in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*_merge.cov
 do
 cat $file | awk '($5+$6 > 10)' > ${file}.10x.cov.CpG
 done
@@ -60,20 +66,23 @@ multiIntersectBed -i a.bed b.bed c.bed
 ###### The basic concept of this approach is that it compares the intervals found in N sorted (-k1,1 -k2,2n for BED) BED/GFF/VCF files and reports whether 0 to N of those files are present at each interval.
 
 
-multiIntersectBed -i /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*5x.cov.CpG > all.5x.bed
+multiIntersectBed -i /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*_merge.cov.5x.cov.CpG > all.5x.bed
+
 cat all.5x.bed | awk '$4 ==52' > filtered.52.5x.bed
 
 Number of CpG sequenced at least 5x
 ```wc -l filtered.52.5x.bed```
-20172 filtered.52.5x.bed
+21954 filtered.52.5x.bed
 
 ### Identify regions common to all at 10X cov
-multiIntersectBed -i /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*10x.cov.CpG > all.5x.bed > all.10x.bed
 
-cat all.10x.bed | awk '$4 ==52' > filtered.52.all.10x.bed
+multiIntersectBed -i /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*_merge.cov.10x.cov.CpG > all.10x.bed
+
+cat all.10x.bed | awk '$4 ==52' > filtered.52.10x.bed
+
 Number of CpG sequenced at least 10x
-```wc -l filtered.52.all.10x.bed```
-10584 filtered.52.all.10x.bed
+```wc -l filtered.52.10x.bed```
+9550 filtered.52.10x.bed
 
 
 ### Extract regions common to all at 10x cov
