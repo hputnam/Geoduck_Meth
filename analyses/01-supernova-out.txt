@@ -1,0 +1,39 @@
+sr320@mox1 outs]$ cat report.txt 
+
+--------------------------------------------------------------------------------
+SUMMARY
+--------------------------------------------------------------------------------
+- Mon Mar 05 04:11:59 2018
+- [Geoduck]  
+- software release = 2.0.0(7fba7b4)
+- likely sequencers = HiSeq3000/4000
+- assembly checksum = -2,318,235,203,015,705,709
+--------------------------------------------------------------------------------
+INPUT
+- 1200.03 M  = READS            = number of reads; ideal 800M-1200M for human
+-  139.50  b = MEAN READ LEN    = mean read length after trimming; ideal 140
+-   88.16  x = RAW COV          = raw coverage; ideal ~56
+-   65.09  x = EFFECTIVE COV    = effective read coverage; ideal ~42 for nominal 56x
+-   63.75  % = READ TWO Q30     = fraction of Q30 bases in read 2; ideal 75-85
+-  374.00  b = MEDIAN INSERT    = median insert size; ideal 0.35-0.40
+-   80.56  % = PROPER PAIRS     = fraction of proper read pairs; ideal >= 75
+-    1.00    = BARCODE FRACTION = fraction of barcodes used; between 0 and 1
+-    2.06 Gb = EST GENOME SIZE  = estimated genome size
+-   16.05  % = REPETITIVE FRAC  = estimated repetitive fraction
+-    0.10  % = HIGH AT FRACTION = high AT index
+-  219.32    = P10              = molecule count extending 10 kb on both sides
+-  150.00  b = HETDIST          = mean distance between heterozygous SNPs
+-    6.08  % = UNBAR            = fraction of reads that are not barcoded
+-  444.00    = BARCODE N50      = N50 reads per barcode
+-   11.58  % = DUPS             = fraction of reads that are duplicates
+-   37.42  % = PHASED           = nonduplicate and phased reads; ideal 45-50
+--------------------------------------------------------------------------------
+OUTPUT
+-    9.30 K  = LONG SCAFFOLDS   = number of scaffolds >= 10 kb
+-    5.28 Kb = EDGE N50         = N50 edge size
+-   14.25 Kb = CONTIG N50       = N50 contig size
+-    1.34 Mb = PHASEBLOCK N50   = N50 phase block size
+-    1.40 Mb = SCAFFOLD N50     = N50 scaffold size
+-   26.47  % = MISSING 10KB     = % of base assembly missing from scaffolds >= 10 kb
+-    1.10 Gb = ASSEMBLY SIZE    = assembly size (only scaffolds >= 10 kb)
+--------------------------------------------------------------------------------
