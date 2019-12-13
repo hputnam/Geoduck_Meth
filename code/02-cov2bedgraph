@@ -1,0 +1,5 @@
+perl ../scripts/destranding-bismark-cov.pl \
+/Users/sr320/Desktop/Pg_val_1_bismark_bt2_pe.deduplicated.bismark.cov \
+| awk '{print $1, $2, $3, $4, $5+$6}' | awk '{if ($5 >= 10) { print $1, $2-1, $3-1, $4}}' \
+> analyses/Pg_val_destrand.10x.bedgraph
+
