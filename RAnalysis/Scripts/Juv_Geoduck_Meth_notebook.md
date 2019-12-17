@@ -1,77 +1,15 @@
-## Obtain Geoduck genome assembly file
-#### 
-wget http://owl.fish.washington.edu/halfshell/genomic-databank/Pgenerosa_v074.fa
+## Geoduck data files 
+https://osf.io/yem8n/
 
-## Obtain Geoduck genome annotation file
-
-wget http://owl.fish.washington.edu/halfshell/genomic-databank/Pgenerosa_v074.gene.gff
-
-wget https://gannet.fish.washington.edu/Atumefaciens/20190701_pgen_maker_v074_annotation/blastp_annotation/blastp.outfmt6
-
-wget https://raw.githubusercontent.com/sr320/nb-2019/master/P_generosa/analyses/uniprot-yourlist_M201908218471C63D39733769F8E060B506551E123954914.tab
-
-mv uniprot-yourlist_M201908218471C63D39733769F8E060B506551E123954914.tab  20190821_annotations.tab
-
-## Run Bismark Genome preparation
-#### Taking the trimmed files @ /gscratch/srlab/strigg/data/Pgenr/FASTQS and aligning to version 74 of the genome.
-
-
-## Genome-Wide Extraction
-https://sr320.github.io/Geoduck-alignments-v74/
-
-### Cytosine Methylation Report
-wget -r \
---no-directories --no-parent \
--A deduplicated.bismark.cov.gz https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/0807/
-
-wget -r \
---no-directories --no-parent \
--A deduplicated.bismark.cov.gz https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/0807-003/
-
-wget -r \
---no-directories --no-parent \
--A deduplicated.bismark.cov.gz https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/0807-004/
-
-wget -r \
---no-directories --no-parent \
--A deduplicated.bismark.cov.gz  https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/0809-005/
-
-
-### Merge strand information
-for ID in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*bismark.cov
-do
-perl /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Scripts/formatting_merging_gff.pl ${ID} \
-	> ${ID}_merge.cov
-done
-
-
-
-### Extract regions with 5x seq coverage
-
-#### Number of CpG sequenced at least 5x
-
-
-for file in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*_merge.cov
-do
-cat $file | awk '($5+$6 > 5)' > ${file}.5x.cov.CpG
-done
-
-
-#### Number of CpG sequenced at least 10x
-
-for file in /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*_merge.cov
-do
-cat $file | awk '($5+$6 > 10)' > ${file}.10x.cov.CpG
-done
-
-
+Home directory 
+```Geoduck_Meth```
 
 ### Identify regions common to all 52 samples at 5X cov
 multiIntersectBed -i a.bed b.bed c.bed
 ###### The basic concept of this approach is that it compares the intervals found in N sorted (-k1,1 -k2,2n for BED) BED/GFF/VCF files and reports whether 0 to N of those files are present at each interval.
 
 ```
-multiIntersectBed -i /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Extracted/*_merge.cov.5x.cov.CpG > all.5x.bed
+multiIntersectBed -i /Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/OSF/*_merge.cov.5x.cov.CpG > all.5x.bed
 
 cat all.5x.bed | awk '$4 ==52' > filtered.52.5x.bed  
 ```
