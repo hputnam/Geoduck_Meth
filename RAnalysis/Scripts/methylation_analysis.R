@@ -5,8 +5,6 @@
 #Date Last Modified: 20191120
 #See Readme file for details
 
-rm(list=ls()) #clears workspace 
-
 #install and load required libraries
 library(plotrix) 
 library(ggplot2)
@@ -18,6 +16,7 @@ library(topGO)
 library(methylGSA)
 library(genefilter)
 
+rm(list=ls()) #clears workspace 
 
 #load sample information
 sample.info <- read.csv("RAnalysis/Data/Sample.Info.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in info
@@ -25,258 +24,50 @@ samp <- sample.info$Sample.ID # set sample info
 samp <- gsub("[_]", "-", samp) #remove extra characters
 
 #load genes gff
-Genes <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-vv0.74.a3.gene.gff3", header=F, sep="\t", na.string="NA", skip=3, stringsAsFactors = F) #read in data file
+Genes <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3", header=F, sep="\t", na.string="NA", skip=3, stringsAsFactors = F) #read in data file
 Genes <- Genes[,c(1,4,5,9)] #select desired columns only
 colnames(Genes) <- c("scaffold", "start", "stop", "gene") #rename columns
 Genes$gene <- gsub(";.*","",Genes$gene) #remove extra characters
 Genes$gene <- gsub("ID=","",Genes$gene) #remove extra characters
 
 #Load annotation file
-Annot <- read.csv("Data/Genome/Panopea-generosa-vv0.74.a3.5d66e5e537f02-blast_functional.tab", header=TRUE, sep="\t", na.string="NA", stringsAsFactors = F)
+Annot <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-vv0.74.a4.5d951a9b74287-blast_functional.tab", header=TRUE, sep="\t", na.string="NA", stringsAsFactors = F, skip=12)
 colnames(Annot) <- c("gene","start", "end", "score", "uniprot.id", "Match.ID", "m_start", "m_end", "E.value", "identity", "al")
-Annot$gene <- gsub("20544-","",Annot$gene) #remove extra characters
+Annot$gene <- gsub("21910-","",Annot$gene) #remove extra characters
 Annot$gene  <- gsub(".m01","",Annot$gene) #remove extra characters
 Uniprots <- Annot[,c(1,5)] #pull out uniprot information
 colnames(Uniprots) <- c("gene", "uniprot.id") #rename columns
-write.csv(Uniprots, "Data/Genome/Uniprot.IDS.csv") #save to file
-GOs <- read.csv("Data/Genome/Uniprot_GOs.tab", header=TRUE, sep="\t", na.string="NA", stringsAsFactors = F) #read in gene ontology information
-colnames(GOs) <- c("uniprot.id", "protein.name.short", "status", "protein.name.long", "gene.names", "organism", "length", "GO.IDs") #rename columns of gene ontology information
+write.csv(Uniprots, "RAnalysis/Data/Genome/Uniprot.IDS.csv") #save to file
+#GOs <- read.csv("RAnalysis/Data/Genome/Uniprot_GOs.tab", header=TRUE, sep="\t", na.string="NA", stringsAsFactors = F) #read in gene ontology information
+#colnames(GOs) <- c("uniprot.id", "protein.name.short", "status", "protein.name.long", "gene.names", "organism", "length", "GO.IDs") #rename columns of gene ontology information
 
 ###### Load in methylation counts #####
-meth.data <- list.files(path = "RAnalysis/Data/Extracted", pattern = "CpG.bed$", full.names=TRUE) %>%
+meth.data <- list.files(path = "RAnalysis/Data/OSF/bedgraphs/10x", pattern = ".bedgraph$", full.names=TRUE) %>%
   set_names(.) %>% 
   map_dfr(read.csv,.id="Sample.ID", header=F, sep="", na.string="NA", stringsAsFactors = F) %>% 
   dplyr::select(-V3) %>%
   group_by(Sample.ID)
-colnames(meth.data) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth")
+colnames(meth.data) <- c("Sample.ID", "scaffold", "position","per.meth")
 
-meth.data$Sample.ID <- gsub("RAnalysis/Data/Extracted/","",meth.data$Sample.ID) #remove extra characters
-meth.data$Sample.ID <- gsub(".5x.genes_CpG.bed","",meth.data$Sample.ID) #remove extra characters 
+meth.data$Sample.ID <- gsub("RAnalysis/Data/OSF/bedgraphs/10x/","",meth.data$Sample.ID) #remove extra characters
+meth.data$Sample.ID <- gsub("_.*","",meth.data$Sample.ID) #remove extra characters 
 meth.data$Sample.ID <- gsub("-","_",meth.data$Sample.ID) #remove extra characters
-meth.data <- full_join(meth.data, Genes, by="scaffold") %>% filter(position >= start & position <= stop)
 
-#meth.data$merger <- paste0(meth.data$scaffold,"_", meth.data$position)  
-# epi.41$position <- as.numeric(epi.41$position)
+MD <- merge(meth.data,sample.info, by="Sample.ID")
 
+Time <- subset(MD, Initial.Treatment == "Ambient" & Secondary.Treatment == "Ambient") 
+D10 <-  subset(MD, TimePoint == "Day10" ) 
+D135 <-  subset(MD, TimePoint == "Day135" ) 
+D145 <-  subset(MD, TimePoint == "Day145" ) 
 
-##### Plotting mean percent methylation #####
-
-##### Plot Ambient Treatments through time #####
-time.amb.meth <- rbind(epi.41,epi.42,epi.43,epi.44,
-                       epi.119,epi.120,epi.135,epi.136,
-                       epi.151,epi.152,epi.153,epi.154,
-                       epi.181,epi.182,epi.184,epi.185)
-time.amb.meth <- merge(time.amb.meth,sample.info, by="Sample.ID")
-time.amb.meth <- time.amb.meth[,c(1,2,3,5,6,9,12,14)]
-colnames(time.amb.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "Treatment", "TimePoint")
-
-#
-# colnames(time.amb.meth) <- c("scaffold", "position","per.meth","meth","unmeth", "start","stop", "gene", "Sample.ID")
-# timepoint.amb.meth <- merge(time.amb.meth,sample.info, by="Sample.ID")
-# time.amb.meth <- timepoint.amb.meth[,c(1,2,3,5,6,9,14)]
-# colnames(time.amb.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "treatment")
-#
-# sams <- aggregate(per.meth~Sample.ID, data=timepoint.amb.meth, FUN=mean)
-# sams <- merge(sams, sample.info, by="Sample.ID")
-# time.amb.means <- aggregate(per.meth~TimePoint, data=sams, FUN=mean)
-# time.amb.se <- aggregate(per.meth~TimePoint, data=sams, FUN=std.error)
-# time.amb.meth.per <- cbind(time.amb.means, time.amb.se$per.meth)
-# colnames(time.amb.meth.per) <- c("TimePoint", "mean","se")
-#
-# Fig.time.amb.per.meth <- ggplot(time.amb.meth.per, aes(x=TimePoint, y=mean)) +
-#   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-#   geom_point(pch=16, size = 3, position = position_dodge(width = 0.05)) +
-#   #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-#   #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-#   xlab("Time") +
-#   ylab("Methylation Level") +
-#   #ylim(19.5,20.5)  +
-#   theme_bw() + #Set the background color
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-#         axis.line = element_line(color = 'black'), #Set the axes color
-#         panel.border = element_blank(), #Set the border
-#         panel.grid.major = element_blank(), #Set the major gridlines
-#         panel.grid.minor = element_blank(), #Set the minor gridlines
-#         plot.background=element_blank(), #Set the plot background
-#         legend.position='none',
-#         axis.title.y = element_text(size = rel(1.8), angle = 90),
-#         axis.title.x = element_text(size = rel(1.8), angle = 00)) + #remove legend background
-#   ggtitle("Ambient Through Time") +
-#   theme(plot.title = element_text(face = 'bold',
-#                                   size = 12,
-#                                   hjust = 0))
-# Fig.time.amb.per.meth
-#
-# sams
-# time.mod <- lm(per.meth ~TimePoint, data=sams)
-# summary(aov(time.mod))
-
-# Treatments after 10 days of exposure  #####
-D10.trt.meth <- rbind(epi.103,epi.104,epi.111,epi.113,
-                      epi.119,epi.120,epi.127,epi.128,
-                      epi.135,epi.136,epi.143,epi.145)
-D10.trt.meth <- merge(D10.trt.meth,sample.info, by="Sample.ID")
-D10.trt.meth <- D10.trt.meth[,c(1,2,3,5,6,9,12)]
-colnames(D10.trt.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "treatment1")
-
-
-#####
-# D10.trt.meth$per.meth <- (D10.trt.meth$meth/(D10.trt.meth$meth+D10.trt.meth$unmeth))*100
-# sams <- aggregate(per.meth~Sample.ID, data=D10.trt.meth, FUN=mean)
-# sams <- merge(sams, sample.info, by="Sample.ID")
-# D10.trt.means <- aggregate(per.meth~Initial.Treatment, data=sams, FUN=mean)
-# D10.trt.se <- aggregate(per.meth~Initial.Treatment, data=sams, FUN=std.error)
-# D10.meth.per <- cbind(D10.trt.means, D10.trt.se$per.meth)
-# colnames(D10.meth.per) <- c("Initial.Treatment", "mean","se")
-#
-# #Exposure1 Plotting
-# Fig.D10.per.meth <- ggplot(D10.meth.per, aes(x=Initial.Treatment, y=mean, group=Initial.Treatment)) +
-#   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-#   #geom_line(aes(linetype=Initial.Treatment), size = 0.5, position = position_dodge(width = 0.05)) +
-#   geom_point(pch=c(16,15,17), size = 3, position = position_dodge(width = 0.05)) +
-#   #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-#   #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-#   xlab("Initial Treatment") +
-#   ylab("Methylation Level") +
-#   #ylim(19.5,20.5)  +
-#   theme_bw() + #Set the background color
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-#         axis.line = element_line(color = 'black'), #Set the axes color
-#         panel.border = element_blank(), #Set the border
-#         panel.grid.major = element_blank(), #Set the major gridlines
-#         panel.grid.minor = element_blank(), #Set the minor gridlines
-#         plot.background=element_blank(), #Set the plot background
-#         legend.position='none',
-#         axis.title.y = element_text(size = rel(1.8), angle = 90),
-#         axis.title.x = element_text(size = rel(1.8), angle = 00)) + #remove legend background
-#   ggtitle("Exposure 1 Day 10") +
-#   theme(plot.title = element_text(face = 'bold',
-#                                   size = 12,
-#                                   hjust = 0))
-# Fig.D10.per.meth
-#
-# sams
-# D10.mod <- lm(per.meth ~Initial.Treatment, data=sams)
-# summary(aov(D10.mod))
-
-#  D135 treatments after common garden #####
-D135.trt.meth <- rbind(epi.151,epi.152,epi.153,epi.154,
-                       epi.159,epi.160,epi.161,epi.162,
-                       epi.167,epi.168,epi.169,epi.170)
-D135.trt.meth <- merge(D135.trt.meth, sample.info, by="Sample.ID")
-D135.trt.meth <- D135.trt.meth[,c(1,2,3,5,6,9,12)]
-colnames(D135.trt.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "treatment")
-
-
-#####
-# D135.trt.meth$per.meth <- (D135.trt.meth$meth/(D135.trt.meth$meth+D135.trt.meth$unmeth))*100
-# sams <- aggregate(per.meth~Sample.ID, data=D135.trt.meth, FUN=mean)
-# sams <- merge(sams, sample.info, by="Sample.ID")
-# D135.trt.means <- aggregate(per.meth~Initial.Treatment, data=sams, FUN=mean)
-# D135.trt.se <- aggregate(per.meth~Initial.Treatment, data=sams, FUN=std.error)
-# D135.meth.per <- cbind(D135.trt.means, D135.trt.se$per.meth)
-# colnames(D135.meth.per) <- c("Initial.Treatment", "mean","se")
-#
-# #Common Garden Plotting
-# Fig.D135.per.meth <- ggplot(D135.meth.per, aes(x=Initial.Treatment, y=mean, group=Initial.Treatment)) +
-#   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-#   #geom_line(aes(linetype=Initial.Treatment), size = 0.5, position = position_dodge(width = 0.05)) +
-#   geom_point(pch=c(16,15,17), size = 3, position = position_dodge(width = 0.05)) +
-#   #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-#   #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-#   xlab("Initial Treatment") +
-#   ylab("Methylation Level") +
-#   #ylim(19.5,20.5)  +
-#   theme_bw() + #Set the background color
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-#         axis.line = element_line(color = 'black'), #Set the axes color
-#         panel.border = element_blank(), #Set the border
-#         panel.grid.major = element_blank(), #Set the major gridlines
-#         panel.grid.minor = element_blank(), #Set the minor gridlines
-#         plot.background=element_blank(), #Set the plot background
-#         legend.position='none',
-#         axis.title.y = element_text(size = rel(1.8), angle = 90),
-#         axis.title.x = element_text(size = rel(1.8), angle = 00)) + #remove legend background
-#   ggtitle("Post Common Garden") +
-#   theme(plot.title = element_text(face = 'bold',
-#                                   size = 12,
-#                                   hjust = 0))
-# Fig.D135.per.meth
-#
-# sams
-# D135.mod <- lm(per.meth ~Initial.Treatment, data=sams)
-# summary(aov(D135.mod))
-
-# Secondary exposure D145 #####
-D145.trt.meth <- rbind(epi.175,epi.176,epi.181,epi.182,
-                  epi.184,epi.185,epi.187,epi.188,
-                  epi.193,epi.194,epi.199,epi.200,
-                  epi.205,epi.206,epi.208,epi.209,
-                  epi.214,epi.215,epi.220,epi.221,
-                  epi.226,epi.227,epi.229,epi.230)
-D145.trt.meth <- merge(D145.trt.meth,sample.info, by="Sample.ID")
-D145.trt.meth <- D145.trt.meth[,c(1,2,3,5,6,9,12,13)]
-colnames(D145.trt.meth) <-c("Sample.ID","scaffold", "position", "meth", "unmeth", "gene", "treatment1", "treatment2")
-
-#####
-# sec.meth$per.meth <- (sec.meth$meth/(sec.meth$meth+sec.meth$unmeth))*100
-# sams <- aggregate(per.meth~Sample.ID, data=sec.meth, FUN=mean)
-# sams <- merge(sams, sample.info, by="Sample.ID")
-# D145.trt.means <- aggregate(per.meth~Initial.Treatment*Secondary.Treatment, data=sams, FUN=mean)
-# D145.trt.se <- aggregate(per.meth~Initial.Treatment*Secondary.Treatment, data=sams, FUN=std.error)
-# D145.meth.per <- cbind(D145.trt.means, D145.trt.se$per.meth)
-# colnames(D145.meth.per) <- c("Initial.Treatment", "Secondary.Treatment", "mean","se")
-# D145.meth.per$Initial.Treatment <- factor(D145.meth.per$Initial.Treatment,levels=c("Ambient","Super.Low", "Low"))
-#
-# #Exposure2 Plotting
-# Fig.D145.per.meth <- ggplot(D145.meth.per, aes(x=Secondary.Treatment, y=mean, group=Initial.Treatment)) +
-#   geom_errorbar(aes(ymin=mean-se, ymax=mean+se), colour="black", width=.1, position = position_dodge(width = 0.05)) +
-#   geom_line(aes(linetype=Initial.Treatment), size = 0.5, position = position_dodge(width = 0.05)) +
-#   geom_point(aes(shape=Initial.Treatment), size = 3, position = position_dodge(width = 0.05)) +
-#   #annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-#   #annotate("text", x=c(0.85,0.85,2.2,2.2,2.25), y=c(0.9,0.95,0.88, 0.92,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
-#   xlab("Secondary Treatment") +
-#   ylab("Methylation Level") +
-#   #ylim(19.5,20.5) +
-#   theme_bw() + #Set the background color
-#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), #Set the text angle
-#         axis.line = element_line(color = 'black'), #Set the axes color
-#         panel.border = element_blank(), #Set the border
-#         panel.grid.major = element_blank(), #Set the major gridlines
-#         panel.grid.minor = element_blank(), #Set the minor gridlines
-#         plot.background=element_blank(), #Set the plot background
-#         legend.position='none',
-#         axis.title.y = element_text(size = rel(1.8), angle = 90),
-#         axis.title.x = element_text(size = rel(1.8), angle = 00)) + #remove legend background
-#   ggtitle("Secondary Exposure") +
-#   theme(plot.title = element_text(face = 'bold',
-#                                   size = 12,
-#                                   hjust = 0))
-# Fig.D145.per.meth
-#
-# sams
-# D145.mod <- lm(per.meth ~Initial.Treatment*Secondary.Treatment, data=sams)
-# summary(aov(D145.mod))
-
-# save plots
-
-# Meth.Level <- arrangeGrob(Fig.D10.per.meth, Fig.D135.per.meth, Fig.D145.per.meth, ncol=2)
-# ggsave(file="Output/Methylation_Level.pdf", Meth.Level, width =6, height = 6, units = c("in"))
-#
-# D10 <- arrangeGrob(Fig.D10.per.meth, ncol=1)
-# ggsave(file="Output/D10.trt.pdf", D10, width =6, height = 6, units = c("in"))
-#
-# D135 <- arrangeGrob(Fig.D135.per.meth, ncol=1)
-# ggsave(file="Output/D135.trt.pdf", D135, width =6, height = 6, units = c("in"))
-#
-# D145 <- arrangeGrob(Fig.D145.per.meth, ncol=1)
-# ggsave(file="Output/D145.trt.pdf", D145, width =6, height = 6, units = c("in"))
+#not enough memory on laptop for this full join
+meth.data.x <- full_join(D135, Genes, by="scaffold") %>% filter(position >= start & position <= stop)
 
 # Save data tables #####
-write.table(time.amb.meth, 'Output/Time.Amb.tsv', sep='\t', row.names=FALSE)
-write.table(D10.trt.meth, 'Output/D10.tsv', sep='\t', row.names=FALSE)
-write.table(D135.trt.meth, 'Output/D135.tsv', sep='\t', row.names=FALSE)
-write.table(D145.trt.meth, 'Output/D145.tsv', sep='\t', row.names=FALSE)
+write.table(Time, 'Output/Time.Amb.tsv', sep='\t', row.names=FALSE)
+write.table(D10, 'Output/D10.tsv', sep='\t', row.names=FALSE)
+write.table(D135, 'Output/D135.tsv', sep='\t', row.names=FALSE)
+write.table(D145, 'Output/D145.tsv', sep='\t', row.names=FALSE)
 
 
 ##### READ IN DATAFRAMES #####
@@ -336,8 +127,6 @@ results[is.na(results)] <- 0
 results$adj.pval.TimePoint <- p.adjust(results$pval.treatment, method='BH')
 #results$adj.pval.position <- p.adjust(results$pval.position, method='BH') #uncomment if you want to include position of CpG within a gene
 #results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH') #uncomment if you want to include position of CpG within a gene interaction with treatment
-
-write.table(results, 'Output/Time_Amb_HP_GLM.tsv', sep='\t', row.names=FALSE)
 
 Time.Amb.sig <-results
 Time.Amb.sig <- Time.Amb.sig[,c(1,3)]
@@ -429,8 +218,6 @@ results$adj.pval.Initial.Treatment <- p.adjust(results$pval.treatment, method='B
 #results$adj.pval.position <- p.adjust(results$pval.position, method='BH') #uncomment if you want to include position of CpG within a gene
 #results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH') #uncomment if you want to include position of CpG within a gene interaction with treatment
 
-write.table(results, 'Output/D10_HP_GLM.tsv', sep='\t', row.names=FALSE)
-
 D10.sig <-results
 D10.sig <- D10.sig[,c(1,3)]
 D10.sig <- D10.sig[order(D10.sig$adj.pval.Initial.Treatment),]
@@ -484,7 +271,6 @@ min.filt <- count(sub_meth_table, vars = c( group))
 newdata <- min.filt[ which(min.filt$n > 4), ]
 sub_meth_table <- sub_meth_table[sub_meth_table$group %in% newdata$vars,]
 
-# HP Model
 # create data frame to store results
 results <- data.frame()
 gs <- unique(sub_meth_table$gene)
@@ -525,8 +311,6 @@ results[is.na(results)] <- 0
 results$adj.pval.treatment <- p.adjust(results$pval.treatment, method='BH')
 #results$adj.pval.position <- p.adjust(results$pval.position, method='BH')
 #results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH')
-
-write.table(results, 'Output/D135_HP_GLM.tsv', sep='\t', row.names=FALSE)
 
 D135.sig <-results
 D135.sig <- D135.sig[,c(1,3)]
@@ -620,8 +404,6 @@ results$adj.pval.treatment1_x_treatment2 <- p.adjust(results$pval.treatment1_x_t
 #results$adj.pval.treatment1_x_position <- p.adjust(results$pval.treatment1_x_position, method='BH')
 #results$adj.pval.treatment2_x_position <- p.adjust(results$pval.treatment2_x_position, method='BH')
 #results$adj.pval.treatment1_x_pval.treatment2_x_position <- p.adjust(results$pval.treatment1_x_pval.treatment2_x_position, method='BH')
-
-write.table(results, 'Output/sec.meth_HP_GLM.all.tsv', sep='\t', row.names=FALSE)
 
 D145.sig <-results
 D145.sig <- D145.sig[,c(1,5:7)]

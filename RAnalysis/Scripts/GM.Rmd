@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Geoduck DNA Methylation"
 author: "HPutnam"
 date: "12/18/2019"
 output: html_document
@@ -59,8 +59,8 @@ colnames(GOs) <- c("uniprot.id", "protein.name.short", "protein.name.long", "gen
 # Filter and Concatenate Datasets
 
 ```{bash}
-
 #Time dataset
+mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time 
 
 multiIntersectBed -i \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41_S38_L005_5x.tab \
@@ -79,154 +79,57 @@ multiIntersectBed -i \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab \
-> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.5x.bed
+> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.5x.bed
 
-cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.5x.bed | awk '$4 ==16' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed 
+cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.5x.bed | awk '$4 ==16' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.filtered.16.5x.bed 
 
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41_S38_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41.5x.genes.bed
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41_S38_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-42_S39_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-43_S40_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-44_S41_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
 
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41.5x.genes_CpG_time.bed
+#Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
+#wb: Print all lines in the second file
+#a: file that ends in posOnly
+#b: annotated gene list
+#Save output in a new file that has the same base name and ends in -Annotated.txt
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/*5x.tab
+do
+  intersectBed \
+  -wb \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  > ${f}_gene
+done
 
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-42_S39_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-42.5x.genes.bed
+#intersect with file to subset only those positions found in all samples
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/*_gene
+do
+  intersectBed \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.filtered.16.5x.bed  \
+  > ${f}_CpG_time.bed
+done
 
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-42.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-42.5x.genes_CpG_time.bed
+wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/*_CpG_time.bed
+```
 
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-43_S40_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-43.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-43.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-43.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-44_S41_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-44.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-44.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-44.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184.5x.genes_CpG_time.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/time.filtered.16.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185.5x.genes_CpG_time.bed
-
-mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time 
-
-mv /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/*genes_CpG_time.bed /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time
-
-wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/*time.bed
-
-# Day 10 Data
-multiIntersectBed -i \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104_S28_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111_S29_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113_S30_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127_S33_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128_S34_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143_S37_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145_S38_L005_5x.tab \
-> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.5x.bed
-
-cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.5x.bed | awk '$4 ==12' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed 
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104_S28_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111_S29_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113_S30_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127_S33_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128_S34_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143_S37_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143.5x.genes_CpG_D10.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145_S38_L005_5x.tab -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145.5x.genes.bed
-
-intersectBed -a /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145.5x.genes.bed -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.filtered.12.5x.bed > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145.5x.genes_CpG_D10.bed
-
+```{bash}
+# Day 10 Data Set
 mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10 
 
-mv /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/*genes_CpG_D10.bed /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10
-
-wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/*D10.bed
-
-
-# Day 135 Data
 multiIntersectBed -i \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104_S28_L005_5x.tab \
@@ -240,53 +143,274 @@ multiIntersectBed -i \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143_S37_L005_5x.tab \
 /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145_S38_L005_5x.tab \
-> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10.5x.bed
+> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.5x.bed
 
+cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.5x.bed | awk '$4 ==12' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.filtered.12.5x.bed 
+
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104_S28_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111_S29_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113_S30_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127_S33_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128_S34_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143_S37_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145_S38_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
+
+#Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
+#wb: Print all lines in the second file
+#a: file 
+#b: annotated gene list
+#Save output in a new file that has the same base name 
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/*5x.tab
+do
+  intersectBed \
+  -wb \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  > ${f}_gene
+done
+
+#intersect with file to subset only those positions found in all samples
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/*_gene
+do
+  intersectBed \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.filtered.12.5x.bed   \
+  > ${f}_CpG_D10.bed
+done
+
+wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/*_CpG_D10.bed
+```
+
+```{bash}
+# Day 135 Data
+
+mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135 
+
+multiIntersectBed -i \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-159_S6_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-160_S7_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-161_S8_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-162_S9_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-167_S10_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-168_S11_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-169_S12_L002_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-170_S13_L002_5x.tab \
+> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.5x.bed
+
+cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.5x.bed | awk '$4 ==12' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.filtered.12.5x.bed 
+
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-159_S6_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-160_S7_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-161_S8_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-162_S9_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-167_S10_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-168_S11_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-169_S12_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-170_S13_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+
+#Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
+#wb: Print all lines in the second file
+#a: file 
+#b: annotated gene list
+#Save output in a new file that has the same base name 
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/*5x.tab
+do
+  intersectBed \
+  -wb \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  > ${f}_gene
+done
+
+#intersect with file to subset only those positions found in all samples
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/*_gene
+do
+  intersectBed \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.filtered.12.5x.bed   \
+  > ${f}_CpG_D135.bed
+done
+
+wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/*_CpG_D135.bed
+```
+
+```{bash}
 # Day 145 Data
 
+mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145 
 
+multiIntersectBed -i \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-175_S14_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-176_S15_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-187_S20_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-188_S21_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-193_S22_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-194_S23_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-199_S24_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-200_S25_L003_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-205_S26_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-206_S27_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-208_S28_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-209_S29_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-214_S30_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-215_S31_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-220_S32_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-221_S33_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-226_S34_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-227_S35_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-229_S36_L004_5x.tab \
+/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-230_S37_L004_5x.tab \
+> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.5x.bed
+
+cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.5x.bed | awk '$4 ==24' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.filtered.24.5x.bed 
+
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-175_S14_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-176_S15_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-187_S20_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-188_S21_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-193_S22_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-194_S23_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-199_S24_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-200_S25_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-205_S26_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-206_S27_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-208_S28_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-209_S29_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-214_S30_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-215_S31_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-220_S32_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-221_S33_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-226_S34_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-227_S35_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-229_S36_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-230_S37_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+
+#Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
+#wb: Print all lines in the second file
+#a: file 
+#b: annotated gene list
+#Save output in a new file that has the same base name 
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/*5x.tab
+do
+  intersectBed \
+  -wb \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  > ${f}_gene
+done
+
+#intersect with file to subset only those positions found in all samples
+for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/*_gene
+do
+  intersectBed \
+  -a ${f} \
+  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.filtered.24.5x.bed   \
+  > ${f}_CpG_D145.bed
+done
+
+wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/*_CpG_D145.bed
 ```
 
-
+# Load in methylation counts
 
 ```{r}
-###### Load in methylation counts #####
 # Time
-meth.data.T <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time", pattern = ".bed$", full.names=TRUE) %>%
+meth.data.T <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time", pattern = "time.bed$", full.names=TRUE) %>%
   set_names(.) %>% 
-  map_dfr(read.csv,.id="Sample.ID", header=F, sep="", na.string="NA", stringsAsFactors = F) %>% 
-  dplyr::select(-V3) %>%
+  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  dplyr::select(-c(V3,V7:V14)) %>%
   group_by(Sample.ID)
-colnames(meth.data.T) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth")
+colnames(meth.data.T) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
 
+meth.data.T$gene <- gsub(";.*","",meth.data.T$gene) #remove extra characters
+meth.data.T$gene <- gsub("ID=","",meth.data.T$gene) #remove extra characters
 meth.data.T$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/","",meth.data.T$Sample.ID) #remove extra characters
-meth.data.T$Sample.ID <- gsub(".5x.genes_CpG_time.bed","",meth.data.T$Sample.ID) #remove extra characters 
+meth.data.T$Sample.ID <- gsub("_.*","",meth.data.T$Sample.ID) #remove extra characters 
 meth.data.T$Sample.ID <- gsub("-","_",meth.data.T$Sample.ID) #remove extra characters
 
-Time <- merge(meth.data.T,sample.info, by="Sample.ID")
-MD.Time <- full_join(Time, Genes, by="scaffold") %>% filter(position >= start & position <= stop)
-
-#D10
-meth.data.D10 <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10", pattern = ".bed$", full.names=TRUE) %>%
-  set_names(.) %>% 
-  map_dfr(read.csv,.id="Sample.ID", header=F, sep="", na.string="NA", stringsAsFactors = F) %>% 
-  dplyr::select(-V3) %>%
-  group_by(Sample.ID)
-colnames(meth.data.D10) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth")
-
-meth.data.D10$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/","",meth.data.D10$Sample.ID) #remove extra characters
-meth.data.D10$Sample.ID <- gsub(".5x.genes_CpG_D10.bed","",meth.data.D10$Sample.ID) #remove extra characters 
-meth.data.D10$Sample.ID <- gsub("-","_",meth.data.D10$Sample.ID) #remove extra characters
-
-MD.D10<- full_join(meth.data.D10, Genes, by="scaffold") %>% filter(position >= start & position <= stop)
-D10 <- merge(MD.D10,sample.info, by="Sample.ID")
-
-#Day 135
-
+MD.Time <- merge(meth.data.T,sample.info, by="Sample.ID")
 ```
 
 ```{r}
-# Comparison of Ambient samples thorugh time
+#Day 10
+meth.data.D10 <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10", pattern = "D10.bed$", full.names=TRUE) %>%
+  set_names(.) %>% 
+  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  dplyr::select(-c(V3,V7:V14)) %>%
+  group_by(Sample.ID)
+colnames(meth.data.D10) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
+
+meth.data.D10$gene <- gsub(";.*","",meth.data.D10$gene) #remove extra characters
+meth.data.D10$gene <- gsub("ID=","",meth.data.D10$gene) #remove extra characters
+meth.data.D10$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/","",meth.data.D10$Sample.ID) #remove extra characters
+meth.data.D10$Sample.ID <- gsub("_.*","",meth.data.D10$Sample.ID) #remove extra characters 
+meth.data.D10$Sample.ID <- gsub("-","_",meth.data.D10$Sample.ID) #remove extra characters
+
+MD.D10 <- merge(meth.data.D10, sample.info, by="Sample.ID")
+```
+
+```{r}
+#Day 135
+meth.data.D135 <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135", pattern = "D135.bed$", full.names=TRUE) %>%
+  set_names(.) %>% 
+  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  dplyr::select(-c(V3,V7:V14)) %>%
+  group_by(Sample.ID)
+colnames(meth.data.D135) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
+
+meth.data.D135$gene <- gsub(";.*","",meth.data.D135$gene) #remove extra characters
+meth.data.D135$gene <- gsub("ID=","",meth.data.D135$gene) #remove extra characters
+meth.data.D135$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/","",meth.data.D135$Sample.ID) #remove extra characters
+meth.data.D135$Sample.ID <- gsub("_.*","",meth.data.D135$Sample.ID) #remove extra characters 
+meth.data.D135$Sample.ID <- gsub("-","_",meth.data.D135$Sample.ID) #remove extra characters
+
+MD.D135 <- merge(meth.data.D135, sample.info, by="Sample.ID")
+```
+
+```{r}
+#Day 145
+meth.data.D145 <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145", pattern = "D145.bed$", full.names=TRUE) %>%
+  set_names(.) %>% 
+  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  dplyr::select(-c(V3,V7:V14)) %>%
+  group_by(Sample.ID)
+colnames(meth.data.D145) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
+
+meth.data.D145$gene <- gsub(";.*","", meth.data.D145$gene) #remove extra characters
+meth.data.D145$gene <- gsub("ID=","",meth.data.D145$gene) #remove extra characters
+meth.data.D145$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/","",meth.data.D145$Sample.ID) #remove extra characters
+meth.data.D145$Sample.ID <- gsub("_.*","",meth.data.D145$Sample.ID) #remove extra characters 
+meth.data.D145$Sample.ID <- gsub("-","_",meth.data.D145$Sample.ID) #remove extra characters
+
+MD.D145 <- merge(meth.data.D145, sample.info, by="Sample.ID")
+```
+
+# Testing for Differentially Methylated Genes
+
+```{r}
+# Comparison of Ambient samples through Time
 # Binomial GLM to test for differentially methylated genes
 
 sub_meth_table  <- MD.Time
@@ -313,7 +437,7 @@ for(i in 1:length(sub_meth_table$gene)){
   a <- anova(fit, test="Chisq")
   
   # capture summary stats to data frame
-  df <- data.frame(gene = sub_meth_table1[1,16],
+  df <- data.frame(gene = sub_meth_table1[1,7],
                    pval.treatment = a$`Pr(>Chi)`[2],
                    #pval.position = a$`Pr(>Chi)`[3], #uncomment if you want to include position of CpG within a gene
                    #pval.treatment_x_position = a$`Pr(>Chi)`[4], #uncomment if you want to include position of CpG within a gene interaction with treatment
@@ -347,61 +471,206 @@ Time.Amb.annot <- Time.Amb.annot[!duplicated(Time.Amb.annot$gene),]
 write.table(Time.Amb.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S1_Time_Amb_DMG_annot.tsv', sep='\t', row.names=FALSE)
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Gene Ontology Enrichment Test of DMG under ambient conditions through time
 ```{r}
-#####GO Enrichment of DMG under ambient conditions through time
-#GO Enrichment for Time.Amb DMGs with GO MWU approach https://github.com/z0on/GO_MWU #####
-time.amb.meth.annot <- merge(sub_meth_table.Time.Amb, GOs, by="uniprot.id", all.x=TRUE) #merge the annotated data with GO terms from uniprot
-time.amb.meth.annot[is.na(time.amb.meth.annot)] <- "unknown" #fill unknown for genes lacking annotation indicated by NA
-time.amb.meth.annot[time.amb.meth.annot==""] <- "unknown" #fill unknown for genes lacking annotation indicated by empty space
-time.amb.meth.annot.MWU <- as.data.frame(cbind(as.character(time.amb.meth.annot$gene), time.amb.meth.annot$GO.IDs)) #select the gene name and GO terms into new dataframe
-colnames(time.amb.meth.annot.MWU) <- c("gene", "GO.IDs") #rename new data frame columns
-nonredun.time.amb.meth.annot <- time.amb.meth.annot.MWU[!duplicated(time.amb.meth.annot.MWU$gene),]
-colnames(nonredun.time.amb.meth.annot) <- c("gene", "GO.IDs") #rename columns of nonredundant data
+# Comparison of Treatments at Day 10
+# Binomial GLM to test for differentially methylated genes
 
-#identify MWU data
-Time.Amb.MWU <- nonredun.time.amb.meth.annot
-tail(Time.Amb.MWU$gene)
-#write MWU data to file
-write.table(Time.Amb.MWU, 'GO_MWU/Time.Amb.GO.MWU', sep='\t', row.names=FALSE)
-#merge all genes with DMGs
-Time.Amb.MWU <- merge(Time.Amb.MWU, Time.Amb.annot, by="gene", all=TRUE)
-tail(Time.Amb.MWU$gene)
-Time.Amb.MWU <- Time.Amb.MWU[,c(1,4)]
-colnames(Time.Amb.MWU) <- c("gene", "DMG")
-Time.Amb.MWU$DMG[Time.Amb.MWU$DMG < 0.05] <- 1
-which(Time.Amb.MWU$DMG ==1)
-Time.Amb.MWU[is.na(Time.Amb.MWU)] <- 0
-which(Time.Amb.MWU$DMG ==1)
+meth_table  <- MD.D10
+sub_meth_table <- meth_table[meth_table$Initial.Treatment == 'Ambient' | meth_table$Initial.Treatment == 'Low' | meth_table$Initial.Treatment == 'Super.Low', ]
+sub_meth_table$group <- paste0(sub_meth_table$Sample.ID, sub_meth_table$gene)
+  
+#filter for genes with >5 methylated positions
+min.filt <- count(sub_meth_table, vars = c( group))
+newdata <- min.filt[ which(min.filt$n > 4), ]
+sub_meth_table <- sub_meth_table[sub_meth_table$group %in% newdata$vars,]
 
-write.table(Time.Amb.MWU, 'GO_MWU/Time.Amb_interest_gsig.MWU', sep=',', row.names=FALSE)
+# create data frame to stored results
+results <- data.frame()
+gs <- unique(sub_meth_table$gene)
 
+#first subset the unique dataframes and second run the GLMs
+for(i in 1:length(sub_meth_table$gene)){
+  
+  #subset the dataframe gene by gene
+  sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
+  
+  # fit glm position model
+  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ Initial.Treatment, 
+             data=sub_meth_table1, family=binomial, maxit = 100)
+  a <- anova(fit, test="Chisq")
+  
+  # capture summary stats to data frame
+  df <- data.frame(gene = sub_meth_table1[1,7],
+                   pval.treatment = a$`Pr(>Chi)`[2],
+                   #pval.position = a$`Pr(>Chi)`[3], #uncomment if you want to include position of CpG within a gene
+                   #pval.treatment_x_position = a$`Pr(>Chi)`[4], #uncomment if you want to include position of CpG within a gene interaction with treatment
+                   stringsAsFactors = F)
+  
+  # bind rows of temporary data frame to the results data frame
+  results <- rbind(results, df)
+  
+}
 
+results[is.na(results)] <- 0
+
+results$adj.pval.Initial.Treatment <- p.adjust(results$pval.treatment, method='BH')
+#results$adj.pval.position <- p.adjust(results$pval.position, method='BH') #uncomment if you want to include position of CpG within a gene
+#results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH') #uncomment if you want to include position of CpG within a gene interaction with treatment
+
+D10.sig <-results
+D10.sig <- D10.sig[,c(1,3)]
+D10.sig <- D10.sig[order(D10.sig$adj.pval.Initial.Treatment),]
+D10.sig <- D10.sig[which(D10.sig$adj.pval.Initial.Treatment<0.05), ]
+
+write.table(D10.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D10_GLM_SortedResults.tsv', sep='\t', row.names=FALSE)
+
+# Annotation of D10 DMG 
+D10.sig.annot <- merge(D10.sig, Annot, by="gene", all.x=TRUE)
+D10.sig.annot <- merge(D10.sig.annot, GOs, by="uniprot.id", all.x=TRUE)
+D10.sig.annot <- D10.sig.annot[order(D10.sig.annot$adj.pval.Initial.Treatment),]
+D10.sig.annot <- D10.sig.annot[!duplicated(D10.sig.annot$gene),]
+write.table(D10.sig.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S2_D10_sig_annot.tsv', sep='\t', row.names=FALSE)
 ```
 
 
+```{r}
+# Comparison of Treatments at Day 135
+# Binomial GLM to test for differentially methylated genes
+
+meth_table  <- MD.D135
+sub_meth_table <- meth_table[meth_table$Initial.Treatment == 'Ambient' | meth_table$Initial.Treatment == 'Low' | meth_table$Initial.Treatment == 'Super.Low', ]
+
+sub_meth_table$group <- paste0(sub_meth_table$Sample.ID, sub_meth_table$gene)
+
+#filter for genes with >5 methylated positions
+min.filt <- count(sub_meth_table, vars = c( group))
+newdata <- min.filt[ which(min.filt$n > 4), ]
+sub_meth_table <- sub_meth_table[sub_meth_table$group %in% newdata$vars,]
+
+# create data frame to store results
+results <- data.frame()
+gs <- unique(sub_meth_table$gene)
+
+#first subset the unique dataframes and second run the GLMs
+for(i in 1:length(sub_meth_table$gene)){
+  
+  #subset the dataframe gene by gene
+  sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
+  
+  #if(length(unique(sub_meth_table1$position)) >1){
+  
+  # fit glm position model
+  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ Initial.Treatment, 
+             data=sub_meth_table1, family=binomial)
+  #} else {
+  #  # fit glm model
+  #  fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ Initial.Treatment * position, 
+  #             data=sub_meth_table1, family=binomial)
+  #}
+  #s <- step(fit, trace=0)
+  a <- anova(fit, test="Chisq")
+  a
+  # capture summary stats to data frame
+  df <- data.frame(gene = sub_meth_table1[1,7],
+                   pval.treatment = a$`Pr(>Chi)`[2],
+                   #pval.position = a$`Pr(>Chi)`[3],
+                   #pval.treatment_x_position = a$`Pr(>Chi)`[4],
+                   stringsAsFactors = F)
+  
+  # bind rows of temporary data frame to the results data frame
+  results <- rbind(results, df)
+  
+}
+
+results[is.na(results)] <- 0
+
+results$adj.pval.treatment <- p.adjust(results$pval.treatment, method='BH')
+#results$adj.pval.position <- p.adjust(results$pval.position, method='BH')
+#results$adj.pval.treatment_x_position <- p.adjust(results$pval.treatment_x_position, method='BH')
+
+D135.sig <-results
+D135.sig <- D135.sig[,c(1,3)]
+D135.sig <- D135.sig[order(D135.sig$adj.pval.treatment),]
+D135.sig <- D135.sig[which(D135.sig$adj.pval.treatment<0.05), ]
+write.table(D135.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D135_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
+
+# Annotation of D135 DMG 
+D135.sig.annot <- merge(D135.sig, Annot, by="gene", all.x=TRUE)
+D135.sig.annot <- merge(D135.sig.annot, GOs, by="uniprot.id", all.x=TRUE)
+D135.sig.annot <- D135.sig.annot[order(D135.sig.annot$adj.pval.treatment),]
+D135.sig.annot <- D135.sig.annot[!duplicated(D135.sig.annot$gene),]
+write.table(D135.sig.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S3_D135_sig_annot.tsv', sep='\t', row.names=FALSE)
+```
 
 
+```{r}
+# Comparison of Treatments at Day 145
+# Binomial GLM to test for differentially methylated genes
+meth_table <- MD.D145
+sub_meth_table <- meth_table[meth_table$Initial.Treatment == "Ambient" | meth_table$Initial.Treatment == "Low" | meth_table$Initial.Treatment == "Super.Low"
+                             | meth_table$Secondary.Treatment == "Ambient" | meth_table$Secondary.Treatment == "Low", ]
+sub_meth_table$group <- paste0(sub_meth_table$Sample.ID, sub_meth_table$gene)
 
+#filter for genes with >5 methylated positions
+min.filt <- count(sub_meth_table, vars = c( group))
+newdata <- min.filt[ which(min.filt$n > 4), ]
+sub_meth_table <- sub_meth_table[sub_meth_table$group %in% newdata$vars,]
 
+# create data frame to store results
+results <- data.frame()
+gs <- unique(sub_meth_table$gene)
 
+#first subset the unique dataframes and second run the GLMs
+for(i in 1:length(sub_meth_table$gene)){
+    
+    #subset the dataframe gene by gene
+    sub_meth_table1 <- subset(sub_meth_table, gene ==gs[i])
+    
+    # fit glm position model
+    fit <- glm(matrix(c(meth, unmeth), ncol=2) ~ Initial.Treatment * Secondary.Treatment, 
+               data=sub_meth_table1, family=binomial)
 
+    a <- anova(fit, test="LRT")
+    
+    # capture summary stats to data frame
+    df <- data.frame(gene = sub_meth_table1[1,7],
+                     pval.treatment1 = a$`Pr(>Chi)`[2],
+                     pval.treatment2 = a$`Pr(>Chi)`[3],
+                     #position = a$`Pr(>Chi)`[2], 
+                     pval.treatment1_x_treatment2 = a$`Pr(>Chi)`[4],
+                     #pval.treatment1_x_position = a$`Pr(>Chi)`[2],
+                     #pval.treatment2_x_position = a$`Pr(>Chi)`[2],
+                     #pval.treatment1_x_pval.treatment2_x_position = a$`Pr(>Chi)`[2],
+                     stringsAsFactors = F)
 
+    # bind rows of temporary data frame to the results data frame
+    results <- rbind(results, df)
+    
+  }
 
+results[is.na(results)] <- 0
 
+results$adj.pval.treatment1 <- p.adjust(results$pval.treatment1, method='BH')
+results$adj.pval.treatment2 <- p.adjust(results$pval.treatment2, method='BH')
+results$adj.pval.treatment1_x_treatment2 <- p.adjust(results$pval.treatment1_x_treatment2, method='BH')
+#results$adj.pval.treatment1_x_position <- p.adjust(results$pval.treatment1_x_position, method='BH')
+#results$adj.pval.treatment2_x_position <- p.adjust(results$pval.treatment2_x_position, method='BH')
+#results$adj.pval.treatment1_x_pval.treatment2_x_position <- p.adjust(results$pval.treatment1_x_pval.treatment2_x_position, method='BH')
 
+D145.sig <-results
+D145.sig <- D145.sig[,c(1,5:7)]
+D145.sig <- D145.sig[order(results$adj.pval.treatment1_x_treatment2),]
+D145.sig <- D145.sig[which(D145.sig$adj.pval.treatment1_x_treatment2<0.05), ]
+write.table(D145.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Interaction_D145_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
 
+sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
+sub_meth_table.D145 <- sub_meth_table
+
+# Annotation of Secondary Exposure Interaction DMG 
+D145.sig.annot <- merge(D145.sig, Annot, by="gene", all.x=TRUE)
+D145.sig.annot <- merge(D145.sig.annot, GOs, by="uniprot.id", all.x=TRUE)
+D145.sig.annot <- D145.sig.annot[order(D145.sig.annot$adj.pval.treatment1_x_treatment2),]
+D145.sig.annot <- D145.sig.annot[!duplicated(D145.sig.annot$gene),]
+write.table(D145.sig.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S4_D145_sig_annot.tsv', sep='\t', row.names=FALSE)
+```
 
