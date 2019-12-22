@@ -1,0 +1,3 @@
+"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
+"65","GO:0004518",0.00259711945088228,0.999726427075415,5,11,"nuclease activity","MF"
+"66","GO:0004991",0.00979332714221543,1,2,2,"parathyroid hormone receptor activity","MF"

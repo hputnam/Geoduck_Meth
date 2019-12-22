@@ -1,0 +1,4 @@
+"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
+"107","GO:0004518",0.0168795482311438,0.996743441144688,5,16,"nuclease activity","MF"
+"104","GO:0001618",0.0256108826597967,0.997289926896191,3,7,"virus receptor activity","MF"
+"106","GO:0001733",0.0256088494806335,0.997290227080265,3,7,"galactosylceramide sulfotransferase activity","MF"

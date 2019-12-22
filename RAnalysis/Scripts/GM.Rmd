@@ -55,7 +55,6 @@ write.csv(Uniprots, "/home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Uniprot.IDS.
 
 GOs <- read.csv("/home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Uniprot_GOs.csv", header=TRUE, sep=",", na.string="NA", stringsAsFactors = F) #read in gene ontology information
 colnames(GOs) <- c("uniprot.id", "protein.name.short", "protein.name.long", "gene.names", "organism", "GO.IDs") #rename columns of gene ontology information
-
 GO.data <- merge(Annot, GOs, by="uniprot.id")
 
 ```
@@ -463,7 +462,7 @@ Time.Amb.sig <- Time.Amb.sig[,c(1,3)]
 Time.Amb.sig <- Time.Amb.sig[order(Time.Amb.sig$adj.pval.TimePoint),]
 Time.Amb.sig <- Time.Amb.sig[which(Time.Amb.sig$adj.pval.TimePoint<0.05), ]
 
-write.table(Time.Amb.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Time.Amb_HP_GLM_SortedResults.tsv', sep='\t', row.names=FALSE)
+#write.table(Time.Amb.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Time_sig.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100 #calculate percent methylation
 
@@ -472,7 +471,7 @@ Time.Amb.annot <- merge(Time.Amb.sig , Annot, by="gene", all.x=TRUE)
 Time.Amb.annot <- merge(Time.Amb.annot, GOs, by="uniprot.id", all.x=TRUE)
 Time.Amb.annot <- Time.Amb.annot[order(Time.Amb.annot$adj.pval.TimePoint),]
 Time.Amb.annot <- Time.Amb.annot[!duplicated(Time.Amb.annot$gene),]
-write.table(Time.Amb.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S1_Time_Amb_DMG_annot.tsv', sep='\t', row.names=FALSE)
+write.table(Time.Amb.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S1_Time_sig_annot.tsv', sep='\t', row.names=FALSE)
 ```
 ```{r}
 # GO Enrichment Analysis of Ambient samples through Time
@@ -576,7 +575,7 @@ D10.sig <- D10.sig[,c(1,3)]
 D10.sig <- D10.sig[order(D10.sig$adj.pval.Initial.Treatment),]
 D10.sig <- D10.sig[which(D10.sig$adj.pval.Initial.Treatment<0.05), ]
 
-write.table(D10.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D10_GLM_SortedResults.tsv', sep='\t', row.names=FALSE)
+write.table(D10.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D10_sig.tsv', sep='\t', row.names=FALSE)
 
 # Annotation of D10 DMG 
 D10.sig.annot <- merge(D10.sig, Annot, by="gene", all.x=TRUE)
@@ -695,7 +694,7 @@ D135.sig <-results
 D135.sig <- D135.sig[,c(1,3)]
 D135.sig <- D135.sig[order(D135.sig$adj.pval.treatment),]
 D135.sig <- D135.sig[which(D135.sig$adj.pval.treatment<0.05), ]
-write.table(D135.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D135_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
+write.table(D135.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D135_sig.tsv', sep='\t', row.names=FALSE)
 
 # Annotation of D135 DMG 
 D135.sig.annot <- merge(D135.sig, Annot, by="gene", all.x=TRUE)
@@ -813,7 +812,7 @@ D145.sig <-results
 D145.sig <- D145.sig[,c(1,5:7)]
 D145.sig <- D145.sig[order(results$adj.pval.treatment1_x_treatment2),]
 D145.sig <- D145.sig[which(D145.sig$adj.pval.treatment1_x_treatment2<0.05), ]
-write.table(D145.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Interaction_D145_GLM_BH_0_05.tsv', sep='\t', row.names=FALSE)
+write.table(D145.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D145_sig.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
 sub_meth_table.D145 <- sub_meth_table
@@ -886,26 +885,26 @@ ints_135_145 <- merge(D135.sig, D145.sig, by="gene")
 ints_all <- merge(ints_10_135, D145.sig, by="gene")
 ints_all.annot <- merge(ints_all, Annot, by="gene", all.x=TRUE)
 ints_all.annot <- ints_all.annot[!duplicated(ints_all.annot$gene),]
-write.table(ints_all.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/DMGs_consistent_all_timepoints_annotated.tsv', sep='\t', row.names=FALSE)
+write.table(ints_all.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/DMGs_consistent_INT.tsv', sep='\t', row.names=FALSE)
 
 ```
 
 ```{r}
-# GO Enrichment Analysis of DMG in all comparisons
+# GO Enrichment Analysis of DMG present in all comparisons
 ##### GO enrichment of DMGs #####
 
-#ALL= all possible genes in D10, D135, and D145
-ALL.INT <- unique(rbind(MD.D10$gene,MD.D135$gene,MD.D145$gene))
-ALL<-as.data.frame(unique(ints_all$gene)) #set the all transcripts list
+#ALL= should be all possible genes in D10, D135, and D145
+
+ALL<-as.data.frame(unique(Genes$gene)) #set the all transcripts list
 colnames(ALL) <-c("gene")
 DMG <- as.character(ints_all$gene) #set the enrichment test list
 LENGTH <-cbind(Genes$gene,Genes$stop-Genes$start) #reads in a list of gene lengths
 colnames(LENGTH) <-c("gene", "length") #name columns
 LENGTH <- merge(LENGTH, ALL, by="gene") #merge gene names and length
-GO.D145 <- merge(ALL, GO.data,by="gene", all=T) #merge GO, ID
-GO.D145[is.na(GO.D145)] <- "unknown" #list NA as unknown
-splitted <- strsplit(as.character(GO.D145$GO.IDs), ";") #slit into multiple GO ids
-GO.terms <- data.frame(v1 = rep.int(GO.D145$gene, sapply(splitted, length)), v2 = unlist(splitted)) #list all genes with each of their GO terms in a single row 
+GO.INT <- merge(ALL, GO.data,by="gene", all=T) #merge GO, ID
+GO.INT[is.na(GO.INT)] <- "unknown" #list NA as unknown
+splitted <- strsplit(as.character(GO.INT$GO.IDs), ";") #slit into multiple GO ids
+GO.terms <- data.frame(v1 = rep.int(GO.INT$gene, sapply(splitted, length)), v2 = unlist(splitted)) #list all genes with each of their GO terms in a single row 
 
 #change contig lists to vectors
 ALL.vector <-c(t(ALL))
@@ -932,15 +931,15 @@ enriched.GO.05<-data.frame(enriched.GO.05.a)
 colnames(enriched.GO.05) <- c("category")
 enriched.GO.05 <- merge(enriched.GO.05, GO.wall, by="category")
 
-MF.D145 <- subset(enriched.GO.05, ontology=="MF")
-MF.D145 <- MF.D145[order(-MF.D145$numDEInCat),]
-CC.D145 <- subset(enriched.GO.05, ontology=="CC")
-CC.D145 <- CC.D145[order(-CC.D145$numDEInCat),]
-BP.D145 <- subset(enriched.GO.05, ontology=="BP")
-BP.D145 <- BP.D145[order(-BP.D145$numDEInCat),]
-write.csv(MF.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_D145.csv")
-write.csv(CC.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_D145.csv")
-write.csv(BP.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_D145.csv")
+MF.INT <- subset(enriched.GO.05, ontology=="MF")
+MF.INT <- MF.INT[order(-MF.INT$numDEInCat),]
+CC.INT <- subset(enriched.GO.05, ontology=="CC")
+CC.INT <- CC.INT[order(-CC.INT$numDEInCat),]
+BP.INT <- subset(enriched.GO.05, ontology=="BP")
+BP.INT <- BP.INT[order(-BP.INT$numDEInCat),]
+write.csv(MF.INT , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_INT.csv")
+write.csv(CC.INT , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_INT.csv")
+write.csv(BP.INT , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_INT.csv")
 ```
 
 ```{r}
@@ -964,7 +963,7 @@ pheatmap(Time.Amb.mat, clustering_method = "average",
          show_colnames =TRUE) #plot heatmap of all DEG by group
 dev.off()
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/Time.Amb.DMG_relative_Meth_All.pdf")
+pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/Time.DMG_Abs.pdf")
 pheatmap(Time.Amb.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=FALSE,
          show_colnames =TRUE) #plot heatmap of all DEG by group
@@ -991,7 +990,7 @@ D10.mat <- D10.mat[order(D10.mat$per.meth.Ambient),]
 
 Breaks <- seq(min(0), max(100), length = 100)
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D10.DMG_Rel_Amb_Meth.pdf", width = 1.5, height= 4)
+pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D10.DMG_Abs_Meth.pdf", width = 1.5, height= 4)
 pheatmap(D10.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_cols=FALSE,cluster_rows = FALSE,fontsize_row = 2,
          show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
@@ -1013,7 +1012,7 @@ D135.mat <- D135[,2:4]
 D135.mat <- D135.mat[match(rownames(D10.mat), rownames(D135.mat)),]
 #D135.mat <- D135.mat-rowMeans(D135.mat[1])
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D135.DMG_Rel_Amb_Meth.pdf", width = 1.5, height= 4)
+pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D135.DMG_Abs_Meth.pdf", width = 1.5, height= 4)
 pheatmap(D135.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_cols=FALSE,cluster_rows = FALSE,fontsize_row = 2,
          show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
@@ -1048,7 +1047,7 @@ D145.mat.1 <- D145.mat[,c(1:2)]
 D145.mat.2 <- D145.mat[,c(3:4)]
 D145.mat.3 <- D145.mat[,c(5:6)]
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145.DMG_absolute_Meth.pdf", width = 3, height= 5)
+pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145.DMG_Abs_Meth.pdf", width = 3, height= 5)
 pheatmap(D145.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_rows=FALSE, cluster_cols=FALSE, gaps_col = c(2,4),
          fontsize_row = 2, show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
@@ -1075,20 +1074,7 @@ dev.off()
 
 ```{r}
 
-#   means <- aggregate(per.meth ~ Initial.Treatment*gene, data=D10.meth_table.means, FUN=mean)
-#   ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
-#   means$ses <- ses$per.meth
-#   
-
 ints_all.annot <- na.omit(ints_all.annot)
-
-# D10.int <- MD.D10[MD.D10$gene %in% ints_all.annot$gene,]
-# D135.int <- MD.D135[MD.D135$gene %in% ints_all.annot$gene,]
-# D145.int <- MD.D145[MD.D145$gene %in% ints_all.annot$gene,]
-# 
-# D10.int.mean <- aggregate(per.meth ~ Initial.Treatment*gene, data=D10.int, FUN=mean)
-# D135.int.mean <- aggregate(per.meth ~ Initial.Treatment*gene, data=D135.int, FUN=mean)
-# D145.int.mean <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment*gene, data=D145.int, FUN=mean)
 
 for (i in 1:nrow(ints_all.annot)){
   sig.gene <- subset(MD.D10, gene ==ints_all.annot$gene[i])
@@ -1149,12 +1135,6 @@ for (i in 1:nrow(ints_all.annot)){
  }
 ```
 
-```{r}
-
-x <- merge(D10, D135, by="gene")
-x <- merge(x, D145, by="gene")
-
-```
 
 
 

@@ -1,0 +1,3 @@
+"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
+"70","GO:0001733",0.00223871748388123,0.999923774994886,4,5,"galactosylceramide sulfotransferase activity","MF"
+"71","GO:0003756",0.0254985757522243,1,2,2,"protein disulfide isomerase activity","MF"
