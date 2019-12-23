@@ -633,6 +633,10 @@ BP.D10 <- BP.D10[order(-BP.D10$numDEInCat),]
 write.csv(MF.D10 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_D10.csv")
 write.csv(CC.D10 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_D10.csv")
 write.csv(BP.D10 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_D10.csv")
+
+D10.nuc.genes <- D10.sig.annot[grep("GO:0004518", D10.sig.annot$GO.IDs), ]
+D10.galac.genes <- D10.sig.annot[grep("GO:0001733", D10.sig.annot$GO.IDs), ]
+
 ```
 
 ```{r}
@@ -752,6 +756,10 @@ BP.D135 <- BP.D135[order(-BP.D135$numDEInCat),]
 write.csv(MF.D135 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_D135.csv")
 write.csv(CC.D135 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_D135.csv")
 write.csv(BP.D135 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_D135.csv")
+
+D135.nuc.genes <- D135.sig.annot[grep("GO:0004518", D135.sig.annot$GO.IDs), ]
+D135.galac.genes <- D135.sig.annot[grep("GO:0001733", D135.sig.annot$GO.IDs), ]
+
 ```
 
 ```{r}
@@ -873,6 +881,9 @@ BP.D145 <- BP.D145[order(-BP.D145$numDEInCat),]
 write.csv(MF.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_D145.csv")
 write.csv(CC.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_D145.csv")
 write.csv(BP.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_D145.csv")
+
+D145.nuc.genes <- D145.sig.annot[grep("GO:0004518", D145.sig.annot$GO.IDs), ]
+D145.galac.genes <- D145.sig.annot[grep("GO:0001733", D145.sig.annot$GO.IDs), ]
 ```
 
 
@@ -1132,8 +1143,142 @@ for (i in 1:nrow(ints_all.annot)){
     theme_bw()
 
   ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145plot_",ints_all.annot$gene[i],"_", ints_all.annot$protein.name[i],".png"), width = 14, height = 10, units = "cm")
- }
+}
 ```
+
+```{r}
+
+#Patterns of GO enrichment genes at each time point
+
+#Day 10 
+for (i in 1:nrow(D10.nuc.genes)){
+  sig.gene <- subset(MD.D10, gene==D10.nuc.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
+    geom_bar(stat="identity", color="black",
+             position=position_dodge()) +
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
+                  position=position_dodge(.9)) +
+    xlab("Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    ylim(0,100)+ #set y limits to 0 and 100%
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/NUC_D10plot_", D10.nuc.genes$gene[i],"_",D10.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+for (i in 1:nrow(D10.galac.genes)){
+  sig.gene <- subset(MD.D10, gene==D10.galac.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
+    geom_bar(stat="identity", color="black",
+             position=position_dodge()) +
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
+                  position=position_dodge(.9)) +
+    xlab("Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    ylim(0,100)+ #set y limits to 0 and 100%
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/Galac_D10plot_", D10.galac.genes$gene[i],"_",D10.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+#Day 135 
+for (i in 1:nrow(D135.nuc.genes)){
+  sig.gene <- subset(MD.D135, gene==D135.nuc.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
+    geom_bar(stat="identity", color="black",
+             position=position_dodge()) +
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
+                  position=position_dodge(.9)) +
+    xlab("Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    ylim(0,100)+ #set y limits to 0 and 100%
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/NUC_D135plot_", D135.nuc.genes$gene[i],"_",D135.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+for (i in 1:nrow(D135.galac.genes)){
+  sig.gene <- subset(MD.D135, gene==D135.galac.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
+    geom_bar(stat="identity", color="black",
+             position=position_dodge()) +
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
+                  position=position_dodge(.9)) +
+    xlab("Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    ylim(0,100)+ #set y limits to 0 and 100%
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/Galac_D135plot_", D135.galac.genes$gene[i],"_",D135.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+#Day 145 
+for (i in 1:nrow(D145.nuc.genes)){
+  sig.gene <- subset(MD.D145, gene ==D145.nuc.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(data=means, aes(x=Secondary.Treatment, y=per.meth, group=Initial.Treatment, colour=Initial.Treatment, shape=Initial.Treatment)) + #plot data
+    geom_line(size=0.7, position=position_dodge(.1)) + #plot lines
+    scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
+    geom_point(size=4, position=position_dodge(.1), colour="black") + #set point characteristics
+    scale_shape_manual(values=c(1,18,16)) + #set shapes
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), #plot error bars
+                  width=0, position=position_dodge(.1), colour="black") + #set error bar characteristics
+    xlab("Secondary Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/NUC_D145plot_", D145.nuc.genes$gene[i],"_",D145.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+for (i in 1:nrow(D145.galac.genes)){
+  sig.gene <- subset(MD.D145, gene ==D145.galac.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(data=means, aes(x=Secondary.Treatment, y=per.meth, group=Initial.Treatment, colour=Initial.Treatment, shape=Initial.Treatment)) + #plot data
+    geom_line(size=0.7, position=position_dodge(.1)) + #plot lines
+    scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
+    geom_point(size=4, position=position_dodge(.1), colour="black") + #set point characteristics
+    scale_shape_manual(values=c(1,18,16)) + #set shapes
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), #plot error bars
+                  width=0, position=position_dodge(.1), colour="black") + #set error bar characteristics
+    xlab("Secondary Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/Galac_D145plot_", D145.galac.genes$gene[i],"_",D145.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+```
+
+
+
+
+
 
 
 
