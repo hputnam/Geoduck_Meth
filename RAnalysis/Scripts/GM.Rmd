@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ## Load Libraries
@@ -18,23 +18,25 @@ library(gridExtra)
 library(seacarb) 
 library(pheatmap)
 library(dplyr)
-#devtools::install_github("tidyverse/tidyr")
 library(tidyverse)
 library(tidyr)
 library(topGO)
 library(goseq)
-#library(methylGSA)
 library(genefilter)
 
 ```
 
 ```{r}
-##### DESCRIPTIVE STATISTICS FOR EXPERIMENTAL DESIGN #####
-Flow1 <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Flow1_Juvenile_Geoduck.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+# FLOW RATES
+#Initial Exposure: Quantifying flow and testing for differences among treatments
+Flow1 <- read.csv("RAnalysis/Data/Flow1_Juvenile_Geoduck.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 #flow values measured in ml/10 sec
 Flow1$Rate <- (((Flow1$Rate1 + Flow1$Rate2)/2)*6)/1000*60 #calculate flow rate in liters per hour
-Flow1.Rate <- aggregate(Rate ~ Treatment, data=Flow1, FUN=mean)
-Flow1.Rate$se <- aggregate(Rate ~ Treatment, data=Flow1, FUN=std.error)
+Flow1.Rate <- aggregate(Rate ~ Treatment, data=Flow1, FUN=mean) #mean flow by treatment
+Flow1.Rate$se <- aggregate(Rate ~ Treatment, data=Flow1, FUN=std.error) #sem flow by treatment
+mean(Flow1$Rate) #mean flow across all tanks
+std.error(Flow1$Rate) #sem flow across all tanks
+
 
 FL1 <- aov(Rate ~ Treatment, data=Flow1) #test for differences in flow rate between treatments
 FL1.res <- anova(FL1) #display anova results
@@ -44,13 +46,15 @@ hist(FL1$residuals) #plot histogram of residuals
 boxplot(FL1$residuals) #plot boxplot of residuals
 plot(FL1) #display residuals versus fitter, normal QQ plot, leverage plot
 
-Flow2 <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Flow2_Juvenile_Geoduck.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+
+#Secondary Exposure: Quantifying flow and testing for differences among treatments
+Flow2 <- read.csv("RAnalysis/Data/Flow2_Juvenile_Geoduck.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 #flow values measured in ml/15 sec
 Flow2$Rate <- ((Flow2$Rate1)*4)/1000*60 #calculate flow rate in liters per hour
-Flow2.Rate <- aggregate(Rate ~ Treatment, data=Flow2, FUN=mean)
-Flow2.Rate$se <- aggregate(Rate ~ Treatment, data=Flow2, FUN=std.error)
-mean(Flow2$Rate)
-std.error(Flow2$Rate)
+Flow2.Rate <- aggregate(Rate ~ Treatment, data=Flow2, FUN=mean) #mean flow by treatment
+Flow2.Rate$se <- aggregate(Rate ~ Treatment, data=Flow2, FUN=std.error) #sem flow by treatment
+mean(Flow2$Rate) #mean flow across all tanks
+std.error(Flow2$Rate) #sem flow across all tanks
 
 FL2 <- aov(Rate ~ Treatment, data=Flow2) #test for differences in flow rate between treatments
 FL2.res <-anova(FL2) #display anova results
@@ -62,10 +66,9 @@ plot(FL2) #display residuals versus fitter, normal QQ plot, leverage plot
 ```
 
 ```{r}
-#Feeding
-#Exposure1
-#Cell_Counts_Juvenile_Geoduck_Exp1.csv
-cells.1 <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Cell_Counts_Juvenile_Geoduck_Exp1.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+# FEEDING RATES
+#Initial Exposure: Quantifying feeding and testing for differences among treatments
+cells.1 <- read.csv("RAnalysis/Data/Cell_Counts_Juvenile_Geoduck_Exp1.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 cells.1$Avg.Cells <- rowMeans(cells.1[,c("Count1",  "Count2")], na.rm = TRUE) #calculate average of counts
 cells.1$cell.num <- cells.1$Avg.Cells/cells.1$Volume.Counted #calculate density
 
@@ -91,9 +94,8 @@ hist(cells1.trt$residuals) #plot histogram of residuals
 boxplot(cells1.trt$residuals) #plot boxplot of residuals
 plot(cells1.trt) #display residuals versus fitter, normal QQ plot, leverage plot
 
-#Exposure2
-#Cell_Counts_Juvenile_Geoduck_Exp2.csv
-cells.2 <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Cell_Counts_Juvenile_Geoduck_Exp2.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+#Secondary Exposure: Quantifying feeding and testing for differences among treatments
+cells.2 <- read.csv("RAnalysis/Data/Cell_Counts_Juvenile_Geoduck_Exp2.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 cells.2$cell.num <- rowMeans(cells.2[,c("Count1",  "Count2", "Count3")], na.rm = TRUE) #calculate average of counts
 avg.cells.tank.2 <- do.call(data.frame,aggregate(cell.num ~ Tank, data = cells.2, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each Tank
 avg.cells.trt.2 <- do.call(data.frame,aggregate(cell.num ~ Treatment, data = cells.2, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each Treatment
@@ -117,10 +119,12 @@ hist(cells2.trt$residuals) #plot histogram of residuals
 boxplot(cells2.trt$residuals) #plot boxplot of residuals
 plot(cells2.trt) #display residuals versus fitter, normal QQ plot, leverage plot
 ```
+
+
 ```{r}
-##### CONTINUOUS EXPERIMENTAL PH DATA #####
+#CONTINUOUS EXPERIMENTAL PH DATA 
 #Avtech_pH_data.csv
-pH <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Avtech_pH_data.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+pH <- read.csv("RAnalysis/Data/Avtech_pH_data.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 pH$Date.Time <-as.POSIXct(pH$Date.Time, format="%m/%d/%y %H:%M") #convert date format
 pH$Date <- as.Date(pH$Date.Time) #convert Date only
 pH$Time <- format(as.POSIXct(pH$Date.Time) ,format = "%H:%M:%S") #convert Time only
@@ -165,10 +169,12 @@ All.pH <- ggplot(daily.pH, aes(x=Date, y=mean, group=Treatment)) + #set up plot 
                                   size = 12, 
                                   hjust = 0)) #set title attributes
 All.pH #view plot
+```
 
-##### CONTINUOUS EXPERIMENTAL TEMPERATURE DATA #####
+```{r}
+#CONTINUOUS EXPERIMENTAL TEMPERATURE DATA
 #Avtech_temp_data.csv
-temp <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Avtech_temp_data.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+temp <- read.csv("RAnalysis/Data/Avtech_temp_data.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 temp$Date.Time <-as.POSIXct(temp$Date.Time, format="%m/%d/%y %H:%M") #convert date format
 temp$Date <- as.Date(temp$Date.Time) #convert Date only
 temp$Time <- format(as.POSIXct(temp$Date.Time) ,format = "%H:%M:%S") #convert time only
@@ -210,15 +216,15 @@ All.temp <- ggplot(daily.temp, aes(x=Date, y=mean, group=Treatment)) + #set up p
 All.temp #view plot
 
 FigureS1 <- arrangeGrob(All.pH, All.temp, ncol=1)
-ggsave(file="/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Figs/Fig.S1.pdf", FigureS1, width = 6, height = 8, units = c("in"))
+ggsave(file="RAnalysis/Figs/Fig.S1.pdf", FigureS1, width = 6, height = 8, units = c("in"))
 ```
 
 ```{r}
-##### SEAWATER CHEMISTRY ANALYSIS FOR DISCRETE MEASUREMENTS #####
+#SEAWATER CHEMISTRY ANALYSIS FOR DISCRETE MEASUREMENTS
 
 #pH Tris Calibration Curves
 #Data to calculate conversion equations from mV to total scale using tris standard for pH probe
-path <-("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/pH_Calibration_Files/") #set path to calibration file folder
+path <-("RAnalysis/Data/pH_Calibration_Files/") #set path to calibration file folder
 file.names<-list.files(path = path, pattern = "csv$") #list all the file names with csv 
 pH.cals <- data.frame(matrix(NA, nrow=length(file.names), ncol=4, dimnames=list(file.names,c("Date", "Intercept", "Slope","R2")))) #generate an empty 3 column dataframe with specific column names
 
@@ -236,7 +242,7 @@ colnames(pH.cals) <- c("Calib.Date",  "Intercept",  "Slope", "R2") #names the co
 pH.cals #view data
 
 #Prepare input file for seacarb
-SW.chem <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/SW_Chem_Juvenile_Geoduck.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+SW.chem <- read.csv("RAnalysis/Data/SW_Chem_Juvenile_Geoduck.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 SW.chem <- merge(pH.cals, SW.chem, by="Calib.Date") #merge pH calibrations with Seawater chemistry data
 R <- 8.31447215 #gas constant in J mol-1 K-1 
 F <-96485.339924 #Faraday constant in coulombs mol-1
@@ -245,6 +251,7 @@ STris<-27.5 #salinity of the Tris from local batch made for Manchester WA salini
 phTris<- (11911.08-18.2499*STris-0.039336*STris^2)*(1/(SW.chem$Temperature+273.15))-366.27059+ 0.53993607*STris+0.00016329*STris^2+(64.52243-0.084041*STris)*log(SW.chem$Temperature+273.15)-0.11149858*(SW.chem$Temperature+273.15) #calculate the pH of the tris (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
 SW.chem$pH.Total<-phTris+(mvTris/1000-SW.chem$pH.MV/1000)/(R*(SW.chem$Temperature+273.15)*log(10)/F) #calculate the pH on the total scale (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
 SW.chem <- na.omit(SW.chem) #remove NAs
+
 
 #Calculate CO2 parameters using seacarb
 carb.output <- carb(flag=8, var1=SW.chem$pH.Total, var2=SW.chem$TA/1000000, S= SW.chem$Salinity, T=SW.chem$Temperature, P=0, Pt=0, Sit=0, pHscale="T", kf="pf", k1k2="l", ks="d") #calculate seawater chemistry parameters using seacarb
@@ -357,29 +364,29 @@ write.table (Exposure2.long, file="/Users/hputnam/MyProjects/Geoduck_Epi/project
 
 ```{r}
 #load sample information
-sample.info <- read.csv("/home/hputnam/Geoduck_BS/RAnalysis/Data/Sample.Info.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in info
+sample.info <- read.csv("RAnalysis/Data/Sample.Info.csv", header=T, sep=",", na.string="NA", stringsAsFactors = F) #read in info
 samp <- sample.info$Sample.ID # set sample info
 samp <- gsub("[_]", "-", samp) #remove extra characters
 
 #load genes gff
-Genes <- read.csv("/home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3", header=F, sep="\t", na.string="NA", skip=3, stringsAsFactors = F) #read in data file
+Genes <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3", header=F, sep="\t", na.string="NA", skip=3, stringsAsFactors = F) #read in data file
 Genes <- Genes[,c(1,4,5,9)] #select desired columns only
 colnames(Genes) <- c("scaffold", "start", "stop", "gene") #rename columns
 Genes$gene <- gsub(";.*","",Genes$gene) #remove extra characters
 Genes$gene <- gsub("ID=","",Genes$gene) #remove extra characters
 
 #Load annotation file
-Annot <- read.csv("/home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-vv0.74.a4.5d951a9b74287-blast_functional.tab", header=TRUE, sep="\t", na.string="NA", stringsAsFactors = F, skip=12)
+Annot <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-vv0.74.a4.5d951a9b74287-blast_functional.tab", header=TRUE, sep="\t", na.string="NA", stringsAsFactors = F, skip=12)
 colnames(Annot) <- c("gene","start", "end", "score", "uniprot.id", "Match.ID", "m_start", "m_end", "E.value", "identity", "al")
 Annot$gene <- gsub("21910-","",Annot$gene) #remove extra characters
 Annot$gene  <- gsub(".m01","",Annot$gene) #remove extra characters
 Uniprots <- Annot[,c(1,5)] #pull out uniprot information
 colnames(Uniprots) <- c("gene", "uniprot.id") #rename columns
-write.csv(Uniprots, "/home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Uniprot.IDS.csv") #save to file
+write.csv(Uniprots, "/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Genome/Uniprot.IDS.csv") #save to file
 
 #Obtain GO terms from Uniprot using Uniprot.IDS.csv https://www.uniprot.org/uploadlists/
 
-GOs <- read.csv("/home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Uniprot_GOs.csv", header=TRUE, sep=",", na.string="NA", stringsAsFactors = F) #read in gene ontology information
+GOs <- read.csv("/Users/hputnam/MyProjects/Geoduck_Meth/RAnalysis/Data/Genome/Uniprot_GOs.csv", header=TRUE, sep=",", na.string="NA", stringsAsFactors = F) #read in gene ontology information
 colnames(GOs) <- c("uniprot.id", "protein.name.short", "protein.name.long", "gene.names", "organism", "GO.IDs") #rename columns of gene ontology information
 GO.data <- merge(Annot, GOs, by="uniprot.id")
 
@@ -389,293 +396,226 @@ GO.data <- merge(Annot, GOs, by="uniprot.id")
 
 ```{bash}
 #Time dataset
-mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time 
+mkdir RAnalysis/Data/OSF/Time 
+
 
 multiIntersectBed -i \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41_S38_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-42_S39_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-43_S40_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-44_S41_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab \
-> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.5x.bed
+RAnalysis/Data/OSF/Time/EPI-41_S38_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-42_S39_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-43_S40_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-44_S41_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-119_S31_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-120_S32_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-135_S35_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-136_S36_L005_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-151_S2_L002_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-152_S3_L002_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-153_S4_L002_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-154_S5_L002_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-181_S16_L003_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-182_S17_L003_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-184_S18_L003_5x.tab \
+RAnalysis/Data/OSF/Time/EPI-185_S19_L003_5x.tab \
+> RAnalysis/Data/OSF/Time/time.5x.bed
 
-cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.5x.bed | awk '$4 ==16' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.filtered.16.5x.bed 
-
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-41_S38_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-42_S39_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-43_S40_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-44_S41_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/
+cat RAnalysis/Data/OSF/Time/time.5x.bed | awk '$4 ==16' > RAnalysis/Data/OSF/Time/time.filtered.16.5x.bed 
 
 #Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
 #wb: Print all lines in the second file
 #a: file that ends in posOnly
 #b: annotated gene list
 #Save output in a new file that has the same base name and ends in -Annotated.txt
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/*5x.tab
+for f in RAnalysis/Data/OSF/Time/*5x.tab
 do
   intersectBed \
   -wb \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  -b RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
   > ${f}_gene
 done
 
 #intersect with file to subset only those positions found in all samples
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/*_gene
+for f in RAnalysis/Data/OSF/Time/*_gene
 do
   intersectBed \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/time.filtered.16.5x.bed  \
+  -b RAnalysis/Data/OSF/Time/time.filtered.16.5x.bed  \
   > ${f}_CpG_time.bed
 done
 
-wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/*_CpG_time.bed
+wc -l RAnalysis/Data/OSF/Time/*_CpG_time.bed
 ```
 
 ```{bash}
 # Day 10 Data Set
-mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10 
+mkdir RAnalysis/Data/OSF/D10 
 
 multiIntersectBed -i \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104_S28_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111_S29_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113_S30_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127_S33_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128_S34_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143_S37_L005_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145_S38_L005_5x.tab \
-> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.5x.bed
+RAnalysis/Data/OSF/D10/EPI-103_S27_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-104_S28_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-111_S29_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-113_S30_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-119_S31_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-120_S32_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-127_S33_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-128_S34_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-135_S35_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-136_S36_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-143_S37_L005_5x.tab \
+RAnalysis/Data/OSF/D10/EPI-145_S38_L005_5x.tab \
+> RAnalysis/Data/OSF/D10/D10.5x.bed
 
-cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.5x.bed | awk '$4 ==12' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.filtered.12.5x.bed 
+cat RAnalysis/Data/OSF/D10/D10.5x.bed | awk '$4 ==12' > RAnalysis/Data/OSF/D10/D10.filtered.12.5x.bed 
 
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-104_S28_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-111_S29_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-113_S30_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-119_S31_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-120_S32_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-127_S33_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-128_S34_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-135_S35_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-136_S36_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-143_S37_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-145_S38_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/
 
 #Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
 #wb: Print all lines in the second file
 #a: file 
 #b: annotated gene list
 #Save output in a new file that has the same base name 
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/*5x.tab
+for f in RAnalysis/Data/OSF/D10/*5x.tab
 do
   intersectBed \
   -wb \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  -b RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
   > ${f}_gene
 done
 
 #intersect with file to subset only those positions found in all samples
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/*_gene
+for f in RAnalysis/Data/OSF/D10/*_gene
 do
   intersectBed \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/D10.filtered.12.5x.bed   \
+  -b RAnalysis/Data/OSF/D10/D10.filtered.12.5x.bed   \
   > ${f}_CpG_D10.bed
 done
 
-wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/*_CpG_D10.bed
+wc -l RAnalysis/Data/OSF/D10/*_CpG_D10.bed
 ```
 
 ```{bash}
 # Day 135 Data
 
-mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135 
+mkdir RAnalysis/Data/OSF/D135 
 
 multiIntersectBed -i \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-159_S6_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-160_S7_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-161_S8_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-162_S9_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-167_S10_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-168_S11_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-169_S12_L002_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-170_S13_L002_5x.tab \
-> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.5x.bed
+RAnalysis/Data/OSF/D135/EPI-151_S2_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-152_S3_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-153_S4_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-154_S5_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-159_S6_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-160_S7_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-161_S8_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-162_S9_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-167_S10_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-168_S11_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-169_S12_L002_5x.tab \
+RAnalysis/Data/OSF/D135/EPI-170_S13_L002_5x.tab \
+> RAnalysis/Data/OSF/D135/D135.5x.bed
 
-cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.5x.bed | awk '$4 ==12' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.filtered.12.5x.bed 
-
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-103_S27_L005_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-151_S2_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-152_S3_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-153_S4_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-154_S5_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-159_S6_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-160_S7_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-161_S8_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-162_S9_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-167_S10_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-168_S11_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-169_S12_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-170_S13_L002_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/
+cat RAnalysis/Data/OSF/D135/D135.5x.bed | awk '$4 ==12' > RAnalysis/Data/OSF/D135/D135.filtered.12.5x.bed 
 
 #Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
 #wb: Print all lines in the second file
 #a: file 
 #b: annotated gene list
 #Save output in a new file that has the same base name 
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/*5x.tab
+for f in RAnalysis/Data/OSF/D135/*5x.tab
 do
   intersectBed \
   -wb \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  -b RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
   > ${f}_gene
 done
 
 #intersect with file to subset only those positions found in all samples
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/*_gene
+for f in RAnalysis/Data/OSF/D135/*_gene
 do
   intersectBed \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/D135.filtered.12.5x.bed   \
+  -b RAnalysis/Data/OSF/D135/D135.filtered.12.5x.bed   \
   > ${f}_CpG_D135.bed
 done
 
-wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/*_CpG_D135.bed
+wc -l RAnalysis/Data/OSF/D135/*_CpG_D135.bed
 ```
 
 ```{bash}
 # Day 145 Data
 
-mkdir /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145 
+mkdir RAnalysis/Data/OSF/D145 
 
 multiIntersectBed -i \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-175_S14_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-176_S15_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-187_S20_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-188_S21_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-193_S22_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-194_S23_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-199_S24_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-200_S25_L003_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-205_S26_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-206_S27_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-208_S28_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-209_S29_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-214_S30_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-215_S31_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-220_S32_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-221_S33_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-226_S34_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-227_S35_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-229_S36_L004_5x.tab \
-/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-230_S37_L004_5x.tab \
-> /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.5x.bed
+RAnalysis/Data/OSF/D145/EPI-175_S14_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-176_S15_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-181_S16_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-182_S17_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-184_S18_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-185_S19_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-187_S20_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-188_S21_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-193_S22_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-194_S23_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-199_S24_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-200_S25_L003_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-205_S26_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-206_S27_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-208_S28_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-209_S29_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-214_S30_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-215_S31_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-220_S32_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-221_S33_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-226_S34_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-227_S35_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-229_S36_L004_5x.tab \
+RAnalysis/Data/OSF/D145/EPI-230_S37_L004_5x.tab \
+> RAnalysis/Data/OSF/D145/D145.5x.bed
 
-cat /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.5x.bed | awk '$4 ==24' > /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.filtered.24.5x.bed 
-
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-175_S14_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-176_S15_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-181_S16_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-182_S17_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-184_S18_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-185_S19_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-187_S20_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-188_S21_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-193_S22_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-194_S23_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-199_S24_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-200_S25_L003_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-205_S26_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-206_S27_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-208_S28_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-209_S29_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-214_S30_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-215_S31_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-220_S32_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-221_S33_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-226_S34_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-227_S35_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-229_S36_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
-cp /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/EPI-230_S37_L004_5x.tab /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/
+cat RAnalysis/Data/OSF/D145/D145.5x.bed | awk '$4 ==24' > RAnalysis/Data/OSF/D145/D145.filtered.24.5x.bed 
 
 #Use intersectBed to find where loci and genes intersect, allowing loci to be mapped to annotated genes
 #wb: Print all lines in the second file
 #a: file 
 #b: annotated gene list
 #Save output in a new file that has the same base name 
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/*5x.tab
+for f in RAnalysis/Data/OSF/D145/*5x.tab
 do
   intersectBed \
   -wb \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
+  -b RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3 \
   > ${f}_gene
 done
 
 #intersect with file to subset only those positions found in all samples
-for f in /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/*_gene
+for f in RAnalysis/Data/OSF/D145/*_gene
 do
   intersectBed \
   -a ${f} \
-  -b /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/D145.filtered.24.5x.bed   \
+  -b RAnalysis/Data/OSF/D145/D145.filtered.24.5x.bed   \
   > ${f}_CpG_D145.bed
 done
 
-wc -l /home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/*_CpG_D145.bed
+wc -l RAnalysis/Data/OSF/D145/*_CpG_D145.bed
 ```
 
 # Load in methylation counts
 
 ```{r}
 # Time
-meth.data.T <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time", pattern = "time.bed$", full.names=TRUE) %>%
+meth.data.T <- list.files(path = "RAnalysis/Data/OSF/Time", pattern = "time.bed$", full.names=TRUE) %>%
   set_names(.) %>% 
-  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  map_dfr(read.csv,.id="Sample.ID", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE) %>% 
   dplyr::select(-c(V3,V7:V14)) %>%
   group_by(Sample.ID)
 colnames(meth.data.T) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
 
 meth.data.T$gene <- gsub(";.*","",meth.data.T$gene) #remove extra characters
 meth.data.T$gene <- gsub("ID=","",meth.data.T$gene) #remove extra characters
-meth.data.T$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/Time/","",meth.data.T$Sample.ID) #remove extra characters
+meth.data.T$Sample.ID <- gsub("RAnalysis/Data/OSF/Time/","",meth.data.T$Sample.ID) #remove extra characters
 meth.data.T$Sample.ID <- gsub("_.*","",meth.data.T$Sample.ID) #remove extra characters 
 meth.data.T$Sample.ID <- gsub("-","_",meth.data.T$Sample.ID) #remove extra characters
 
@@ -684,16 +624,17 @@ MD.Time <- merge(meth.data.T,sample.info, by="Sample.ID")
 
 ```{r}
 #Day 10
-meth.data.D10 <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10", pattern = "D10.bed$", full.names=TRUE) %>%
+meth.data.D10 <- list.files(path = "RAnalysis/Data/OSF/D10", pattern = "D10.bed$", full.names=TRUE) %>%
   set_names(.) %>% 
-  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  map_dfr(read.csv,.id="Sample.ID", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE) %>% 
   dplyr::select(-c(V3,V7:V14)) %>%
   group_by(Sample.ID)
+
 colnames(meth.data.D10) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
 
 meth.data.D10$gene <- gsub(";.*","",meth.data.D10$gene) #remove extra characters
 meth.data.D10$gene <- gsub("ID=","",meth.data.D10$gene) #remove extra characters
-meth.data.D10$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D10/","",meth.data.D10$Sample.ID) #remove extra characters
+meth.data.D10$Sample.ID <- gsub("RAnalysis/Data/OSF/D10/","",meth.data.D10$Sample.ID) #remove extra characters
 meth.data.D10$Sample.ID <- gsub("_.*","",meth.data.D10$Sample.ID) #remove extra characters 
 meth.data.D10$Sample.ID <- gsub("-","_",meth.data.D10$Sample.ID) #remove extra characters
 
@@ -702,16 +643,16 @@ MD.D10 <- merge(meth.data.D10, sample.info, by="Sample.ID")
 
 ```{r}
 #Day 135
-meth.data.D135 <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135", pattern = "D135.bed$", full.names=TRUE) %>%
+meth.data.D135 <- list.files(path = "RAnalysis/Data/OSF/D135", pattern = "D135.bed$", full.names=TRUE) %>%
   set_names(.) %>% 
-  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  map_dfr(read.csv,.id="Sample.ID", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE) %>% 
   dplyr::select(-c(V3,V7:V14)) %>%
   group_by(Sample.ID)
 colnames(meth.data.D135) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
 
 meth.data.D135$gene <- gsub(";.*","",meth.data.D135$gene) #remove extra characters
 meth.data.D135$gene <- gsub("ID=","",meth.data.D135$gene) #remove extra characters
-meth.data.D135$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D135/","",meth.data.D135$Sample.ID) #remove extra characters
+meth.data.D135$Sample.ID <- gsub("RAnalysis/Data/OSF/D135/","",meth.data.D135$Sample.ID) #remove extra characters
 meth.data.D135$Sample.ID <- gsub("_.*","",meth.data.D135$Sample.ID) #remove extra characters 
 meth.data.D135$Sample.ID <- gsub("-","_",meth.data.D135$Sample.ID) #remove extra characters
 
@@ -720,16 +661,16 @@ MD.D135 <- merge(meth.data.D135, sample.info, by="Sample.ID")
 
 ```{r}
 #Day 145
-meth.data.D145 <- list.files(path = "/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145", pattern = "D145.bed$", full.names=TRUE) %>%
+meth.data.D145 <- list.files(path = "RAnalysis/Data/OSF/D145", pattern = "D145.bed$", full.names=TRUE) %>%
   set_names(.) %>% 
-  map_dfr(read.csv,.id="Sample.ID", header=F, sep="\t", na.string="NA", stringsAsFactors = F) %>% 
+  map_dfr(read.csv,.id="Sample.ID", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE) %>% 
   dplyr::select(-c(V3,V7:V14)) %>%
   group_by(Sample.ID)
 colnames(meth.data.D145) <- c("Sample.ID", "scaffold", "position","per.meth","meth","unmeth","gene")
 
 meth.data.D145$gene <- gsub(";.*","", meth.data.D145$gene) #remove extra characters
 meth.data.D145$gene <- gsub("ID=","",meth.data.D145$gene) #remove extra characters
-meth.data.D145$Sample.ID <- gsub("/home/hputnam/Geoduck_BS/RAnalysis/Data/OSF/D145/","",meth.data.D145$Sample.ID) #remove extra characters
+meth.data.D145$Sample.ID <- gsub("RAnalysis/Data/OSF/D145/","",meth.data.D145$Sample.ID) #remove extra characters
 meth.data.D145$Sample.ID <- gsub("_.*","",meth.data.D145$Sample.ID) #remove extra characters 
 meth.data.D145$Sample.ID <- gsub("-","_",meth.data.D145$Sample.ID) #remove extra characters
 
@@ -788,7 +729,7 @@ Time.Amb.sig <- Time.Amb.sig[,c(1,3)]
 Time.Amb.sig <- Time.Amb.sig[order(Time.Amb.sig$adj.pval.TimePoint),]
 Time.Amb.sig <- Time.Amb.sig[which(Time.Amb.sig$adj.pval.TimePoint<0.05), ]
 
-#write.table(Time.Amb.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Time_sig.tsv', sep='\t', row.names=FALSE)
+#write.table(Time.Amb.sig, '/home/hputnam/MyPorjects/Geoduck_Meth/RAnalysis/Output/Time_sig.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100 #calculate percent methylation
 
@@ -797,8 +738,9 @@ Time.Amb.annot <- merge(Time.Amb.sig , Annot, by="gene", all.x=TRUE)
 Time.Amb.annot <- merge(Time.Amb.annot, GOs, by="uniprot.id", all.x=TRUE)
 Time.Amb.annot <- Time.Amb.annot[order(Time.Amb.annot$adj.pval.TimePoint),]
 Time.Amb.annot <- Time.Amb.annot[!duplicated(Time.Amb.annot$gene),]
-write.table(Time.Amb.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S1_Time_sig_annot.tsv', sep='\t', row.names=FALSE)
+write.table(Time.Amb.annot, 'RAnalysis/Output/Table_S1_Time_sig_annot.tsv', sep='\t', row.names=FALSE)
 ```
+
 ```{r}
 # GO Enrichment Analysis of Ambient samples through Time
 ##### GO enrichment of DMGs #####
@@ -844,9 +786,9 @@ CC.TIME <- subset(enriched.GO.05, ontology=="CC")
 CC.TIME <- CC.TIME[order(-CC.TIME$numDEInCat),]
 BP.TIME <- subset(enriched.GO.05, ontology=="BP")
 BP.TIME <- BP.TIME[order(-BP.TIME$numDEInCat),]
-write.csv(MF.TIME , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_TIME.csv")
-write.csv(CC.TIME , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_TIME.csv")
-write.csv(BP.TIME , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_TIME.csv")
+write.csv(MF.TIME , file = "RAnalysis/Output/MF_Sig_Enriched_GO.05_TIME.csv")
+write.csv(CC.TIME , file = "RAnalysis/Output/CC_Sig_Enriched_GO.05_TIME.csv")
+write.csv(BP.TIME , file = "RAnalysis/Output/BP_Sig_Enriched_GO.05_TIME.csv")
 ```
 
 
@@ -901,14 +843,14 @@ D10.sig <- D10.sig[,c(1,3)]
 D10.sig <- D10.sig[order(D10.sig$adj.pval.Initial.Treatment),]
 D10.sig <- D10.sig[which(D10.sig$adj.pval.Initial.Treatment<0.05), ]
 
-write.table(D10.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D10_sig.tsv', sep='\t', row.names=FALSE)
+write.table(D10.sig, 'RAnalysis/Output/D10_sig.tsv', sep='\t', row.names=FALSE)
 
 # Annotation of D10 DMG 
 D10.sig.annot <- merge(D10.sig, Annot, by="gene", all.x=TRUE)
 D10.sig.annot <- merge(D10.sig.annot, GOs, by="uniprot.id", all.x=TRUE)
 D10.sig.annot <- D10.sig.annot[order(D10.sig.annot$adj.pval.Initial.Treatment),]
 D10.sig.annot <- D10.sig.annot[!duplicated(D10.sig.annot$gene),]
-write.table(D10.sig.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S2_D10_sig_annot.tsv', sep='\t', row.names=FALSE)
+write.table(D10.sig.annot, 'RAnalysis/Output/Table_S2_D10_sig_annot.tsv', sep='\t', row.names=FALSE)
 ```
 
 ```{r}
@@ -931,7 +873,7 @@ DMG.vector <-c(t(DMG))
 ID.vector <- LENGTH$gene
 LENGTH.vector <-LENGTH$length
 
-gene.vector=as.integer(ALL.vector%in%DMG.vector) #Construct new vector with 1 for DEG and 0 for others
+gene.vector <- as.integer(ALL.vector%in%DMG.vector) #Construct new vector with 1 for DEG and 0 for others
 names(gene.vector)=ALL.vector #set names
 DEG.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector by length of gene
 
@@ -956,9 +898,9 @@ CC.D10 <- subset(enriched.GO.05, ontology=="CC")
 CC.D10 <- CC.D10[order(-CC.D10$numDEInCat),]
 BP.D10 <- subset(enriched.GO.05, ontology=="BP")
 BP.D10 <- BP.D10[order(-BP.D10$numDEInCat),]
-write.csv(MF.D10 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_D10.csv")
-write.csv(CC.D10 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_D10.csv")
-write.csv(BP.D10 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_D10.csv")
+write.csv(MF.D10 , file = "RAnalysis/Output/MF_Sig_Enriched_GO.05_D10.csv")
+write.csv(CC.D10 , file = "RAnalysis/Output/CC_Sig_Enriched_GO.05_D10.csv")
+write.csv(BP.D10 , file = "RAnalysis/Output/BP_Sig_Enriched_GO.05_D10.csv")
 
 D10.nuc.genes <- D10.sig.annot[grep("GO:0004518", D10.sig.annot$GO.IDs), ]
 D10.galac.genes <- D10.sig.annot[grep("GO:0001733", D10.sig.annot$GO.IDs), ]
@@ -1024,14 +966,14 @@ D135.sig <-results
 D135.sig <- D135.sig[,c(1,3)]
 D135.sig <- D135.sig[order(D135.sig$adj.pval.treatment),]
 D135.sig <- D135.sig[which(D135.sig$adj.pval.treatment<0.05), ]
-write.table(D135.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D135_sig.tsv', sep='\t', row.names=FALSE)
+write.table(D135.sig, 'RAnalysis/Output/D135_sig.tsv', sep='\t', row.names=FALSE)
 
 # Annotation of D135 DMG 
 D135.sig.annot <- merge(D135.sig, Annot, by="gene", all.x=TRUE)
 D135.sig.annot <- merge(D135.sig.annot, GOs, by="uniprot.id", all.x=TRUE)
 D135.sig.annot <- D135.sig.annot[order(D135.sig.annot$adj.pval.treatment),]
 D135.sig.annot <- D135.sig.annot[!duplicated(D135.sig.annot$gene),]
-write.table(D135.sig.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S3_D135_sig_annot.tsv', sep='\t', row.names=FALSE)
+write.table(D135.sig.annot, 'RAnalysis/Output/Table_S3_D135_sig_annot.tsv', sep='\t', row.names=FALSE)
 ```
 
 ```{r}
@@ -1079,9 +1021,9 @@ CC.D135 <- subset(enriched.GO.05, ontology=="CC")
 CC.D135 <- CC.D135[order(-CC.D135$numDEInCat),]
 BP.D135 <- subset(enriched.GO.05, ontology=="BP")
 BP.D135 <- BP.D135[order(-BP.D135$numDEInCat),]
-write.csv(MF.D135 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_D135.csv")
-write.csv(CC.D135 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_D135.csv")
-write.csv(BP.D135 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_D135.csv")
+write.csv(MF.D135 , file = "RAnalysis/Output/MF_Sig_Enriched_GO.05_D135.csv")
+write.csv(CC.D135 , file = "RAnalysis/Output/CC_Sig_Enriched_GO.05_D135.csv")
+write.csv(BP.D135 , file = "RAnalysis/Output/BP_Sig_Enriched_GO.05_D135.csv")
 
 D135.nuc.genes <- D135.sig.annot[grep("GO:0004518", D135.sig.annot$GO.IDs), ]
 D135.galac.genes <- D135.sig.annot[grep("GO:0001733", D135.sig.annot$GO.IDs), ]
@@ -1146,7 +1088,7 @@ D145.sig <-results
 D145.sig <- D145.sig[,c(1,5:7)]
 D145.sig <- D145.sig[order(results$adj.pval.treatment1_x_treatment2),]
 D145.sig <- D145.sig[which(D145.sig$adj.pval.treatment1_x_treatment2<0.05), ]
-write.table(D145.sig, '/home/hputnam/Geoduck_BS/RAnalysis/Output/D145_sig.tsv', sep='\t', row.names=FALSE)
+write.table(D145.sig, 'RAnalysis/Output/D145_sig.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
 sub_meth_table.D145 <- sub_meth_table
@@ -1156,7 +1098,7 @@ D145.sig.annot <- merge(D145.sig, Annot, by="gene", all.x=TRUE)
 D145.sig.annot <- merge(D145.sig.annot, GOs, by="uniprot.id", all.x=TRUE)
 D145.sig.annot <- D145.sig.annot[order(D145.sig.annot$adj.pval.treatment1_x_treatment2),]
 D145.sig.annot <- D145.sig.annot[!duplicated(D145.sig.annot$gene),]
-write.table(D145.sig.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/Table_S4_D145_sig_annot.tsv', sep='\t', row.names=FALSE)
+write.table(D145.sig.annot, 'RAnalysis/Output/Table_S4_D145_sig_annot.tsv', sep='\t', row.names=FALSE)
 ```
 
 ```{r}
@@ -1204,12 +1146,10 @@ CC.D145 <- subset(enriched.GO.05, ontology=="CC")
 CC.D145 <- CC.D145[order(-CC.D145$numDEInCat),]
 BP.D145 <- subset(enriched.GO.05, ontology=="BP")
 BP.D145 <- BP.D145[order(-BP.D145$numDEInCat),]
-write.csv(MF.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_D145.csv")
-write.csv(CC.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_D145.csv")
-write.csv(BP.D145 , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_D145.csv")
+write.csv(MF.D145 , file = "RAnalysis/Output/MF_Sig_Enriched_GO.05_D145.csv")
+write.csv(CC.D145 , file = "RAnalysis/Output/CC_Sig_Enriched_GO.05_D145.csv")
+write.csv(BP.D145 , file = "RAnalysis/Output/BP_Sig_Enriched_GO.05_D145.csv")
 
-D145.nuc.genes <- D145.sig.annot[grep("GO:0004518", D145.sig.annot$GO.IDs), ]
-D145.galac.genes <- D145.sig.annot[grep("GO:0001733", D145.sig.annot$GO.IDs), ]
 ```
 
 
@@ -1222,7 +1162,7 @@ ints_135_145 <- merge(D135.sig, D145.sig, by="gene")
 ints_all <- merge(ints_10_135, D145.sig, by="gene")
 ints_all.annot <- merge(ints_all, Annot, by="gene", all.x=TRUE)
 ints_all.annot <- ints_all.annot[!duplicated(ints_all.annot$gene),]
-write.table(ints_all.annot, '/home/hputnam/Geoduck_BS/RAnalysis/Output/DMGs_consistent_INT.tsv', sep='\t', row.names=FALSE)
+write.table(ints_all.annot, 'RAnalysis/Output/DMGs_consistent_INT.tsv', sep='\t', row.names=FALSE)
 
 ```
 
@@ -1274,9 +1214,9 @@ CC.INT <- subset(enriched.GO.05, ontology=="CC")
 CC.INT <- CC.INT[order(-CC.INT$numDEInCat),]
 BP.INT <- subset(enriched.GO.05, ontology=="BP")
 BP.INT <- BP.INT[order(-BP.INT$numDEInCat),]
-write.csv(MF.INT , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/MF_Sig_Enriched_GO.05_INT.csv")
-write.csv(CC.INT , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/CC_Sig_Enriched_GO.05_INT.csv")
-write.csv(BP.INT , file = "/home/hputnam/Geoduck_BS/RAnalysis/Output/BP_Sig_Enriched_GO.05_INT.csv")
+write.csv(MF.INT , file = "RAnalysis/Output/MF_Sig_Enriched_GO.05_INT.csv")
+write.csv(CC.INT , file = "RAnalysis/Output/CC_Sig_Enriched_GO.05_INT.csv")
+write.csv(BP.INT , file = "RAnalysis/Output/BP_Sig_Enriched_GO.05_INT.csv")
 ```
 
 ```{r}
@@ -1300,7 +1240,7 @@ pheatmap(Time.Amb.mat, clustering_method = "average",
          show_colnames =TRUE) #plot heatmap of all DEG by group
 dev.off()
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/Time.DMG_Abs.pdf")
+pdf("RAnalysis/Output/Time.DMG_Abs.pdf")
 pheatmap(Time.Amb.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=FALSE,
          show_colnames =TRUE) #plot heatmap of all DEG by group
@@ -1327,7 +1267,7 @@ D10.mat <- D10.mat[order(D10.mat$per.meth.Ambient),]
 
 Breaks <- seq(min(0), max(100), length = 100)
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D10.DMG_Abs_Meth.pdf", width = 1.5, height= 4)
+pdf("RAnalysis/Output/D10.DMG_Abs_Meth.pdf", width = 1.5, height= 4)
 pheatmap(D10.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_cols=FALSE,cluster_rows = FALSE,fontsize_row = 2,
          show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
@@ -1349,7 +1289,7 @@ D135.mat <- D135[,2:4]
 D135.mat <- D135.mat[match(rownames(D10.mat), rownames(D135.mat)),]
 #D135.mat <- D135.mat-rowMeans(D135.mat[1])
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D135.DMG_Abs_Meth.pdf", width = 1.5, height= 4)
+pdf("RAnalysis/Output/D135.DMG_Abs_Meth.pdf", width = 1.5, height= 4)
 pheatmap(D135.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_cols=FALSE,cluster_rows = FALSE,fontsize_row = 2,
          show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
@@ -1384,24 +1324,24 @@ D145.mat.1 <- D145.mat[,c(1:2)]
 D145.mat.2 <- D145.mat[,c(3:4)]
 D145.mat.3 <- D145.mat[,c(5:6)]
 
-pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145.DMG_Abs_Meth.pdf", width = 3, height= 5)
+pdf("RAnalysis/Output/D145.DMG_Abs_Meth.pdf", width = 3, height= 5)
 pheatmap(D145.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_rows=FALSE, cluster_cols=FALSE, gaps_col = c(2,4),
          fontsize_row = 2, show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
 dev.off()
 
 
-# pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145.DMG_Rel_Amb_Meth_1.pdf")
+# pdf("/home/hputnam/MyPorjects/Geoduck_Meth/RAnalysis/Output/D145.DMG_Rel_Amb_Meth_1.pdf")
 # pheatmap(D145.mat.1, clustering_method = "average", 
 #          clustering_distance_rows="euclidean", show_rownames =TRUE, fontsize_row = 2, cluster_cols=FALSE,
 #          cluster_rows=F, show_colnames =TRUE) #plot heatmap of all DEG by group
 # dev.off()
-# pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145.DMG_Rel_Amb_Meth_2.pdf")
+# pdf("/home/hputnam/MyPorjects/Geoduck_Meth/RAnalysis/Output/D145.DMG_Rel_Amb_Meth_2.pdf")
 # pheatmap(D145.mat.2, clustering_method = "average", 
 #          clustering_distance_rows="euclidean", show_rownames =TRUE, fontsize_row = 2, cluster_cols=FALSE,
 #          cluster_rows=F, show_colnames =TRUE) #plot heatmap of all DEG by group
 # dev.off()
-# pdf("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145.DMG_Rel_Amb_Meth_3.pdf")
+# pdf("/home/hputnam/MyPorjects/Geoduck_Meth/RAnalysis/Output/D145.DMG_Rel_Amb_Meth_3.pdf")
 # pheatmap(D145.mat.3, clustering_method = "average", 
 #          clustering_distance_rows="euclidean", show_rownames =TRUE, fontsize_row = 2, cluster_cols=FALSE,
 #          cluster_rows=F, show_colnames =TRUE) #plot heatmap of all DEG by group
@@ -1429,7 +1369,7 @@ for (i in 1:nrow(ints_all.annot)){
     scale_fill_manual(values = c("blue", "purple", "red"))+
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/D10plot_", ints_all.annot$gene[i],"_",ints_all.annot$protein.name[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/D10plot_", ints_all.annot$gene[i],"_",ints_all.annot$protein.name[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 for (i in 1:nrow(ints_all.annot)){
@@ -1448,7 +1388,7 @@ for (i in 1:nrow(ints_all.annot)){
     scale_fill_manual(values = c("blue", "purple", "red"))+
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/D135plot_", ints_all.annot$gene[i],"_",ints_all.annot$protein.name[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/D135plot_", ints_all.annot$gene[i],"_",ints_all.annot$protein.name[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 for (i in 1:nrow(ints_all.annot)){
@@ -1468,7 +1408,7 @@ for (i in 1:nrow(ints_all.annot)){
     ylab("Percent Methylation") + #plot y axis label
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/D145plot_",ints_all.annot$gene[i],"_", ints_all.annot$protein.name[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/D145plot_",ints_all.annot$gene[i],"_", ints_all.annot$protein.name[i],".png"), width = 14, height = 10, units = "cm")
 }
 ```
 
@@ -1494,7 +1434,7 @@ for (i in 1:nrow(D10.nuc.genes)){
     scale_fill_manual(values = c("blue", "purple", "red"))+
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/NUC_D10plot_", D10.nuc.genes$gene[i],"_",D10.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/NUC_D10plot_", D10.nuc.genes$gene[i],"_",D10.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 for (i in 1:nrow(D10.galac.genes)){
@@ -1514,7 +1454,7 @@ for (i in 1:nrow(D10.galac.genes)){
     scale_fill_manual(values = c("blue", "purple", "red"))+
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/Galac_D10plot_", D10.galac.genes$gene[i],"_",D10.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/Galac_D10plot_", D10.galac.genes$gene[i],"_",D10.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 #Day 135 
@@ -1535,7 +1475,7 @@ for (i in 1:nrow(D135.nuc.genes)){
     scale_fill_manual(values = c("blue", "purple", "red"))+
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/NUC_D135plot_", D135.nuc.genes$gene[i],"_",D135.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/NUC_D135plot_", D135.nuc.genes$gene[i],"_",D135.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 for (i in 1:nrow(D135.galac.genes)){
@@ -1555,7 +1495,7 @@ for (i in 1:nrow(D135.galac.genes)){
     scale_fill_manual(values = c("blue", "purple", "red"))+
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/Galac_D135plot_", D135.galac.genes$gene[i],"_",D135.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/Galac_D135plot_", D135.galac.genes$gene[i],"_",D135.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 #Day 145 
@@ -1576,7 +1516,7 @@ for (i in 1:nrow(D145.nuc.genes)){
     ylab("Percent Methylation") + #plot y axis label
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/NUC_D145plot_", D145.nuc.genes$gene[i],"_",D145.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/NUC_D145plot_", D145.nuc.genes$gene[i],"_",D145.nuc.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 for (i in 1:nrow(D145.galac.genes)){
@@ -1596,7 +1536,7 @@ for (i in 1:nrow(D145.galac.genes)){
     ylab("Percent Methylation") + #plot y axis label
     theme_bw()
 
-  ggsave(temp_plot, file=paste0("/home/hputnam/Geoduck_BS/RAnalysis/Output/Galac_D145plot_", D145.galac.genes$gene[i],"_",D145.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/Galac_D145plot_", D145.galac.genes$gene[i],"_",D145.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 ```
