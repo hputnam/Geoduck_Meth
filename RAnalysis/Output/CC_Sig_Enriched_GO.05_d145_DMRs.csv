@@ -1,0 +1,5 @@
+"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
+"1855","GO:0005700",0.000980429545649325,0.999999799640786,1,6,"polytene chromosome","CC"
+"1856","GO:0005703",0.00117092756306668,0.999999706023039,1,7,"polytene chromosome puff","CC"
+"1833","GO:0005665",0.00123799904130104,0.999999659202625,1,9,"RNA polymerase II, core complex","CC"
+"1799","GO:0005581",0.0164781363848192,0.999932127908324,1,119,"collagen trimer","CC"

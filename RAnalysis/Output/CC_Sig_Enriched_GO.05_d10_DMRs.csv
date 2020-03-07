@@ -1,0 +1,6 @@
+"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
+"10981","GO:0070531",0.00279328061015467,0.999997363493893,1,4,"BRCA1-A complex","CC"
+"58","GO:0000145",0.00563987887997569,0.999987447165306,1,8,"exocyst","CC"
+"1897","GO:0005773",0.0104635210963843,0.999953830185911,1,15,"vacuole","CC"
+"5614","GO:0031092",0.016519964900243,0.999881566999802,1,24,"platelet alpha granule membrane","CC"
+"11916","GO:0090575",0.0244122644569196,0.999737069222057,1,35,"RNA polymerase II transcription factor complex","CC"
