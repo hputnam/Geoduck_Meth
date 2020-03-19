@@ -1,6 +1,6 @@
 #!/bin/bash
 ## Job Name
-#SBATCH --job-name=testdd
+#SBATCH --job-name=testnod
 ## Allocation Definition
 #SBATCH --account=srlab
 #SBATCH --partition=srlab
@@ -14,9 +14,9 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sr320@uw.edu
 ## Specify the working directory for this job
-#SBATCH --chdir=/gscratch/scrubbed/sr320/031920-trimtest
+#SBATCH --chdir=/gscratch/scrubbed/sr320/031920-trimtest-nod
 
-#RUNNING TEST DEDUPLICATING
+#RUNNING TEST WITHOUT DEDUPLICATING
 
 # Directories and programs
 bismark_dir="/gscratch/srlab/programs/Bismark-0.21.0"
@@ -49,20 +49,13 @@ ${bismark_dir}/bismark \
 
 
 
-find *.bam | \
-xargs basename -s .bam | \
-xargs -I{} ${bismark_dir}/deduplicate_bismark \
---bam \
---paired \
-{}.bam
-
 
 
 ${bismark_dir}/bismark_methylation_extractor \
 --bedGraph --counts --scaffolds \
 --multicore 14 \
 --buffer_size 75% \
-*deduplicated.bam
+*.bam
 
 
 
@@ -78,7 +71,7 @@ ${bismark_dir}/bismark2summary
 
 # Sort files for methylkit and IGV
 
-find *deduplicated.bam | \
+find *.bam | \
 xargs basename -s .bam | \
 xargs -I{} ${samtools} \
 sort --threads 28 {}.bam \
@@ -96,14 +89,14 @@ index -@ 28 {}.sorted.bam
 
 
 
-find *deduplicated.bismark.cov.gz \
-| xargs basename -s _R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.gz \
+find *bismark.cov.gz \
+| xargs basename -s _R1_001_val_1_bismark_bt2_pe.bismark.cov.gz \
 | xargs -I{} ${bismark_dir}/coverage2cytosine \
 --genome_folder ${genome_folder} \
 -o {} \
 --merge_CpG \
 --zero_based \
-{}_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.gz
+{}_R1_001_val_1_bismark_bt2_pe.bismark.cov.gz
 
 
 #creating bedgraphs post merge
@@ -160,20 +153,13 @@ ${bismark_dir}/bismark \
 
 
 
-find *.bam | \
-xargs basename -s .bam | \
-xargs -I{} ${bismark_dir}/deduplicate_bismark \
---bam \
---paired \
-{}.bam
-
 
 
 ${bismark_dir}/bismark_methylation_extractor \
 --bedGraph --counts --scaffolds \
 --multicore 14 \
 --buffer_size 75% \
-*deduplicated.bam
+*.bam
 
 
 
@@ -189,7 +175,7 @@ ${bismark_dir}/bismark2summary
 
 # Sort files for methylkit and IGV
 
-find *deduplicated.bam | \
+find *.bam | \
 xargs basename -s .bam | \
 xargs -I{} ${samtools} \
 sort --threads 28 {}.bam \
@@ -207,14 +193,14 @@ index -@ 28 {}.sorted.bam
 
 
 
-find *deduplicated.bismark.cov.gz \
-| xargs basename -s _R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.gz \
+find *.bismark.cov.gz \
+| xargs basename -s _R1_001_val_1_bismark_bt2_pe..bismark.cov.gz \
 | xargs -I{} ${bismark_dir}/coverage2cytosine \
 --genome_folder ${genome_folder} \
 -o {} \
 --merge_CpG \
 --zero_based \
-{}_R1_001_val_1_bismark_bt2_pe.deduplicated.bismark.cov.gz
+{}_R1_001_val_1_bismark_bt2_pe.bismark.cov.gz
 
 
 #creating bedgraphs post merge
