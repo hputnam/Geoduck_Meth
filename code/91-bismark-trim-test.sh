@@ -193,8 +193,8 @@ index -@ 28 {}.sorted.bam
 
 
 
-find *.bismark.cov.gz \
-| xargs basename -s _R1_001_val_1_bismark_bt2_pe..bismark.cov.gz \
+find *bismark.cov.gz \
+| xargs basename -s _R1_001_val_1_bismark_bt2_pe.bismark.cov.gz \
 | xargs -I{} ${bismark_dir}/coverage2cytosine \
 --genome_folder ${genome_folder} \
 -o {} \
