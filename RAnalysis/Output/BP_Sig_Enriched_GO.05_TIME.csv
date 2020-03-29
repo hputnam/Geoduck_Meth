@@ -1,1 +1,5 @@
 "","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
+"157","GO:0001702",0.021549571543027,0.997499393303638,3,11,"gastrulation with mouth forming second","BP"
+"159","GO:0001934",0.0210265021024583,0.997642011329946,3,10,"positive regulation of protein phosphorylation","BP"
+"160","GO:0002040",0.0407141327697465,0.993640771396155,3,14,"sprouting angiogenesis","BP"
+"161","GO:0002223",0.00961122573678239,0.999807978412486,2,3,"stimulatory C-type lectin receptor signaling pathway","BP"

@@ -393,10 +393,11 @@ GO.data <- merge(Annot, GOs, by="uniprot.id")
 ```
 
 # Filter and Concatenate Datasets
+#https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/032120-fds/
 
 ```{bash}
 #Time dataset
-mkdir RAnalysis/Data/OSF/Time 
+#mkdir RAnalysis/Data/OSF/Time 
 
 
 multiIntersectBed -i \
@@ -448,7 +449,7 @@ wc -l RAnalysis/Data/OSF/Time/*_CpG_time.bed
 
 ```{bash}
 # Day 10 Data Set
-mkdir RAnalysis/Data/OSF/D10 
+#mkdir RAnalysis/Data/OSF/D10 
 
 multiIntersectBed -i \
 RAnalysis/Data/OSF/D10/EPI-103_S27_L005_5x.tab \
@@ -497,7 +498,7 @@ wc -l RAnalysis/Data/OSF/D10/*_CpG_D10.bed
 ```{bash}
 # Day 135 Data
 
-mkdir RAnalysis/Data/OSF/D135 
+#mkdir RAnalysis/Data/OSF/D135 
 
 multiIntersectBed -i \
 RAnalysis/Data/OSF/D135/EPI-151_S2_L002_5x.tab \
@@ -545,7 +546,7 @@ wc -l RAnalysis/Data/OSF/D135/*_CpG_D135.bed
 ```{bash}
 # Day 145 Data
 
-mkdir RAnalysis/Data/OSF/D145 
+#mkdir RAnalysis/Data/OSF/D145 
 
 multiIntersectBed -i \
 RAnalysis/Data/OSF/D145/EPI-175_S14_L003_5x.tab \
@@ -1034,6 +1035,7 @@ write.csv(BP.D135 , file = "RAnalysis/Output/BP_Sig_Enriched_GO.05_D135.csv")
 
 D135.nuc.genes <- D135.sig.annot[grep("GO:0004518", D135.sig.annot$GO.IDs), ]
 D135.galac.genes <- D135.sig.annot[grep("GO:0001733", D135.sig.annot$GO.IDs), ]
+D135.chondrocyte.genes <- D135.sig.annot[grep("GO:0003429", D135.sig.annot$GO.IDs), ]
 
 ```
 
@@ -1159,6 +1161,7 @@ write.csv(BP.D145 , file = "RAnalysis/Output/BP_Sig_Enriched_GO.05_D145.csv")
 
 D145.nuc.genes <- D145.sig.annot[grep("GO:0004518", D145.sig.annot$GO.IDs), ]
 D145.galac.genes <- D145.sig.annot[grep("GO:0001733", D145.sig.annot$GO.IDs), ]
+D145.chondrocyte.genes <- D145.sig.annot[grep("GO:0003429", D145.sig.annot$GO.IDs), ]
 
 ```
 
@@ -1253,13 +1256,13 @@ dev.off()
 pdf("RAnalysis/Output/Time.DMG_Abs.pdf")
 pheatmap(Time.Amb.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =FALSE, cluster_cols=FALSE,
-         show_colnames =TRUE) #plot heatmap of all DEG by group
+         show_colnames =TRUE, scale="none") #plot heatmap of all DEG by group
 dev.off()
 ```
 
 ```{r}
 D10.meth_table.means <- aggregate(per.meth ~ Initial.Treatment*gene, data=MD.D10, FUN=mean)
-D10.meth_table.means <- D10.meth_table.means[D10.meth_table.means$gene %in% ints_all$gene,]
+D10.meth_table.means <- D10.meth_table.means[D10.meth_table.means$gene %in% D10.sig$gene,]
 
 #D10 <- D10.meth_table.means %>% pivot_wider(names_from = Initial.Treatment, values_from = per.meth)
 #D10 <- D10[D10$gene %in% ints_all.annot$gene,]
@@ -1275,18 +1278,18 @@ D10.mat <- D10[,2:4]
 D10.mat <- D10.mat[order(D10.mat$per.meth.Ambient),]
 D10.mat <- D10.mat-rowMeans(D10.mat)
 
-Breaks <- seq(min(0), max(100), length = 100)
+#Breaks <- seq(min(0), max(100), length = 100)
 
 pdf("RAnalysis/Output/D10.DMG_Abs_Meth.pdf", width = 4, height= 4)
 pheatmap(D10.mat, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_cols=FALSE,cluster_rows = TRUE,fontsize_row = 2,
-         show_colnames =TRUE) #plot heatmap of all DEG by group
+         show_colnames =TRUE, scale="none") #plot heatmap of all DEG by group
 dev.off()
 ```
 
 ```{r}
 D135.meth_table.means <- aggregate(per.meth ~ Initial.Treatment*gene, data=MD.D135, FUN=mean)
-D135.meth_table.means <- D135.meth_table.means[D135.meth_table.means$gene %in% ints_all$gene,]
+D135.meth_table.means <- D135.meth_table.means[D135.meth_table.means$gene %in% D135.sig$gene,]
 
 D135 <- reshape(D135.meth_table.means, 
   timevar = "Initial.Treatment",
@@ -1296,19 +1299,19 @@ D135 <- reshape(D135.meth_table.means,
 row.names(D135) <- D135$gene
 
 D135.mat <- D135[,2:4]
-D135.mat <- D135.mat[match(rownames(D10.mat), rownames(D135.mat)),]
-#D135.mat <- D135.mat-rowMeans(D135.mat[1])
+#D135.mat <- D135.mat[match(rownames(D10.mat), rownames(D135.mat)),]
+D135.mat <- D135.mat-rowMeans(D135.mat)
 
 pdf("RAnalysis/Output/D135.DMG_Abs_Meth.pdf", width = 1.5, height= 4)
 pheatmap(D135.mat, clustering_method = "average", 
-         clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_cols=FALSE,cluster_rows = FALSE,fontsize_row = 2,
-         show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
+         clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_cols=FALSE,cluster_rows = FALSE,fontsize_row = 0.8,
+         show_colnames =TRUE, scale="none") #plot heatmap of all DEG by group
 dev.off()
 ```
 
 ```{r}
 D145.meth_table.means <- aggregate(per.meth ~ gene*Initial.Treatment*Secondary.Treatment, data=MD.D145, FUN=mean)
-D145.meth_table.means <- D145.meth_table.means[D145.meth_table.means$gene %in% ints_all$gene,]
+D145.meth_table.means <- D145.meth_table.means[D145.meth_table.means$gene %in% D145.sig$gene,]
 D145.meth_table.means$group <- paste0(D145.meth_table.means$Initial.Treatment, D145.meth_table.means$Secondary.Treatment)
 D145.meth_table.means <- D145.meth_table.means[,c(1,4,5)]
 #D145 <- D145.meth_table.means %>% pivot_wider(names_from = c(treatment1,treatment2), values_from = per.meth)
@@ -1319,6 +1322,7 @@ D145 <- reshape(D145.meth_table.means,
 
 row.names(D145) <- D145$gene
 D145.mat <- D145[,2:7]
+D145.mat.norm <- D145.mat-rowMeans(D145.mat)
 
 # D145.mat$per.meth.AmbientAmbient <- D145.mat$per.meth.AmbientAmbient  - D145.mat$per.meth.AmbientAmbient
 # D145.mat$per.meth.AmbientLow <- D145.mat$per.meth.AmbientLow  - D145.mat$per.meth.AmbientAmbient
@@ -1328,18 +1332,37 @@ D145.mat <- D145[,2:7]
 # D145.mat$per.meth.Super.LowLow <- D145.mat$per.meth.Super.LowLow  - D145.mat$per.meth.Super.LowAmbient
 col.order <- c("per.meth.AmbientAmbient", "per.meth.AmbientLow", "per.meth.LowAmbient", "per.meth.LowLow", "per.meth.Super.LowAmbient", "per.meth.Super.LowLow")
 D145.mat  <- D145.mat[,col.order]
-D145.mat <- D145.mat[match(rownames(D10.mat), rownames(D145.mat)),]
-
-D145.mat.1 <- D145.mat[,c(1:2)]
-D145.mat.2 <- D145.mat[,c(3:4)]
-D145.mat.3 <- D145.mat[,c(5:6)]
+#D145.mat <- D145.mat[match(rownames(D10.mat), rownames(D145.mat)),]
 
 pdf("RAnalysis/Output/D145.DMG_Abs_Meth.pdf", width = 3, height= 5)
-pheatmap(D145.mat, clustering_method = "average", 
+pheatmap(D145.mat.norm, clustering_method = "average", 
          clustering_distance_rows="euclidean", show_rownames =TRUE, cluster_rows=FALSE, cluster_cols=FALSE, gaps_col = c(2,4),
-         fontsize_row = 2, show_colnames =TRUE, breaks = Breaks) #plot heatmap of all DEG by group
+         fontsize_row = 1, show_colnames =TRUE, scale="none") #plot heatmap of all DEG by group
 dev.off()
 
+D145.mat.1 <- D145.mat[,c(1:2)]
+D145.mat.1 <- as.data.frame(D145.mat.1)
+D145.mat.1$gene <-rownames(D145.mat.1)
+D145.mat.1$diff <- D145.mat.1$per.meth.AmbientLow - D145.mat.1$per.meth.AmbientAmbient
+mean(D145.mat.1$diff)
+std.error(D145.mat.1$diff)
+var(D145.mat.1$diff)
+
+D145.mat.2 <- D145.mat[,c(3:4)]
+D145.mat.2 <- as.data.frame(D145.mat.2)
+D145.mat.2$gene <-rownames(D145.mat.2)
+D145.mat.2$diff <- D145.mat.2$per.meth.LowLow - D145.mat.2$per.meth.LowAmbient
+mean(D145.mat.2$diff)
+std.error(D145.mat.2$diff)
+var(D145.mat.2$diff)
+
+D145.mat.3 <- D145.mat[,c(5:6)]
+D145.mat.3 <- as.data.frame(D145.mat.3)
+D145.mat.3$gene <-rownames(D145.mat.3)
+D145.mat.3$diff <- D145.mat.3$per.meth.Super.LowLow - D145.mat.3$per.meth.Super.LowAmbient
+mean(D145.mat.3$diff)
+std.error(D145.mat.3$diff)
+var(D145.mat.3$diff)
 
 # pdf("/home/hputnam/MyPorjects/Geoduck_Meth/RAnalysis/Output/D145.DMG_Rel_Amb_Meth_1.pdf")
 # pheatmap(D145.mat.1, clustering_method = "average", 
@@ -1508,6 +1531,27 @@ for (i in 1:nrow(D135.galac.genes)){
   ggsave(temp_plot, file=paste0("RAnalysis/Output/Galac_D135plot_", D135.galac.genes$gene[i],"_",D135.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
+#Day 135 
+for (i in 1:nrow(D135.chondrocyte.genes)){
+  sig.gene <- subset(MD.D135, gene==D135.chondrocyte.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
+    geom_bar(stat="identity", color="black",
+             position=position_dodge()) +
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
+                  position=position_dodge(.9)) +
+    xlab("Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    ylim(0,100)+ #set y limits to 0 and 100%
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/Chondrocyte_D135plot_", D135.chondrocyte.genes$gene[i],"_",D135.chondrocyte.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
 #Day 145 
 for (i in 1:nrow(D145.nuc.genes)){
   sig.gene <- subset(MD.D145, gene ==D145.nuc.genes$gene[i])
@@ -1547,6 +1591,27 @@ for (i in 1:nrow(D145.galac.genes)){
     theme_bw()
 
   ggsave(temp_plot, file=paste0("RAnalysis/Output/Galac_D145plot_", D145.galac.genes$gene[i],"_",D145.galac.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+#Day 145 
+for (i in 1:nrow(D145.chondrocyte.genes)){
+  sig.gene <- subset(MD.D145, gene==D145.chondrocyte.genes$gene[i])
+  means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
+  ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
+  means$ses <- ses$per.meth
+
+  temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
+    geom_bar(stat="identity", color="black",
+             position=position_dodge()) +
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
+                  position=position_dodge(.9)) +
+    xlab("Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    ylim(0,100)+ #set y limits to 0 and 100%
+    scale_fill_manual(values = c("blue", "purple", "red"))+
+    theme_bw()
+
+  ggsave(temp_plot, file=paste0("RAnalysis/Output/Chondrocyte_D145plot_", D145.chondrocyte.genes$gene[i],"_",D145.chondrocyte.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
 }
 
 ```

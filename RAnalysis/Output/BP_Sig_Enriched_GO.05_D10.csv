@@ -1,4 +1,4 @@
 "","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
-"106","GO:0000185",0.00850637801087709,1,2,2,"activation of MAPKKK activity","BP"
-"109","GO:0001837",0.0259631194338353,0.99911170293172,2,3,"epithelial to mesenchymal transition","BP"
-"110","GO:0002064",0.0120286204660564,1,2,2,"epithelial cell development","BP"
+"138","GO:0000185",0.0077827840726138,1,2,2,"activation of MAPKKK activity","BP"
+"141","GO:0001837",0.0207122378681034,0.999374162994883,2,3,"epithelial to mesenchymal transition","BP"
+"142","GO:0002064",0.007568437439035,1,2,2,"epithelial cell development","BP"
