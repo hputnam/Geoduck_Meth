@@ -1457,10 +1457,8 @@ BPplot <- BP.D145 %>% mutate(name = fct_reorder(name, numDEInCat)) %>%
         theme(axis.text = element_text(size=5.1) )#Set axis text size
 BPplot
 
-library(ggpubr)
-ggarrange(BPplot, MFplot , 
-          labels = c("A", "B"),
-          ncol = 1, nrow = 2)
-ggsave("RAnalysis/Output/D145_GOPlots.pdf")
 
+library(cowplot)
+plot_grid(BPplot, MFplot, ncol=1, align="v")
+ggsave("RAnalysis/Output/D145_GOPlots.pdf")
 ```
