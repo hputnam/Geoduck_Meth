@@ -1,7 +1,0 @@
-"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
-"5240","GO:0030169",0.00268081433744801,0.999998295586087,1,19,"low-density lipoprotein particle binding","MF"
-"1058","GO:0003899",0.00338074119739386,0.999997257065569,1,24,"DNA-directed 5'-3' RNA polymerase activity","MF"
-"3077","GO:0008329",0.00345140448805047,0.999997136133925,1,25,"signaling pattern recognition receptor activity","MF"
-"8844","GO:0046872",0.0178281959104676,1,2,1889,"metal ion binding","MF"
-"1573","GO:0004888",0.0245653493748288,0.999848107520251,1,179,"transmembrane signaling receptor activity","MF"
-"5291","GO:0030246",0.0320809482440741,0.999739628461615,1,230,"carbohydrate binding","MF"

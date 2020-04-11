@@ -1,7 +1,0 @@
-"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
-"10280","GO:0060355",0.00165701953145988,0.999999370253088,1,12,"positive regulation of cell adhesion molecule production","BP"
-"6555","GO:0034138",0.00167032629691058,0.999999360093439,1,12,"toll-like receptor 3 signaling pathway","BP"
-"2523","GO:0006910",0.00285744122293148,0.99999805804246,1,20,"phagocytosis, recognition","BP"
-"11259","GO:0071360",0.00336683659342556,0.999997279601676,1,24,"cellular response to exogenous dsRNA","BP"
-"2546","GO:0006955",0.0107321800448339,0.999971425520654,1,77,"immune response","BP"
-"2199","GO:0006366",0.0140669802801504,0.999950667494937,1,102,"transcription by RNA polymerase II","BP"
