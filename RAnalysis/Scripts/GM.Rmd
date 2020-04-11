@@ -24,6 +24,7 @@ library(topGO)
 library(goseq)
 library(genefilter)
 library(gplots)
+library(cowplot)
 
 ```
 
@@ -1308,7 +1309,7 @@ Time.Amb <- Time.Amb.meth_table.means %>% pivot_wider(names_from = c(TimePoint),
 Time.Amb.mat <- as.matrix(Time.Amb[,-1])
 
 pdf("RAnalysis/Output/Time.DMG_Rel_HEATMAP.pdf")
-heatmap.2(Time.Amb.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+TimeHM <- heatmap.2(Time.Amb.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
 dev.off()
 
 ```
@@ -1327,7 +1328,7 @@ col.order <- c( "Ambient",
 D10.mat <- D10.mat[,col.order]
 
 pdf("RAnalysis/Output/D10.DMG_Rel_HEATMAP.pdf")
-heatmap.2(D10.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+D10HM <- heatmap.2(D10.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
 dev.off()
 
 ```
@@ -1346,7 +1347,7 @@ col.order <- c( "Ambient",
 D135.mat <- D135.mat[,col.order]
 
 pdf("RAnalysis/Output/D135.DMG_Rel_HEATMAP.pdf")
-heatmap.2(D135.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+D135HM <- heatmap.2(D135.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
 dev.off()
 ```
 
@@ -1362,7 +1363,7 @@ col.order <- c("Ambient_Ambient", "Ambient_Low", "Low_Ambient", "Low_Low", "Supe
 D145.mat  <- D145.mat[,col.order]
 
 pdf("RAnalysis/Output/D145.DMG_Rel_HEATMAP.pdf")
-heatmap.2(D145.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.1,0.1), sepcolor="white", keysize = 1, colsep=c(0,2,4,6))
+D145HM <- heatmap.2(D145.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.1,0.1), sepcolor="white", keysize = 1, colsep=c(0,2,4,6))
 dev.off()
 
 ```
@@ -1458,7 +1459,6 @@ BPplot <- BP.D145 %>% mutate(name = fct_reorder(name, numDEInCat)) %>%
 BPplot
 
 
-library(cowplot)
 plot_grid(BPplot, MFplot, ncol=1, align="v")
 ggsave("RAnalysis/Output/D145_GOPlots.pdf")
 ```
