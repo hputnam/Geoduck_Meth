@@ -1,0 +1,726 @@
+---
+title: "DMR_stats_and_anno"
+author: "Shelly Trigg"
+date: "4/13/2020"
+output: html_document
+---
+
+load libraries
+```{r}
+library(data.table)
+library(gplots)
+library(ggplot2)
+library(dplyr)
+library(broom)
+library(RColorBrewer)
+library(egg)
+```
+
+# Part 1:  Filter methylated regions for regions that have coverage in 75% of samples per group
+
+read in data
+```{r}
+amb_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/amb_AllTimes_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+day10_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/day10_AllpH_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+day135_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/day135_AllpH_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+day145_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/day145_AllpH_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+meta_data <- read.csv("Data/Sample.Info.csv", stringsAsFactors = FALSE)
+```
+
+
+
+loop through tables and keep only lines where up to one sample contains NA for % methylation
+```{r}
+## For ambient DMR table
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(amb_DMR))){
+  day0 <- amb_DMR[i,7:10] #define columns from the category Day 0
+  day10 <- amb_DMR[i,11:14] #define columns from the category Day 10
+  day135 <- amb_DMR[i,15:18] #define columns from the category Day 135
+  day145 <- amb_DMR[i,19:22] #define columns from the category Day 145
+  if(length(which(is.na(day0))) < 2 & length(which(is.na(day10))) < 2 & length(which(is.na(day135))) < 2 & length(which(is.na(day145))) < 2){
+  df <- rbind(df,amb_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+
+#save df as a specific variable
+ambDMRs <- df
+
+## For day 10 DMR table
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(day10_DMR))){
+  LowpH <- day10_DMR[i,c(7,8,15,16)] #define columns from the category low pH
+  SuperLowpH <- day10_DMR[i,c(9,10,17,18)] #define columns from the category super low pH
+  amb <- day10_DMR[i,c(11:14)] #define columns from the category ambient
+  if(length(which(is.na(LowpH))) < 2 & length(which(is.na(SuperLowpH))) < 2 & length(which(is.na(amb))) < 2){
+    df <- rbind(df,day10_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+
+#save df as a specific variable
+d10DMRs <- df
+
+
+## For day 135 DMR table
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(day135_DMR))){
+  amb <- day135_DMR[i,7:10] #define columns from the category low pH
+  LowpH <- day135_DMR[i,11:14] #define columns from the category super low pH
+  SuperLowpH <- day135_DMR[i,15:18] #define columns from the category ambient
+  if(length(which(is.na(LowpH))) < 2 & length(which(is.na(SuperLowpH))) < 2 & length(which(is.na(amb))) < 2){
+    df <- rbind(df,day135_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+#save df as a specific variable
+d135DMRs <- df
+
+## For Day 145 DMR table 
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(day145_DMR))){
+  AmbAmb <- day145_DMR[i,9:12] #define columns from the category low pH
+  LowAmb <- day145_DMR[i,c(7,8,15,16)] #define columns from the category super low pH
+  SuperLowAmb <- day145_DMR[i,c(13,14,17,18)] #define columns from the category ambient
+  AmbLow <- day145_DMR[i,c(19,20,27,28)] #define columns from the category ambient
+  LowLow <- day145_DMR[i,c(21,22,29,30)] #define columns from the category ambient
+  SuperLowLow <- day145_DMR[i,23:26] #define columns from the category ambient
+  if(length(which(is.na(AmbAmb))) < 2 & length(which(is.na(LowAmb))) < 2 & length(which(is.na(SuperLowAmb))) < 2 & length(which(is.na(AmbLow))) < 2 & length(which(is.na(LowLow))) < 2 & length(which(is.na(SuperLowLow))) < 2){
+    df <- rbind(df,day145_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+#save df as a specific variable
+d145DMRs <- df
+```
+
+# Part 2: Run group statistics on regions to find regions that are significantly different among groups
+
+Make a unique ID column 
+```{r}
+#for all ambient sample comparison
+d10DMRs$ID <- paste(d10DMRs$chr,":",d10DMRs$start,"-",d10DMRs$end, sep = "")
+d10DMRs$ID <- gsub("__.*__.*:",":",d10DMRs$ID)
+
+d135DMRs$ID <- paste(d135DMRs$chr,":",d135DMRs$start,"-",d135DMRs$end, sep = "")
+d135DMRs$ID <- gsub("__.*__.*:",":",d135DMRs$ID)
+
+ambDMRs$ID <- paste(ambDMRs$chr,":",ambDMRs$start,"-",ambDMRs$end, sep = "")
+ambDMRs$ID <- gsub("__.*__.*:",":",ambDMRs$ID)
+
+d145DMRs$ID <- paste(d145DMRs$chr,":",d145DMRs$start,"-",d145DMRs$end, sep = "")
+d145DMRs$ID <- gsub("__.*__.*:",":",d145DMRs$ID)
+
+```
+
+reformat data for calculating group effect
+```{r}
+#reformat all to long format
+d10DMRs_STACKED <- tidyr::gather(d10DMRs[,7:ncol(d10DMRs)], "Sample.ID", "perc.meth",1:12)
+
+d135DMRs_STACKED <- tidyr::gather(d135DMRs[,7:ncol(d135DMRs)], "Sample.ID", "perc.meth",1:12)
+
+d145DMRs_STACKED <- tidyr::gather(d145DMRs[,7:ncol(d145DMRs)], "Sample.ID", "perc.meth",1:24)
+
+ambDMRs_STACKED <- tidyr::gather(ambDMRs[,7:ncol(ambDMRs)], "Sample.ID", "perc.meth",1:16)
+
+
+#simplify sample ID column
+d10DMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", d10DMRs_STACKED$Sample.ID)
+
+d135DMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", d135DMRs_STACKED$Sample.ID)
+
+d145DMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", d145DMRs_STACKED$Sample.ID)
+
+ambDMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", ambDMRs_STACKED$Sample.ID)
+
+#merge with meta data
+d10DMRs_STACKED <- merge(d10DMRs_STACKED, meta_data, by = "Sample.ID")
+
+d135DMRs_STACKED <- merge(d135DMRs_STACKED, meta_data, by = "Sample.ID")
+
+d145DMRs_STACKED <- merge(d145DMRs_STACKED, meta_data, by = "Sample.ID")
+#create column for initial and secondary treatment
+d145DMRs_STACKED$Treatment <- paste(d145DMRs_STACKED$Initial.Treatment,d145DMRs_STACKED$Secondary.Treatment, sep ="_")
+
+ambDMRs_STACKED <- merge(ambDMRs_STACKED, meta_data, by = "Sample.ID")
+
+```
+
+plot % meth dist.
+```{r}
+a <- ggplot(d10DMRs_STACKED) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Day 10") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+c <- ggplot(d135DMRs_STACKED) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Day 135") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+e <- ggplot(d145DMRs_STACKED) + geom_histogram(aes(perc.meth, group = Treatment, color = Treatment,fill = Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Day 145") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+g <- ggplot(ambDMRs_STACKED) + geom_histogram(aes(perc.meth, group = TimePoint, color = TimePoint,fill = TimePoint), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Ambient") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+```
+
+arc sin sqrt transform the data
+```{r}
+#arcsin sqrt transformation function
+asinTransform <- function(p) { asin(sqrt(p))}
+
+#arcsin transform data 
+#day 10
+d10DMRs_STACKED_asin <- d10DMRs_STACKED
+d10DMRs_STACKED_asin$perc.meth <- asinTransform(d10DMRs_STACKED_asin$perc.meth)
+#day 135
+d135DMRs_STACKED_asin <- d135DMRs_STACKED
+d135DMRs_STACKED_asin$perc.meth <- asinTransform(d135DMRs_STACKED_asin$perc.meth)
+#day145
+d145DMRs_STACKED_asin <- d145DMRs_STACKED
+d145DMRs_STACKED_asin$perc.meth <- asinTransform(d145DMRs_STACKED_asin$perc.meth)
+#amb samples
+ambDMRs_STACKED_asin <- ambDMRs_STACKED
+ambDMRs_STACKED_asin$perc.meth <- asinTransform(ambDMRs_STACKED_asin$perc.meth)
+
+
+```
+
+plot distribution of TRANSFORMED % methylation in all DMRs in all samples
+```{r}
+b <- ggplot(d10DMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Day 10 transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+d <- ggplot(d135DMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Day 135 transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+f <- ggplot(d145DMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = Treatment, color = Treatment,fill = Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Day 145 transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+h <- ggplot(ambDMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = TimePoint, color = TimePoint,fill = TimePoint), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Ambient transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8, face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+jpeg("Output/DMR_mCpG_histograms.jpg", width = 6, height = 8, units = "in", res = 300)
+ggarrange(a,b,c,d,e,f,g,h, nrow = 4)
+dev.off()
+```
+
+## Run anova on TRANSFORMED data to assess group differences for each DMR
+
+**Hypotehsis: there is no effect from pH at day10**
+```{r}
+d10DMR_1way_aov_pH <- d10DMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~Initial.Treatment, data =  . ))
+#summarize ANOVA data
+d10DMR_1way_aov_pH_modelsumm <- glance(d10DMR_1way_aov_pH, meth_aov_models)
+
+#add a comparison column
+d10DMR_1way_aov_pH_modelsumm$comparison <- "Day_10"
+```
+
+**Hypotehsis: there is no effect from pH at day135**
+```{r}
+d135DMR_1way_aov_pH <- d135DMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~Initial.Treatment, data =  . ))
+#summarize ANOVA data
+d135DMR_1way_aov_pH_modelsumm <- glance(d135DMR_1way_aov_pH, meth_aov_models)
+#add a comparison column
+d135DMR_1way_aov_pH_modelsumm$comparison <- "Day_135"
+```
+
+**Hypotehsis: there is no effect from pH at day145**
+```{r}
+d145DMR_1way_aov_pH <- d145DMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~Treatment, data =  . ))
+#summarize ANOVA data
+d145DMR_1way_aov_pH_modelsumm <- glance(d145DMR_1way_aov_pH, meth_aov_models)
+#add a comparison column
+d145DMR_1way_aov_pH_modelsumm$comparison <- "Day_145"
+
+```
+
+
+**Hypotehsis: there is no effect from time in ambient samples**
+```{r}
+ambDMR_1way_aov_pH <- ambDMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~TimePoint, data =  . ))
+#summarize ANOVA data
+ambDMR_1way_aov_pH_modelsumm <- glance(ambDMR_1way_aov_pH, meth_aov_models)
+
+#add a comparison column
+ambDMR_1way_aov_pH_modelsumm$comparison <- "All_ambient"
+```
+
+write out ANOVA data to file
+```{r}
+#write ANOVA output to file
+write.csv(rbind(d10DMR_1way_aov_pH_modelsumm,d135DMR_1way_aov_pH_modelsumm,d145DMR_1way_aov_pH_modelsumm,ambDMR_1way_aov_pH_modelsumm), "Output/DMR_1way_aov_modelsumm.csv", row.names = FALSE, quote = FALSE)
+```
+
+plot heatmap of 1way aov for pH p.val 0.05 sig DMRs
+```{r}
+#create matrix for d10 samples
+aov_0.05pH_d10DMR_m <- as.matrix(d10DMRs[,7:18])
+rownames(aov_0.05pH_d10DMR_m) <- d10DMRs$ID
+
+aov_0.05pH_d10DMR_m <- aov_0.05pH_d10DMR_m[which(rownames(aov_0.05pH_d10DMR_m) %in% pull(d10DMR_1way_aov_pH_modelsumm[which(d10DMR_1way_aov_pH_modelsumm$p.value < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_d10DMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_d10DMR_m))
+
+
+#reorder columns by pH treatment (amb, low, superlow)
+aov_0.05pH_d10DMR_m <- aov_0.05pH_d10DMR_m[,c(5,6,7,8,1,2,9,10,3,4,11,12)]
+
+###Visualize group means
+#calculate group means
+MeanD10pHamb <- rowMeans(aov_0.05pH_d10DMR_m[,grep("119|120|135|136", colnames(aov_0.05pH_d10DMR_m))], na.rm = TRUE)
+
+MeanD10pHlow <- rowMeans(aov_0.05pH_d10DMR_m[,grep("103|104|127|128", colnames(aov_0.05pH_d10DMR_m))], na.rm = TRUE)
+
+MeanD10pHslow <- rowMeans(aov_0.05pH_d10DMR_m[,grep("111|113|143|145", colnames(aov_0.05pH_d10DMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_d10DMR_mean_m <- as.matrix(data.frame(cbind(MeanD10pHamb,MeanD10pHlow, MeanD10pHslow)))
+
+#plot for day10 group mean comparison
+colnames(aov_0.05pH_d10DMR_mean_m) <- c("pH 8.0", "pH 7.4", "pH 7.0")
+
+jpeg("Output/D10.DMR_heatmap.jpg", width = 600, height = 1000)
+heatmap.2(aov_0.05pH_d10DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d10DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d10DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+dev.off()
+
+### DAY 135 ###
+#create matrix for d135 samples
+aov_0.05pH_d135DMR_m <- as.matrix(d135DMRs[,7:18])
+rownames(aov_0.05pH_d135DMR_m) <- d135DMRs$ID
+
+aov_0.05pH_d135DMR_m <- aov_0.05pH_d135DMR_m[which(rownames(aov_0.05pH_d135DMR_m) %in% pull(d135DMR_1way_aov_pH_modelsumm[which(d135DMR_1way_aov_pH_modelsumm$p.value < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_d135DMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_d135DMR_m))
+
+
+#columns are already ordered by pH treatment (amb, low, superlow)
+
+###Visualize group means
+#calculate group means
+Meand135pHamb <- rowMeans(aov_0.05pH_d135DMR_m[,grep("151|152|153|154", colnames(aov_0.05pH_d135DMR_m))], na.rm = TRUE)
+
+Meand135pHlow <- rowMeans(aov_0.05pH_d135DMR_m[,grep("159|160|161|162", colnames(aov_0.05pH_d135DMR_m))], na.rm = TRUE)
+
+Meand135pHslow <- rowMeans(aov_0.05pH_d135DMR_m[,grep("167|168|169|170", colnames(aov_0.05pH_d135DMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_d135DMR_mean_m <- as.matrix(data.frame(cbind(Meand135pHamb,Meand135pHlow, Meand135pHslow)))
+#plot for day135 group mean comparison
+colnames(aov_0.05pH_d135DMR_mean_m) <- c("pH 8.0", "pH 7.4", "pH 7.0")
+
+
+jpeg("Output/D135.DMR_heatmap.jpg", width = 600, height = 1000)
+heatmap.2(aov_0.05pH_d135DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), na.color = "black", density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d135DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d135DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+dev.off()
+
+
+##### DAY 145  ######
+#create matrix for d145 samples
+aov_0.05pH_d145DMR_m <- as.matrix(d145DMRs[,7:30])
+rownames(aov_0.05pH_d145DMR_m) <- d145DMRs$ID
+
+aov_0.05pH_d145DMR_m <- aov_0.05pH_d145DMR_m[which(rownames(aov_0.05pH_d145DMR_m) %in% pull(d145DMR_1way_aov_pH_modelsumm[which(d145DMR_1way_aov_pH_modelsumm$p.value < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_d145DMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_d145DMR_m))
+
+
+#order columns by pH treatment (amb-amb, amb-low,low-amb, low-low, superlow-amb, superlow-low)
+aov_0.05pH_d145DMR_m <- aov_0.05pH_d145DMR_m[,c(3,4,5,6,13,14,21,22,1,2,9,10,15,16,23,24,7,8,11,12,17,18,19,20)]
+
+###Visualize group means
+#calculate group means
+
+Meand145pHambamb <- rowMeans(aov_0.05pH_d145DMR_m[,grep("181|182|184|185", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHamblow <- rowMeans(aov_0.05pH_d145DMR_m[,grep("205|206|226|227", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHlowamb <- rowMeans(aov_0.05pH_d145DMR_m[,grep("175|176|193|194", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHlowlow <- rowMeans(aov_0.05pH_d145DMR_m[,grep("208|209|229|230", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHSlowamb <- rowMeans(aov_0.05pH_d145DMR_m[,grep("187|188|199|200", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHSlowlow <- rowMeans(aov_0.05pH_d145DMR_m[,grep("214|215|220|221", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_d145DMR_mean_m <- as.matrix(data.frame(cbind(Meand145pHambamb,Meand145pHamblow,Meand145pHlowamb,Meand145pHlowlow,Meand145pHSlowamb,Meand145pHSlowlow)))
+
+#plot for day145 group mean comparison
+colnames(aov_0.05pH_d145DMR_mean_m) <- c("pH 8.0 -> pH 8.0", "pH 8.0 -> pH 7.4","pH 7.4 -> pH 8.0","pH 7.4 -> pH 7.4", "pH 7.0 -> pH 8.0", "pH 7.0 -> pH 7.4")
+
+jpeg("Output/D145.DMR_heatmap.jpg", width = 800, height = 1000)
+heatmap.2(aov_0.05pH_d145DMR_mean_m,margins = c(12,15), cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), lmat = rbind(c(0,3),c(2,1),c(4,0)),na.color = "black", density.info = "none", trace = "none", scale = "row", keysize=1, key.par = list(cex=1),labRow = FALSE,sepwidth=c(0.1,0.01), lhei=c(1.5,4,1),lwid= c(1.0, 5), sepcolor="white",colsep=seq(2,ncol(aov_0.05pH_d145DMR_mean_m),2),rowsep=1:nrow(aov_0.05pH_d145DMR_mean_m))
+dev.off()
+
+##### AMBIENT SAMPLES ######
+
+#create matrix for amb samples
+aov_0.05pH_ambDMR_m <- as.matrix(ambDMRs[,7:22])
+rownames(aov_0.05pH_ambDMR_m) <- ambDMRs$ID
+
+aov_0.05pH_ambDMR_m <- aov_0.05pH_ambDMR_m[which(rownames(aov_0.05pH_ambDMR_m) %in% pull(ambDMR_1way_aov_pH_modelsumm[which(ambDMR_1way_aov_pH_modelsumm$p.value < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_ambDMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_ambDMR_m))
+
+
+#columns are already ordered by time (day0, day10,day135,day145)
+
+###Visualize group means
+#calculate group means
+Meanambd0 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("41|42|43|44", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+Meanambd10 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("119|120|135|136", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+
+Meanambd135 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("151|152|153|154", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+Meanambd145 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("181|182|184|185", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_ambDMR_mean_m <- as.matrix(data.frame(cbind(Meanambd0,Meanambd10, Meanambd135,Meanambd145)))
+
+#plot for ambient group mean comparison
+colnames(aov_0.05pH_ambDMR_mean_m) <- c("Day 0", "Day 10", "Day 135", "Day 145")
+
+jpeg("Output/Time.DMR_heatmap.jpg", width = 700, height = 1000)
+heatmap.2(aov_0.05pH_ambDMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_ambDMR_mean_m),rowsep=1:nrow(aov_0.05pH_ambDMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+dev.off()
+```
+
+Write out bedfiles
+```{r}
+#write out d10 DMR bed file
+aov_0.05pH_d10DMR_bed <- data.frame(aov_0.05pH_d10DMR_m)
+aov_0.05pH_d10DMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_d10DMR_m))
+aov_0.05pH_d10DMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_d10DMR_m))
+aov_0.05pH_d10DMR_bed$start <- gsub("-.*","", aov_0.05pH_d10DMR_bed$start)
+aov_0.05pH_d10DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d10DMR_m))
+aov_0.05pH_d10DMR_bed$comparison <- "d10"
+aov_0.05pH_d10DMR_bed <- aov_0.05pH_d10DMR_bed[,c((ncol(aov_0.05pH_d10DMR_bed)-3):ncol(aov_0.05pH_d10DMR_bed)) ]
+write.table(aov_0.05pH_d10DMR_bed,"Output/aov_0.05pH_d10DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+
+#write out d135 DMR bed file
+aov_0.05pH_d135DMR_bed <- data.frame(aov_0.05pH_d135DMR_m)
+aov_0.05pH_d135DMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_d135DMR_m))
+aov_0.05pH_d135DMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_d135DMR_m))
+aov_0.05pH_d135DMR_bed$start <- gsub("-.*","", aov_0.05pH_d135DMR_bed$start)
+aov_0.05pH_d135DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d135DMR_m))
+aov_0.05pH_d135DMR_bed$comparison <- "d135"
+aov_0.05pH_d135DMR_bed <- aov_0.05pH_d135DMR_bed[,c((ncol(aov_0.05pH_d135DMR_bed)-3):ncol(aov_0.05pH_d135DMR_bed)) ]
+write.table(aov_0.05pH_d135DMR_bed,"Output/aov_0.05pH_d135DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+
+#write out d145 DMR bed file
+aov_0.05pH_d145DMR_bed <- data.frame(aov_0.05pH_d145DMR_m)
+aov_0.05pH_d145DMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_d145DMR_m))
+aov_0.05pH_d145DMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_d145DMR_m))
+aov_0.05pH_d145DMR_bed$start <- gsub("-.*","", aov_0.05pH_d145DMR_bed$start)
+aov_0.05pH_d145DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d145DMR_m))
+aov_0.05pH_d145DMR_bed$comparison <- "d145"
+aov_0.05pH_d145DMR_bed <- aov_0.05pH_d145DMR_bed[,c((ncol(aov_0.05pH_d145DMR_bed)-3):ncol(aov_0.05pH_d145DMR_bed)) ]
+write.table(aov_0.05pH_d145DMR_bed,"Output/aov_0.05pH_d145DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+
+
+#write out amb DMR bed file
+aov_0.05pH_ambDMR_bed <- data.frame(aov_0.05pH_ambDMR_m)
+aov_0.05pH_ambDMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_ambDMR_m))
+aov_0.05pH_ambDMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_ambDMR_m))
+aov_0.05pH_ambDMR_bed$start <- gsub("-.*","", aov_0.05pH_ambDMR_bed$start)
+aov_0.05pH_ambDMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_ambDMR_m))
+aov_0.05pH_ambDMR_bed$comparison <- "amb"
+aov_0.05pH_ambDMR_bed <- aov_0.05pH_ambDMR_bed[,c((ncol(aov_0.05pH_ambDMR_bed)-3):ncol(aov_0.05pH_ambDMR_bed)) ]
+write.table(aov_0.05pH_ambDMR_bed,"Output/aov_0.05pH_ambDMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+```
+
+
+
+
+
+# Genomic Feature Analysis
+
+
+
+
+read in data
+```{r}
+# read in features that DMRs overlap with
+amb_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_amb_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d10_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_d10_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d135_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_d135_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d145_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_d145_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+# read in features that covered regions (background) overlap with
+amb_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/amb_features.3CpG.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d10_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/day10_features.3CpG.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d135_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/day135_features.3CpG.txt", header = FALSE,sep = "\t", stringsAsFactors = FALSE)
+
+d145_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/day145_features.3CpG.txt", header = FALSE,sep = "\t", stringsAsFactors = FALSE)
+```
+
+
+format data for plotting
+```{r}
+# ambient data 
+
+amb_DMR_feat <- amb_DMR_feat[,-c(1:3)]
+d10_DMR_feat <- d10_DMR_feat[,-c(1:3)]
+d135_DMR_feat <- d135_DMR_feat[,-c(1:3)]
+d145_DMR_feat <- d145_DMR_feat[,-c(1:3)]
+
+DMR_feat <- rbind(amb_DMR_feat,d10_DMR_feat,d135_DMR_feat,d145_DMR_feat)
+
+colnames(DMR_feat) <- c("comparison", "scaffold", "start", "end", "feature")
+
+DMR_feat$comparison <- gsub("amb","time", DMR_feat$comparison)
+DMR_feat$comparison <- gsub("d", "day ", DMR_feat$comparison)
+
+amb_feat$comparison <- "time"
+d10_feat$comparison <- "day 10"
+d135_feat$comparison <- "day 135"
+d145_feat$comparison <- "day 145"
+
+feat <- rbind(amb_feat,d10_feat, d135_feat, d145_feat)
+
+colnames(feat) <- c("scaffold", "start", "end", "feature","comparison")
+
+feat <- feat[,c(5,1:4)]
+  
+DMR_feat$region <- "DMRs"
+feat$region <- "all.regions"
+
+#combine all features and DMRs
+feat_combined <- rbind(DMR_feat, feat)
+feat_combined$feature <- gsub("3prime_UTR", "put.3primeUTR",feat_combined$feature)
+feat_combined$feature <- gsub("put_promoter", "put.promoter",feat_combined$feature)
+feat_combined$feature <- gsub("repeat_region", "repeat.reagion",feat_combined$feature)
+
+
+feat_combined_noTime <- feat_combined[which(feat_combined$comparison!="time"),]
+
+feat_combined_TIME <- feat_combined[which(feat_combined$comparison=="time"),]
+
+#plot all pH comparions
+jpeg("Output/pH.DMR_genom_feat_stacked_barplot.jpg", width = 6, height = 5, units = "in", res =300)
+ggplot(feat_combined_noTime,aes(x = region, y = ..count.., fill = factor(feature), group = feature)) + geom_bar(position = "fill", color = "black") + scale_y_continuous(labels=scales::percent) + ylab("% of total regions") + facet_wrap(~comparison,ncol = 4) + theme_bw() + theme(axis.text.x = element_text(size = 7, angle = 60, hjust = 1), axis.title = element_text(size = 12, face = "bold")) + scale_fill_manual("Feature",values = RColorBrewer::brewer.pal(9,"BuGn"))
+dev.off()
+
+#plot only time comparison
+jpeg("Output/Time.DMR_genom_feat_stacked_barplot.jpg", width = 4, height = 7, units = "in", res =300)
+ggplot(feat_combined_TIME,aes(x = region, y = ..count.., fill = factor(feature), group = feature)) + geom_bar(position = "fill", color = "black") + scale_y_continuous(labels=scales::percent) + ylab("% of total regions") + facet_wrap(~comparison,ncol = 4) + theme_bw() + theme(axis.text.x = element_text(size = 7, angle = 60, hjust = 1), axis.title = element_text(size = 12, face = "bold")) + scale_fill_manual("Feature",values = RColorBrewer::brewer.pal(9,"BuGn"))
+dev.off()
+
+
+```
+
+
+# Run Chi square test on feature proportions
+
+
+```{r}
+# create table with feature totals for DMRs
+amb_DMR_feat_summary <- data.frame(table(amb_DMR_feat$V8))
+#rename columns
+colnames(amb_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+amb_feat_summary <- data.frame(table(amb_feat$V4))
+#rename columns
+colnames(amb_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+amb_feat_summ <- merge(amb_DMR_feat_summary, amb_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+amb_feat_summ[is.na(amb_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+amb_feat_DMR_total <- sum(amb_feat_summ$numDMR)
+amb_feat_region_total <- sum(amb_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(amb_feat_summ)){ #loop through each feature
+  numBKGDReg <-amb_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- amb_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (amb_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (amb_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(amb_feat_summ$feature[i]),paste0("Not",amb_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(amb_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(amb_feat_summ,chi_table, by = "feature")
+
+amb_chi_table <- chi_table
+amb_chi_table$comparison <- "amb"
+```
+
+day 10
+```{r}
+# create table with feature totals for DMRs
+d10_DMR_feat_summary <- data.frame(table(d10_DMR_feat$V8))
+#rename columns
+colnames(d10_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+d10_feat_summary <- data.frame(table(d10_feat$V4))
+#rename columns
+colnames(d10_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+d10_feat_summ <- merge(d10_DMR_feat_summary, d10_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+d10_feat_summ[is.na(d10_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+d10_feat_DMR_total <- sum(d10_feat_summ$numDMR)
+d10_feat_region_total <- sum(d10_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(d10_feat_summ)){ #loop through each feature
+  numBKGDReg <-d10_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- d10_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (d10_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (d10_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(d10_feat_summ$feature[i]),paste0("Not",d10_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(d10_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(d10_feat_summ,chi_table, by = "feature")
+
+d10_chi_table <- chi_table
+d10_chi_table$comparison <- "d10"
+```
+
+day 135
+```{r}
+# create table with feature totals for DMRs
+d135_DMR_feat_summary <- data.frame(table(d135_DMR_feat$V8))
+#rename columns
+colnames(d135_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+d135_feat_summary <- data.frame(table(d135_feat$V4))
+#rename columns
+colnames(d135_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+d135_feat_summ <- merge(d135_DMR_feat_summary, d135_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+d135_feat_summ[is.na(d135_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+d135_feat_DMR_total <- sum(d135_feat_summ$numDMR)
+d135_feat_region_total <- sum(d135_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(d135_feat_summ)){ #loop through each feature
+  numBKGDReg <-d135_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- d135_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (d135_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (d135_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(d135_feat_summ$feature[i]),paste0("Not",d135_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(d135_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(d135_feat_summ,chi_table, by = "feature")
+
+d135_chi_table <- chi_table
+d135_chi_table$comparison <- "d135"
+```
+
+day 145
+```{r}
+# create table with feature totals for DMRs
+d145_DMR_feat_summary <- data.frame(table(d145_DMR_feat$V8))
+#rename columns
+colnames(d145_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+d145_feat_summary <- data.frame(table(d145_feat$V4))
+#rename columns
+colnames(d145_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+d145_feat_summ <- merge(d145_DMR_feat_summary, d145_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+d145_feat_summ[is.na(d145_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+d145_feat_DMR_total <- sum(d145_feat_summ$numDMR)
+d145_feat_region_total <- sum(d145_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(d145_feat_summ)){ #loop through each feature
+  numBKGDReg <-d145_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- d145_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (d145_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (d145_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(d145_feat_summ$feature[i]),paste0("Not",d145_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(d145_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(d145_feat_summ,chi_table, by = "feature")
+
+d145_chi_table <- chi_table
+d145_chi_table$comparison <- "d145"
+```
+
+combine all chi sq comparisons together
+```{r}
+all_chi <- rbind(amb_chi_table,d10_chi_table,d135_chi_table,d145_chi_table)
+
+all_chi$feature <- gsub("3prime_UTR", "put.3primeUTR",all_chi$feature)
+all_chi$feature <- gsub("put_promoter", "put.promoter",all_chi$feature)
+all_chi$feature <- gsub("repeat_region", "repeat.reagion",all_chi$feature)
+all_chi$comparison <- gsub("amb", "time", all_chi$comparison)
+all_chi$comparison <- gsub("d", "day_", all_chi$comparison)
+
+write.csv(all_chi,"Output/DMR_genom_feat_chi_table.csv", row.names = FALSE, quote = FALSE)
+
+```
+
+
