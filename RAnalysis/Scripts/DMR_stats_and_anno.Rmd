@@ -424,12 +424,59 @@ aov_0.05pH_ambDMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_ambDMR_m)
 aov_0.05pH_ambDMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_ambDMR_m))
 aov_0.05pH_ambDMR_bed$start <- gsub("-.*","", aov_0.05pH_ambDMR_bed$start)
 aov_0.05pH_ambDMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_ambDMR_m))
-aov_0.05pH_ambDMR_bed$comparison <- "amb"
+aov_0.05pH_ambDMR_bed$comparison <- "time"
 aov_0.05pH_ambDMR_bed <- aov_0.05pH_ambDMR_bed[,c((ncol(aov_0.05pH_ambDMR_bed)-3):ncol(aov_0.05pH_ambDMR_bed)) ]
 write.table(aov_0.05pH_ambDMR_bed,"Output/aov_0.05pH_ambDMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
 ```
 
 
+
+Create boxplots of significant DMR sizes (not very interesting)
+```{r}
+#bind together all DMR bed files
+aov_0.05_DMR_bed <- rbind(aov_0.05pH_ambDMR_bed, aov_0.05pH_d10DMR_bed,aov_0.05pH_d135DMR_bed,aov_0.05pH_d145DMR_bed)
+
+#replace "d" with "day" in the comparison column
+aov_0.05_DMR_bed$comparison <- gsub("d","day ",aov_0.05_DMR_bed$comparison)
+
+#create a column for DMR length
+aov_0.05_DMR_bed$length <- (as.numeric(aov_0.05_DMR_bed$end) - as.numeric(aov_0.05_DMR_bed$start))
+
+#make violin plots
+jpeg("Output/DMR_size_distributions.jpg", width = 6, height = 4.5, units = "in", res = 300)
+ggplot(aov_0.05_DMR_bed,aes(comparison,length, fill = comparison)) + geom_violin(trim = FALSE) + geom_boxplot(width=0.1) + theme_bw() + theme(axis.text = element_text(size = 10))
+dev.off()
+
+#transform to normalize
+ggplot(aov_0.05_DMR_bed,aes(log(length,2), fill = comparison, color = comparison)) + geom_density(alpha = 0.25)
+
+#test if a pH or time ever has an affect on DMR length
+summary(aov(log(length,2)~comparison, data =  aov_0.05_DMR_bed ))
+
+
+#plot distribution of DMRs across scaffolds
+jpeg("Output/DMR_distribution_across_scaffolds.jpg", width = 10, height = 5, units = "in", res = 300)
+ggplot(aov_0.05_DMR_bed, aes(substr(Scaffold,10,11), group = comparison, color = comparison, fill = comparison)) + geom_bar(aes(y = (..prop..)*100), stat="count", position = "dodge") + xlab("Scaffold") + ylab("% DMRs") + theme_bw()
+dev.off()
+
+#read in file with scaffold lengths
+pgen_scaffolds <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/GENOMES/Panopea-generosa-v1.0.fa.fai", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+#remove extraneous info
+pgen_scaffolds <- pgen_scaffolds[,c(1,2)]
+#rename columns
+colnames(pgen_scaffolds) <- c("Scaffold", "total_scaff_length")
+#add scaffold lengths to DMR table
+aov_0.05_DMR_bed <- merge(aov_0.05_DMR_bed,pgen_scaffolds, by = "Scaffold")
+#create a scaffold position column
+aov_0.05_DMR_bed$Scaffold_position <- (as.numeric(aov_0.05_DMR_bed$start)/as.numeric(aov_0.05_DMR_bed$total_scaff_length))
+
+#plot histograms showing the number of DMRs x scaffold position for each comparison facetted by scaffold
+jpeg("Output/DMR_distribution_by_scaffold_position.jpg", width = 6, height = 7, units = "in", res = 300)
+ggplot(aov_0.05_DMR_bed) + geom_histogram(aes(Scaffold_position, fill = comparison), position = "dodge", bins = 10) + facet_wrap(~Scaffold, nrow = 5) + xlab("relative scaffold position") + ylab("number of DMRs") + theme_bw() + theme(axis.text.x = element_text(size = 8, angle = 60, hjust= 1),axis.text.y = element_text(size = 10))
+dev.off()
+
+```
 
 
 
