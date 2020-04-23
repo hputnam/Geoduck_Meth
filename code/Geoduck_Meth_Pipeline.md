@@ -56,17 +56,21 @@ ${reads_dir}{}_R2_001.fastq.gz
 
 /gscratch/srlab/strigg/bin/anaconda3/bin/multiqc \
 /gscratch/scrubbed/strigg/analyses/20200320/TG_FASTQS/FastQC/.
-
-
-
 ```
----
+**Original script:** 
 
-**output from TrimGalore and MultiQC**  
+[https://gannet.fish.washington.edu/metacarcinus/mox_jobs/20200320_TrimGpgnrMeth1.sh](https://gannet.fish.washington.edu/metacarcinus/mox_jobs/20200320_TrimGpgnrMeth1.sh)
+
+**Log file:** 
+
+[https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200320/slurm-2386816.out](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200320/slurm-2386816.out)
+
+**Output from TrimGalore and MultiQC:**  
 
 [https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200320/](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200320/)
 
 ---
+
 # Genome Preparation
 
 **File info**     
@@ -229,7 +233,16 @@ done
 ```
 ---
 
-**All Output from Bismark Aligment**
+**Original script:** 
+
+[https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/032120-fds/03-bismark.sh](https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/032120-fds/03-bismark.sh)
+
+**Log file:** 
+
+[https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/032120-fds/slurm-2417730.out](https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/032120-fds/slurm-2417730.out)
+
+
+**All Output from Bismark Aligment:**
 
 [https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/032120-fds/](https://gannet.fish.washington.edu/seashell/bu-mox/scrubbed/032120-fds/)
 
@@ -237,6 +250,8 @@ done
 ---
 
 # DMR analysis
+
+### Defining DMRs
 
 ```
 # Directories and programs
@@ -490,16 +505,298 @@ EPI-230_S37_L004_5xmerg_allc.tsv \
 --min-num-dms 3 
 ```
 ---
+**original script:** 
 
-**All Output from DMRfind**
+[https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/20200327_DMRfind.sh](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/20200327_DMRfind.sh)
+
+**log file:** 
+
+[https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/screenlog.0](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/screenlog.0)
+
+**All Output from DMRfind:**
 
 [https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/)
 
 ---
 
-### Group statistics and genomic feature analysis of regions
+### Group statistics and plots for DMRs and genomic feature analysis 
 
 [https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/DMR_stats_and_anno.Rmd](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/DMR_stats_and_anno.Rmd)
+
+---
+
+### Genomic feature analysis 
+
+```
+#####################################
+## PART 1:  Prepare Reference file ##
+#####################################
+
+# make putative promoter track 
+
+/Users/Shared/bioinformatics/bedtools2/bin/flankBed \
+-i /Volumes/web/metacarcinus/Pgenerosa/GENOMES/feature_tracks/Panopea-generosa-v1.0.a4.gene.gff3 \
+-g /Volumes/web/metacarcinus/Pgenerosa/GENOMES/Panopea-generosa-v1.0.fa.fai \
+-l 1000 \
+-r 0 \
+-s |\
+awk '{ gsub("gene","put_promoter",$3); print $0 }'|\
+awk '{if($5-$4 > 3)print $0}'|\
+tr ' ' '\t' \
+> /Volumes/web/metacarcinus/Pgenerosa/GENOMES/feature_tracks/Panopea-generosa-v1.0.a4.putprom.gff3
+
+# make putative 3'UTR track 
+
+/Users/Shared/bioinformatics/bedtools2/bin/flankBed \
+-i /Volumes/web/metacarcinus/Pgenerosa/GENOMES/feature_tracks/Panopea-generosa-v1.0.a4.gene.gff3 \
+-g /Volumes/web/metacarcinus/Pgenerosa/GENOMES/Panopea-generosa-v1.0.fa.fai \
+-l 0 \
+-r 2000 \
+-s |\
+awk '{ gsub("gene","3prime_UTR",$3); print $0 }'|\
+awk '{if($5-$4 > 3)print $0}'|\
+tr ' ' '\t' \
+> /Volumes/web/metacarcinus/Pgenerosa/GENOMES/feature_tracks/Panopea-generosa-v1.0.a4.3primeUTR.gff3
+
+# Make a comprehensive gff by concatenating individual feature gffs
+
+path=/Volumes/web/metacarcinus/Pgenerosa/GENOMES/feature_tracks
+
+cat \
+${path}/Panopea-generosa-v1.0.a4.exon.gff3 \
+${path}/Panopea-generosa-v1.0.a4.intron.gff3 \
+${path}/Panopea-generosa-v1.0.a4.putprom.gff3 \
+${path}/Panopea-generosa-v1.0.a4.3primeUTR.gff3 \
+${path}/Panopea-generosa-v1.0.a4.intergenic.gff3 \
+${path}/Panopea-generosa-v1.0.a4.repeat*.gff3 \
+${path}/Panopea-generosa-v1.0.a4.tRNA.gff3 \
+> /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.gff3
+
+#sort concatenated gff
+
+cat /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.gff3 |\
+awk -F"\t" '{if(($1 !~/gff-version/)&&($1 !~/Generated/)&&($1 !~/Project/))print $0}' |\
+awk -F"\t" '{print $1"\t"$4"\t"$5"\t"$3}'|\
+/Users/Shared/bioinformatics/bedtools2/bin/sortBed \
+-i - \
+> /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.sort.bed
+
+#bin features 
+
+cat /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.sort.bed |\
+uniq |\
+/Users/Shared/bioinformatics/bedtools2/bin/windowMaker \
+-b - \
+-w 2000 \
+-i src |\
+/Users/Shared/bioinformatics/bedtools2/bin/sortBed \
+-i - \
+> /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.2Kbin.sort.bed
+
+# remove any duplicate lines from sorted binned concatenated gff
+
+cat /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.2Kbin.sort.bed |uniq > /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.2Kbin.uniq.bed
+
+###########################################
+## PART 2:  Determine background regions ##
+###########################################
+
+## STEP 1. find all CpGs covered by at least 3/4 samples per group (use merge.tab files)
+
+%%bash
+
+set -ex
+
+#first create variables for each file grouping
+declare -a amb_day0="/Users/strigg/Desktop/20200327/merged_tab/EPI-41_S38_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-42_S39_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-43_S40_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-44_S41_L005_5x.tab"
+
+declare -a amb_day10="/Users/strigg/Desktop/20200327/merged_tab/EPI-119_S31_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-120_S32_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-135_S35_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-136_S36_L005_5x.tab"
+
+declare -a amb_day135="/Users/strigg/Desktop/20200327/merged_tab/EPI-151_S2_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-152_S3_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-153_S4_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-154_S5_L002_5x.tab"
+
+declare -a amb_day145="/Users/strigg/Desktop/20200327/merged_tab/EPI-181_S16_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-182_S17_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-184_S18_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-185_S19_L003_5x.tab"
+
+declare -a low_day10="/Users/strigg/Desktop/20200327/merged_tab/EPI-103_S27_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-104_S28_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-127_S33_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-128_S34_L005_5x.tab"
+
+declare -a low_day135="/Users/strigg/Desktop/20200327/merged_tab/EPI-160_S7_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-161_S8_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-162_S9_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-159_S6_L002_5x.tab"
+
+declare -a slow_day10="/Users/strigg/Desktop/20200327/merged_tab/EPI-111_S29_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-113_S30_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-143_S37_L005_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-145_S38_L005_5x.tab"
+
+declare -a slow_day135="/Users/strigg/Desktop/20200327/merged_tab/EPI-167_S10_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-168_S11_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-169_S12_L002_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-170_S13_L002_5x.tab"
+
+declare -a lamb_day145="/Users/strigg/Desktop/20200327/merged_tab/EPI-175_S14_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-176_S15_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-193_S22_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-194_S23_L003_5x.tab"
+
+declare -a slamb_day145="/Users/strigg/Desktop/20200327/merged_tab/EPI-187_S20_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-188_S21_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-199_S24_L003_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-200_S25_L003_5x.tab"
+
+declare -a ambl_day145="/Users/strigg/Desktop/20200327/merged_tab/EPI-205_S26_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-206_S27_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-226_S34_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-227_S35_L004_5x.tab"
+
+declare -a lowlow_day145="/Users/strigg/Desktop/20200327/merged_tab/EPI-208_S28_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-209_S29_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-229_S36_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-230_S37_L004_5x.tab"
+
+declare -a sllow_day145="/Users/strigg/Desktop/20200327/merged_tab/EPI-214_S30_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-215_S31_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-220_S32_L004_5x.tab 
+/Users/strigg/Desktop/20200327/merged_tab/EPI-221_S33_L004_5x.tab"
+
+#next create another list of variable names
+
+groups=(amb_day0 amb_day10 amb_day135 amb_day145 low_day10 low_day135 slow_day10 slow_day135 lamb_day145 slamb_day145 ambl_day145 lowlow_day145 sllow_day145)
+
+#next loop through variable names to combine the files within each experimental group
+#cat all group files together
+#if the context is CG print the chromosome and position
+#sort data
+#unique and count the frequency of positions
+#if the position is overlapping in 3/4 samples keep
+
+
+for f in "${groups[@]}"
+do
+x="${f}" 
+cat ${!x} | \
+awk '{print $1,$2,$3}' | \
+sort | \
+uniq -c | \
+awk '{if($1>2)print $2"\t"$3"\t"$4}' \
+> ${f}.3xCpG.bed
+done
+
+
+## STEP 2. find CpGs common to all groups in comparison (e.g. all ambient samples over time, all day 10 samples, etc.)
+
+# day 10 comparison
+
+cat /Users/strigg/Desktop/20200406/*day10*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==3)print $2"\t"$3"\t"$4}' \
+> /Users/strigg/Desktop/20200406/day10.3xCpG.allgrps.bed
+
+# day 135 comparison
+
+cat /Users/strigg/Desktop/20200406/*day135*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==3)print $2"\t"$3"\t"$4}' \
+> /Users/strigg/Desktop/20200406/day135.3xCpG.allgrps.bed
+
+#day 145 comparison
+
+cat /Users/strigg/Desktop/20200406/*day145*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==6)print $2"\t"$3"\t"$4}' \
+> /Users/strigg/Desktop/20200406/day145.3xCpG.allgrps.bed
+
+#all ambient samples over time comparison
+
+cat /Users/strigg/Desktop/20200406/amb_*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==4)print $2"\t"$3"\t"$4}' \
+> /Users/strigg/Desktop/20200406/amb.3xCpG.allgrps.bed
+
+
+## STEP 3. determine binned features that common CpGs overlap with (bedtools intersect)
+
+%%bash
+
+FILES=/Volumes/web/metacarcinus/Pgenerosa/analyses/20200406/*.3xCpG.allgrps.bed
+
+for f in $FILES
+do
+/Users/Shared/bioinformatics/bedtools2/bin/intersectBed \
+-a ${f} \
+-b /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.2Kbin.uniq.bed \
+-wb \
+> /Users/strigg/Desktop/20200408/$(basename ${f%.3xCpG.allgrps.bed})_features.txt
+done
+
+
+## STEP 4. filter features for those with at least 3 CpGs
+
+%%bash
+
+FILES=/Users/strigg/Desktop/20200408/*_features.txt
+
+for f in $FILES
+do
+cat ${f} |\
+awk -F"\t" '{print $4,$5,$6,$7}' |\
+sort |\
+uniq -c |\
+awk '{if($1>2)print $2"\t"$3"\t"$4"\t"$5}'\
+> /Users/strigg/Desktop/20200408/$(basename ${f%_features.txt})_features.3CpG.txt
+done
+
+###################################################
+## PART 3:  Determine DMR overlap with reference ##
+###################################################
+
+%%bash
+
+FILES=/Users/strigg/Documents/GitHub/Shelly_Pgenerosa/analyses/20200320_anno/aov_0.05*DMR.bed
+
+for f in $FILES
+do
+/Users/Shared/bioinformatics/bedtools2/bin/intersectBed \
+-a ${f} \
+-b /Users/strigg/Desktop/20200408/Panopea-generosa-v1.0.a4.2Kbin.uniq.bed \
+-wb \
+> /Users/strigg/Desktop/20200408/$(basename ${f%DMR.bed})_0408.txt
+done
+```
+---
+**original scripts:** 
+
+Part 1; Part 2, step 4; and Part 3: [https://github.com/shellytrigg/Shelly_Pgenerosa/blob/master/analyses/20200406_Create_UTR_tracks.ipynb](https://github.com/shellytrigg/Shelly_Pgenerosa/blob/master/analyses/20200406_Create_UTR_tracks.ipynb)
+
+Part 2, step 1: [https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200406/0.75Xcov_CpG.sh](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200406/0.75Xcov_CpG.sh)
+
+Part 2, steps 2 and 3: [https://github.com/shellytrigg/Shelly_Pgenerosa/blob/master/analyses/20200403_feature_analysis.ipynb](https://github.com/shellytrigg/Shelly_Pgenerosa/blob/master/analyses/20200403_feature_analysis.ipynb)
+
+**log file:** 
+
+Part 2, step 1: [https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200406/screenlog.0](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200406/screenlog.0)
+
+**All Output from Genomic feature:**
+
+[https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/](https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/)
 
 ---
 
