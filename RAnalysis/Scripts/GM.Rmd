@@ -1699,17 +1699,17 @@ colnames(BP_Sig_D145_sim_matrix) <- unlist(BP_Sig_D145_terms)
 breaks <- c(seq(0,1, length=6))
 
 #Save Day 10 BP heatmap
-jpeg(file="RAnalysis/Output/GOsemsim_heatmap_D10_BP_sig_GO.jpg", width=10, height=6, units = "in", res = 300)
+pdf(file="RAnalysis/Output/GOsemsim_heatmap_D10_BP_sig_GO.pdf", width=10, height=6)
 heatmap.2(BP_Sig_D10_sim_matrix, margins = c(5,20), cexRow = 0.3,distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'), labRow = rownames(BP_Sig_D10_sim_matrix),labCol = FALSE,col= rev(colorRampPalette(brewer.pal(5, "RdYlBu"))(5)), density.info = "none", trace = "none", dendrogram="row")
 dev.off()
 
 #Save Day 135 BP heatmap
-jpeg(file="RAnalysis/Output/GOsemsim_heatmap_D135_BP_sig_GO.jpg", width=10, height=6, units = "in", res = 300)
+pdf(file="RAnalysis/Output/GOsemsim_heatmap_D135_BP_sig_GO.pdf", width=10, height=6)
 heatmap.2(BP_Sig_D135_sim_matrix, margins = c(5,20), cexRow = 0.3,distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'), labRow = rownames(BP_Sig_D135_sim_matrix),labCol = FALSE,col= rev(colorRampPalette(brewer.pal(5, "RdYlBu"))(5)), density.info = "none", trace = "none", dendrogram="row")
 dev.off()
 
 #Save Day 145 BP heatmap
-jpeg(file="RAnalysis/Output/GOsemsim_heatmap_D145_BP_sig_GO.jpg", width=10, height=6, units = "in", res = 300)
+pdf(file="RAnalysis/Output/GOsemsim_heatmap_D145_BP_sig_GO.pdf", width=10, height=6)
 heatmap.2(BP_Sig_D145_sim_matrix, margins = c(5,20), cexRow = 0.3,distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'), labRow = rownames(BP_Sig_D145_sim_matrix),labCol = FALSE,col= rev(colorRampPalette(brewer.pal(5, "RdYlBu"))(5)), density.info = "none", trace = "none", dendrogram="row")
 dev.off()
 ```
@@ -1775,17 +1775,17 @@ colnames(MF_Sig_D145_sim_matrix) <- unlist(MF_Sig_D145_terms)
 breaks <- c(seq(0,1, length=6))
 
 #Save Day 10 MF heatmap
-jpeg(file="RAnalysis/Output/GOsemsim_heatmap_D10_MF_sig_GO.jpg", width=10, height=6, units = "in", res = 300)
+pdf(file="RAnalysis/Output/GOsemsim_heatmap_D10_MF_sig_GO.pdf", width=10, height=6)
 heatmap.2(MF_Sig_D10_sim_matrix, margins = c(5,20), cexRow = 0.5,distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'), labRow = rownames(MF_Sig_D10_sim_matrix),labCol = FALSE,col= rev(colorRampPalette(brewer.pal(5, "RdYlBu"))(5)), density.info = "none", trace = "none", dendrogram="row")
 dev.off()
 
 #Save Day 135 MF heatmap
-jpeg(file="RAnalysis/Output/GOsemsim_heatmap_D135_MF_sig_GO.jpg", width=10, height=6, units = "in", res = 300)
+pdf(file="RAnalysis/Output/GOsemsim_heatmap_D135_MF_sig_GO.pdf", width=10, height=6)
 heatmap.2(MF_Sig_D135_sim_matrix, margins = c(5,20), cexRow = 0.5,distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'), labRow = rownames(MF_Sig_D135_sim_matrix),labCol = FALSE,col= rev(colorRampPalette(brewer.pal(5, "RdYlBu"))(5)), density.info = "none", trace = "none", dendrogram="row")
 dev.off()
 
 #Save Day 145 MF heatmap
-jpeg(file="RAnalysis/Output/GOsemsim_heatmap_D145_MF_sig_GO.jpg", width=10, height=6, units = "in", res = 300)
+pdf(file="RAnalysis/Output/GOsemsim_heatmap_D145_MF_sig_GO.pdf", width=10, height=6)
 heatmap.2(MF_Sig_D145_sim_matrix, margins = c(5,20), cexRow = 0.5,distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'), labRow = rownames(MF_Sig_D145_sim_matrix),labCol = FALSE,col= rev(colorRampPalette(brewer.pal(5, "RdYlBu"))(5)), density.info = "none", trace = "none", dendrogram="row")
 dev.off()
 ```
