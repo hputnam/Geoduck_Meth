@@ -1,7 +1,7 @@
 ---
 title: "Geoduck DNA Methylation"
 author: "HPutnam"
-date: "04/11/2020"
+date: "05/14/2020"
 output: html_document
 ---
 
@@ -1584,20 +1584,20 @@ dev.off()
 
 ```{r}
 ##### Gene Ontology Plots
-MFplot <- MF.D145 %>% mutate(name = fct_reorder(term, numDEInCat)) %>%
-  filter(numDEInCat > 1) %>%
-  ggplot( aes(x=term, y=numDEInCat) ) +
-      geom_segment( aes(x=term ,xend=term, y=0, yend=numDEInCat), color="black") +
+BPplot.10 <- BP.D10 %>% head(., n = 10L) %>%
+  #filter(numDEInCat > 3) %>%
+  ggplot(aes(x=reorder(term, numDEInCat), y= numDEInCat) ) +
+      geom_segment(aes(x=reorder(term, numDEInCat) ,xend=reorder(term, -numDEInCat), y=0, yend=numDEInCat), color="black") +
       geom_point(size=1, color="black") +
   coord_flip()+
       theme(
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank(),
-        legend.position="none"
-      ) +
+        legend.position="none") +
   xlab("") +
   ylab("") +
-  ggtitle("Day 145 Molecular Function") + #add a main title
+  ylim(0,20) +
+  ggtitle("Day 10 Biological Process") + #add a main title
   theme(plot.title = element_text(face = 'bold', 
                                   size = 12, 
                                   hjust = 0)) +
@@ -1607,22 +1607,48 @@ MFplot <- MF.D145 %>% mutate(name = fct_reorder(term, numDEInCat)) %>%
                      panel.grid.minor = element_blank(), #Set minor gridlines
                      axis.line = element_line(colour = "black"), #Set axes color
         plot.background=element_blank()) + #Set the plot background
-        theme(axis.text = element_text(size=3.6) )#Set axis text size
-MFplot
+        theme(axis.text = element_text(size=8) )#Set axis text size
+BPplot.10
 
-BPplot <- BP.D145 %>% mutate(name = fct_reorder(term, numDEInCat)) %>%
-  filter(numDEInCat > 2) %>%
-  ggplot( aes(x=term, y=numDEInCat) ) +
-      geom_segment( aes(x=term ,xend=term, y=0, yend=numDEInCat), color="black") +
+BPplot.135 <- BP.D135 %>% head(., n = 10L) %>%
+  #filter(numDEInCat > 3) %>%
+  ggplot(aes(x=reorder(term, numDEInCat), y= numDEInCat) ) +
+      geom_segment(aes(x=reorder(term, numDEInCat) ,xend=reorder(term, -numDEInCat), y=0, yend=numDEInCat), color="black") +
       geom_point(size=1, color="black") +
   coord_flip()+
       theme(
         panel.grid.minor.y = element_blank(),
         panel.grid.major.y = element_blank(),
-        legend.position="none"
-      ) +
+        legend.position="none") +
   xlab("") +
   ylab("") +
+  ylim(0,20) +
+  ggtitle("Day 135 Biological Process") + #add a main title
+  theme(plot.title = element_text(face = 'bold', 
+                                  size = 12, 
+                                  hjust = 0)) +
+  theme_bw() + #Set background color 
+  theme(panel.border = element_blank(), # Set border
+                     panel.grid.major = element_blank(), #Set major gridlines
+                     panel.grid.minor = element_blank(), #Set minor gridlines
+                     axis.line = element_line(colour = "black"), #Set axes color
+        plot.background=element_blank()) + #Set the plot background
+        theme(axis.text = element_text(size=8) )#Set axis text size
+BPplot.135
+
+BPplot.145 <- BP.D145 %>% head(., n = 10L) %>%
+  #filter(numDEInCat > 3) %>%
+  ggplot(aes(x=reorder(term, numDEInCat), y= numDEInCat) ) +
+      geom_segment(aes(x=reorder(term, numDEInCat) ,xend=reorder(term, -numDEInCat), y=0, yend=numDEInCat), color="black") +
+      geom_point(size=1, color="black") +
+  coord_flip()+
+      theme(
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_blank(),
+        legend.position="none") +
+  xlab("") +
+  ylab("") +
+  ylim(0,20) +
   ggtitle("Day 145 Biological Process") + #add a main title
   theme(plot.title = element_text(face = 'bold', 
                                   size = 12, 
@@ -1633,12 +1659,12 @@ BPplot <- BP.D145 %>% mutate(name = fct_reorder(term, numDEInCat)) %>%
                      panel.grid.minor = element_blank(), #Set minor gridlines
                      axis.line = element_line(colour = "black"), #Set axes color
         plot.background=element_blank()) + #Set the plot background
-        theme(axis.text = element_text(size=5.1) )#Set axis text size
-BPplot
+        theme(axis.text = element_text(size=8) )#Set axis text size
+BPplot.145
 
 
-plot_grid(BPplot, MFplot, ncol=1, align="v")
-ggsave("RAnalysis/Output/D145_GOPlots.pdf")
+plot_grid(BPplot.10, BPplot.135, BPplot.145, ncol=1, align="v")
+ggsave("RAnalysis/Output/BP_GOPlots.pdf")
 ```
 
 ## Part 1: Generate BP Semantic Similarity heatmaps for Day 10, Day 135, and Day 145 pH group comparisons
