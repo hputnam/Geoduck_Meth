@@ -28,7 +28,7 @@ day135_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/a
 
 day145_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200327/day145_AllpH_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
-meta_data <- read.csv("Data/Sample.Info.csv", stringsAsFactors = FALSE)
+meta_data <- read.csv("RAnalysis/Data/Sample.Info.csv", stringsAsFactors = FALSE)
 ```
 
 
@@ -192,7 +192,7 @@ f <- ggplot(d145DMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = Treat
 
 h <- ggplot(ambDMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = TimePoint, color = TimePoint,fill = TimePoint), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Ambient transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8, face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
 
-jpeg("Output/DMR_mCpG_histograms.jpg", width = 6, height = 8, units = "in", res = 300)
+jpeg("RAnalysis/Output/DMR_mCpG_histograms.jpg", width = 6, height = 8, units = "in", res = 300)
 ggarrange(a,b,c,d,e,f,g,h, nrow = 4)
 dev.off()
 ```
@@ -246,7 +246,7 @@ ambDMR_1way_aov_pH_modelsumm$comparison <- "All_ambient"
 write out ANOVA data to file
 ```{r}
 #write ANOVA output to file
-write.csv(rbind(d10DMR_1way_aov_pH_modelsumm,d135DMR_1way_aov_pH_modelsumm,d145DMR_1way_aov_pH_modelsumm,ambDMR_1way_aov_pH_modelsumm), "Output/DMR_1way_aov_modelsumm.csv", row.names = FALSE, quote = FALSE)
+write.csv(rbind(d10DMR_1way_aov_pH_modelsumm,d135DMR_1way_aov_pH_modelsumm,d145DMR_1way_aov_pH_modelsumm,ambDMR_1way_aov_pH_modelsumm), "RAnalysis/Output/DMR_1way_aov_modelsumm.csv", row.names = FALSE, quote = FALSE)
 ```
 
 plot heatmap of 1way aov for pH p.val 0.05 sig DMRs
@@ -277,7 +277,7 @@ aov_0.05pH_d10DMR_mean_m <- as.matrix(data.frame(cbind(MeanD10pHamb,MeanD10pHlow
 #plot for day10 group mean comparison
 colnames(aov_0.05pH_d10DMR_mean_m) <- c("pH 8.0", "pH 7.4", "pH 7.0")
 
-jpeg("Output/D10.DMR_heatmap.jpg", width = 600, height = 1000)
+jpeg("RAnalysis/Output/D10.DMR_heatmap.jpg", width = 600, height = 1000)
 heatmap.2(aov_0.05pH_d10DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d10DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d10DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
 dev.off()
 
@@ -307,7 +307,7 @@ aov_0.05pH_d135DMR_mean_m <- as.matrix(data.frame(cbind(Meand135pHamb,Meand135pH
 colnames(aov_0.05pH_d135DMR_mean_m) <- c("pH 8.0", "pH 7.4", "pH 7.0")
 
 
-jpeg("Output/D135.DMR_heatmap.jpg", width = 600, height = 1000)
+jpeg("RAnalysis/Output/D135.DMR_heatmap.jpg", width = 600, height = 1000)
 heatmap.2(aov_0.05pH_d135DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), na.color = "black", density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d135DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d135DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
 dev.off()
 
@@ -346,7 +346,7 @@ aov_0.05pH_d145DMR_mean_m <- as.matrix(data.frame(cbind(Meand145pHambamb,Meand14
 #plot for day145 group mean comparison
 colnames(aov_0.05pH_d145DMR_mean_m) <- c("pH 8.0 -> pH 8.0", "pH 8.0 -> pH 7.4","pH 7.4 -> pH 8.0","pH 7.4 -> pH 7.4", "pH 7.0 -> pH 8.0", "pH 7.0 -> pH 7.4")
 
-jpeg("Output/D145.DMR_heatmap.jpg", width = 800, height = 1000)
+jpeg("RAnalysis/Output/D145.DMR_heatmap.jpg", width = 800, height = 1000)
 heatmap.2(aov_0.05pH_d145DMR_mean_m,margins = c(12,15), cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), lmat = rbind(c(0,3),c(2,1),c(4,0)),na.color = "black", density.info = "none", trace = "none", scale = "row", keysize=1, key.par = list(cex=1),labRow = FALSE,sepwidth=c(0.1,0.01), lhei=c(1.5,4,1),lwid= c(1.0, 5), sepcolor="white",colsep=seq(2,ncol(aov_0.05pH_d145DMR_mean_m),2),rowsep=1:nrow(aov_0.05pH_d145DMR_mean_m))
 dev.off()
 
@@ -380,7 +380,7 @@ aov_0.05pH_ambDMR_mean_m <- as.matrix(data.frame(cbind(Meanambd0,Meanambd10, Mea
 #plot for ambient group mean comparison
 colnames(aov_0.05pH_ambDMR_mean_m) <- c("Day 0", "Day 10", "Day 135", "Day 145")
 
-jpeg("Output/Time.DMR_heatmap.jpg", width = 700, height = 1000)
+jpeg("RAnalysis/Output/Time.DMR_heatmap.jpg", width = 700, height = 1000)
 heatmap.2(aov_0.05pH_ambDMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_ambDMR_mean_m),rowsep=1:nrow(aov_0.05pH_ambDMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
 dev.off()
 ```
@@ -395,7 +395,7 @@ aov_0.05pH_d10DMR_bed$start <- gsub("-.*","", aov_0.05pH_d10DMR_bed$start)
 aov_0.05pH_d10DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d10DMR_m))
 aov_0.05pH_d10DMR_bed$comparison <- "d10"
 aov_0.05pH_d10DMR_bed <- aov_0.05pH_d10DMR_bed[,c((ncol(aov_0.05pH_d10DMR_bed)-3):ncol(aov_0.05pH_d10DMR_bed)) ]
-write.table(aov_0.05pH_d10DMR_bed,"Output/aov_0.05pH_d10DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+write.table(aov_0.05pH_d10DMR_bed,"RAnalysis/Output/aov_0.05pH_d10DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
 
 #write out d135 DMR bed file
 aov_0.05pH_d135DMR_bed <- data.frame(aov_0.05pH_d135DMR_m)
@@ -405,7 +405,7 @@ aov_0.05pH_d135DMR_bed$start <- gsub("-.*","", aov_0.05pH_d135DMR_bed$start)
 aov_0.05pH_d135DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d135DMR_m))
 aov_0.05pH_d135DMR_bed$comparison <- "d135"
 aov_0.05pH_d135DMR_bed <- aov_0.05pH_d135DMR_bed[,c((ncol(aov_0.05pH_d135DMR_bed)-3):ncol(aov_0.05pH_d135DMR_bed)) ]
-write.table(aov_0.05pH_d135DMR_bed,"Output/aov_0.05pH_d135DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+write.table(aov_0.05pH_d135DMR_bed,"RAnalysis/Output/aov_0.05pH_d135DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
 
 #write out d145 DMR bed file
 aov_0.05pH_d145DMR_bed <- data.frame(aov_0.05pH_d145DMR_m)
@@ -415,7 +415,7 @@ aov_0.05pH_d145DMR_bed$start <- gsub("-.*","", aov_0.05pH_d145DMR_bed$start)
 aov_0.05pH_d145DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d145DMR_m))
 aov_0.05pH_d145DMR_bed$comparison <- "d145"
 aov_0.05pH_d145DMR_bed <- aov_0.05pH_d145DMR_bed[,c((ncol(aov_0.05pH_d145DMR_bed)-3):ncol(aov_0.05pH_d145DMR_bed)) ]
-write.table(aov_0.05pH_d145DMR_bed,"Output/aov_0.05pH_d145DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+write.table(aov_0.05pH_d145DMR_bed,"RAnalysis/Output/aov_0.05pH_d145DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
 
 
 #write out amb DMR bed file
@@ -426,7 +426,7 @@ aov_0.05pH_ambDMR_bed$start <- gsub("-.*","", aov_0.05pH_ambDMR_bed$start)
 aov_0.05pH_ambDMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_ambDMR_m))
 aov_0.05pH_ambDMR_bed$comparison <- "time"
 aov_0.05pH_ambDMR_bed <- aov_0.05pH_ambDMR_bed[,c((ncol(aov_0.05pH_ambDMR_bed)-3):ncol(aov_0.05pH_ambDMR_bed)) ]
-write.table(aov_0.05pH_ambDMR_bed,"Output/aov_0.05pH_ambDMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+write.table(aov_0.05pH_ambDMR_bed,"RAnalysis/Output/aov_0.05pH_ambDMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
 ```
 
 
@@ -443,7 +443,7 @@ aov_0.05_DMR_bed$comparison <- gsub("d","day ",aov_0.05_DMR_bed$comparison)
 aov_0.05_DMR_bed$length <- (as.numeric(aov_0.05_DMR_bed$end) - as.numeric(aov_0.05_DMR_bed$start))
 
 #make violin plots
-jpeg("Output/DMR_size_distributions.jpg", width = 6, height = 4.5, units = "in", res = 300)
+jpeg("RAnalysis/Output/DMR_size_distributions.jpg", width = 6, height = 4.5, units = "in", res = 300)
 ggplot(aov_0.05_DMR_bed,aes(comparison,length, fill = comparison)) + geom_violin(trim = FALSE) + geom_boxplot(width=0.1) + theme_bw() + theme(axis.text = element_text(size = 10))
 dev.off()
 
@@ -455,7 +455,7 @@ summary(aov(log(length,2)~comparison, data =  aov_0.05_DMR_bed ))
 
 
 #plot distribution of DMRs across scaffolds
-jpeg("Output/DMR_distribution_across_scaffolds.jpg", width = 10, height = 5, units = "in", res = 300)
+jpeg("RAnalysis/Output/DMR_distribution_across_scaffolds.jpg", width = 10, height = 5, units = "in", res = 300)
 ggplot(aov_0.05_DMR_bed, aes(substr(Scaffold,10,11), group = comparison, color = comparison, fill = comparison)) + geom_bar(aes(y = (..prop..)*100), stat="count", position = "dodge") + xlab("Scaffold") + ylab("% DMRs") + theme_bw()
 dev.off()
 
@@ -472,7 +472,7 @@ aov_0.05_DMR_bed <- merge(aov_0.05_DMR_bed,pgen_scaffolds, by = "Scaffold")
 aov_0.05_DMR_bed$Scaffold_position <- (as.numeric(aov_0.05_DMR_bed$start)/as.numeric(aov_0.05_DMR_bed$total_scaff_length))
 
 #plot histograms showing the number of DMRs x scaffold position for each comparison facetted by scaffold
-jpeg("Output/DMR_distribution_by_scaffold_position.jpg", width = 6, height = 7, units = "in", res = 300)
+jpeg("RAnalysis/Output/DMR_distribution_by_scaffold_position.jpg", width = 6, height = 7, units = "in", res = 300)
 ggplot(aov_0.05_DMR_bed) + geom_histogram(aes(Scaffold_position, fill = comparison), position = "dodge", bins = 10) + facet_wrap(~Scaffold, nrow = 5) + xlab("relative scaffold position") + ylab("number of DMRs") + theme_bw() + theme(axis.text.x = element_text(size = 8, angle = 60, hjust= 1),axis.text.y = element_text(size = 10))
 dev.off()
 
@@ -549,12 +549,12 @@ feat_combined_noTime <- feat_combined[which(feat_combined$comparison!="time"),]
 feat_combined_TIME <- feat_combined[which(feat_combined$comparison=="time"),]
 
 #plot all pH comparions
-jpeg("Output/pH.DMR_genom_feat_stacked_barplot.jpg", width = 6, height = 5, units = "in", res =300)
+jpeg("RAnalysis/Output/pH.DMR_genom_feat_stacked_barplot.jpg", width = 6, height = 5, units = "in", res =300)
 ggplot(feat_combined_noTime,aes(x = region, y = ..count.., fill = factor(feature), group = feature)) + geom_bar(position = "fill", color = "black") + scale_y_continuous(labels=scales::percent) + ylab("% of total regions") + facet_wrap(~comparison,ncol = 4) + theme_bw() + theme(axis.text.x = element_text(size = 7, angle = 60, hjust = 1), axis.title = element_text(size = 12, face = "bold")) + scale_fill_manual("Feature",values = RColorBrewer::brewer.pal(9,"BuGn"))
 dev.off()
 
 #plot only time comparison
-jpeg("Output/Time.DMR_genom_feat_stacked_barplot.jpg", width = 4, height = 7, units = "in", res =300)
+jpeg("RAnalysis/Output/Time.DMR_genom_feat_stacked_barplot.jpg", width = 4, height = 7, units = "in", res =300)
 ggplot(feat_combined_TIME,aes(x = region, y = ..count.., fill = factor(feature), group = feature)) + geom_bar(position = "fill", color = "black") + scale_y_continuous(labels=scales::percent) + ylab("% of total regions") + facet_wrap(~comparison,ncol = 4) + theme_bw() + theme(axis.text.x = element_text(size = 7, angle = 60, hjust = 1), axis.title = element_text(size = 12, face = "bold")) + scale_fill_manual("Feature",values = RColorBrewer::brewer.pal(9,"BuGn"))
 dev.off()
 
@@ -766,7 +766,7 @@ all_chi$feature <- gsub("repeat_region", "repeat.reagion",all_chi$feature)
 all_chi$comparison <- gsub("amb", "time", all_chi$comparison)
 all_chi$comparison <- gsub("d", "day_", all_chi$comparison)
 
-write.csv(all_chi,"Output/DMR_genom_feat_chi_table.csv", row.names = FALSE, quote = FALSE)
+write.csv(all_chi,"RAnalysis/Output/DMR_genom_feat_chi_table.csv", row.names = FALSE, quote = FALSE)
 
 ```
 
