@@ -15,7 +15,7 @@ duck.genome <- data.frame(chr=c("Scaffold_01", "Scaffold_02", "Scaffold_03", "Sc
                           lev1=c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ), 
                           lev2=c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ))
 duck.genome$chr <- as.character(duck.genome$chr)
-#duck.genome <- subset(duck.genome, chr=="Scaffold_01")
+duck.genome <- subset(duck.genome, chr=="Scaffold_01")
 str(duck.genome)
 
 
@@ -26,18 +26,18 @@ gene$V5 <- as.numeric(gene$V5)
 gene$V6 <- as.numeric(0.5)
 gene$V7 <- as.numeric(1)
 str(gene)
-#gene <- subset(gene, V1=="Scaffold_01")
+gene <- subset(gene, V1=="Scaffold_01")
 
 pdf("RAnalysis/Output/CircosPlot.pdf")
 circos.clear()
-#circos.initializeWithIdeogram(duck.genome, species = NULL, sort.chr = TRUE)
+circos.initializeWithIdeogram(duck.genome, species = NULL, sort.chr = TRUE)
 circos.initializeWithIdeogram(gene, species = NULL, sort.chr = TRUE)
 dev.off()
 
 #Goal: For a small region only
 #Outer coordinate band, genes band, CpG band, and methylome band
 
-CpG <- read.table("RAnalysis/Data/Genome/Panopea-generosa-v1.0.CpG.gff", sep = "\t", header = FALSE, stringsAsFactors = FALSE,nrows=10000)
+CpG <- read.table("RAnalysis/Data/Genome/Panopea-generosa-v1.0.CpG.gff", sep = "\t", header = FALSE, stringsAsFactors = FALSE,nrows=100000)
 CpG <- CpG[,c(1,4,5,6)]
 CpG$V4 <-as.numeric(CpG$V4)
 CpG$V5 <- as.numeric(CpG$V5)
@@ -48,16 +48,16 @@ str(CpG)
 
 small.duck.genome <- data.frame(chr=c("Scaffold_01"),
                           start=c(1), 
-                          end=c(100000),
+                          end=c(1000000),
                           lev1=c(1), 
                           lev2=c(1))
 
 small.gene <- subset(gene, V1=="Scaffold_01")
-small.gene <- small.gene[1:6,]
-small.CpG <- CpG[1:2079,]
+small.gene <- small.gene[1:46,]
+small.CpG <- CpG[1:14626,]
 
 Meth <- read.table("RAnalysis/Data/OSF/bedgraphs/5x/union_5x.bedgraph", sep = "\t", 
-                   header = TRUE, stringsAsFactors = FALSE,nrows=863)
+                   header = TRUE, stringsAsFactors = FALSE,nrows=6241)
 str(Meth)
 tail(Meth)
 
