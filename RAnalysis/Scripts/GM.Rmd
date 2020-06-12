@@ -43,6 +43,7 @@ Flow1.Rate <- aggregate(Rate ~ Treatment, data=Flow1, FUN=mean) #mean flow by tr
 Flow1.Rate$se <- aggregate(Rate ~ Treatment, data=Flow1, FUN=std.error) #sem flow by treatment
 mean(Flow1$Rate) #mean flow across all tanks
 std.error(Flow1$Rate) #sem flow across all tanks
+length(Flow1$Rate) #n flow across all tanks
 
 
 FL1 <- aov(Rate ~ Treatment, data=Flow1) #test for differences in flow rate between treatments
@@ -62,6 +63,7 @@ Flow2.Rate <- aggregate(Rate ~ Treatment, data=Flow2, FUN=mean) #mean flow by tr
 Flow2.Rate$se <- aggregate(Rate ~ Treatment, data=Flow2, FUN=std.error) #sem flow by treatment
 mean(Flow2$Rate) #mean flow across all tanks
 std.error(Flow2$Rate) #sem flow across all tanks
+length(Flow2$Rate) #n flow across all tanks
 
 FL2 <- aov(Rate ~ Treatment, data=Flow2) #test for differences in flow rate between treatments
 FL2.res <-anova(FL2) #display anova results
@@ -126,7 +128,6 @@ hist(cells2.trt$residuals) #plot histogram of residuals
 boxplot(cells2.trt$residuals) #plot boxplot of residuals
 plot(cells2.trt) #display residuals versus fitter, normal QQ plot, leverage plot
 ```
-
 
 ```{r Continuous pH}
 #CONTINUOUS EXPERIMENTAL PH DATA 
@@ -257,136 +258,51 @@ mvTris <- SW.chem$Temperature*SW.chem$Slope+SW.chem$Intercept #calculate the mV 
 STris<-27.5 #salinity of the Tris from local batch made for Manchester WA salinity conditions in Spring 2016. Batch date = 20160214
 phTris<- (11911.08-18.2499*STris-0.039336*STris^2)*(1/(SW.chem$Temperature+273.15))-366.27059+ 0.53993607*STris+0.00016329*STris^2+(64.52243-0.084041*STris)*log(SW.chem$Temperature+273.15)-0.11149858*(SW.chem$Temperature+273.15) #calculate the pH of the tris (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
 SW.chem$pH.Total<-phTris+(mvTris/1000-SW.chem$pH.MV/1000)/(R*(SW.chem$Temperature+273.15)*log(10)/F) #calculate the pH on the total scale (Dickson A. G., Sabine C. L. and Christian J. R., SOP 6a)
-#SW.chem <- na.omit(SW.chem) #remove NAs
 
-Trts.pH <- SW.chem %>%
-  group_by(Treatment.Group, Exposure) %>%
-  summarise(mean = mean(pH.Total,na.rm = TRUE), sem=std.error(pH.Total,na.rm = TRUE), n = n())
+#calculate mean TA from titrations
 Trts.TA <- SW.chem %>%
   group_by(Treatment.Group, Exposure) %>%
-  summarise(mean = mean(Total.Alkalinity,na.rm = TRUE),sem=std.error(Total.Alkalinity,na.rm = TRUE), n = n())
-Trts.Temp<- SW.chem %>%
-  group_by(Treatment.Group, Exposure) %>%
-  summarise(mean = mean(Temperature,na.rm = TRUE),sem=std.error(Temperature,na.rm = TRUE), n = n())
+  summarise(mean = mean(Total.Alkalinity,na.rm = TRUE),sem=std.error(Total.Alkalinity,na.rm = TRUE), N= sum(!is.na(Total.Alkalinity)))
 
-TA.mod <- summary(aov(Total.Alkalinity ~ Treatment, data=SW.chem))
+TA.mod <- aov(Total.Alkalinity ~ Treatment, data=SW.chem)
+summary(TA.mod)
 par(mfrow=c(1,3))
 hist(TA.mod$residuals)
 boxplot(TA.mod$residuals)
 plot(TA.mod$fitted.values,TA.mod$residuals)
+
+#apply mean TA value per treatment to new column for seacarb calculations
+# SW.chem %>%
+#   mutate(TA.mean = case_when(Treatment.Group %in% Ambient ~ Trts.TA[1,3], 
+#                              Treatment.Group %in% Mid ~ Trts.TA[4,3], 
+#                              Treatment.Group %in% High ~ Trts.TA[3,3])) 
+
+#Calculate CO2 parameters using seacarb
+carb.output <- carb(flag=8, var1=SW.chem$pH.Total, var2=SW.chem$TA.calc/1000000, S= SW.chem$Salinity, T=SW.chem$Temperature, P=0, Pt=0, Sit=0, pHscale="T", kf="pf", k1k2="l", ks="d") #calculate seawater chemistry parameters using seacarb
+carb.output$ALK <- carb.output$ALK*1000000 #convert to µmol kg-1
+carb.output$CO2 <- carb.output$CO2*1000000 #convert to µmol kg-1
+carb.output$HCO3 <- carb.output$HCO3*1000000 #convert to µmol kg-1
+carb.output$CO3 <- carb.output$CO3*1000000 #convert to µmol kg-1
+carb.output$DIC <- carb.output$DIC*1000000 #convert to µmol kg-1
+carb.output <- cbind(SW.chem$Measure.Date,  SW.chem$Exposure, SW.chem$Sample.ID,  SW.chem$Treatment, carb.output) #combine the sample information with the seacarb output
+colnames(carb.output) <- c("Date", "Exposure", "Tank",  "Treatment",	"flag",	"Salinity",	"Temperature","Patm",	"Pressure",	"pH",	"CO2",	"fCO2", "pCO2",	"fCO2pot","pCO2pot","fCOinsitu", "pCOinsitu","HCO3",	"CO3",	"DIC", "TA",	"Aragonite.Sat", 	"Calcite.Sat") #Rename columns to describe contents
+carb.output <- subset(carb.output, select= c("Exposure","Date",  "Tank",  "Treatment",	"Salinity",	"Temperature",		"pH",	"CO2",	"pCO2",	"HCO3",	"CO3",	"DIC", "TA",	"Aragonite.Sat"))
+
+#Calculate descriptive stats for seawater chemistry by Exposure
+mean.carb.output  <- carb.output %>% 
+  group_by(Exposure, Treatment) %>%
+   summarise_at(c("Salinity","Temperature","pH","CO2","pCO2","HCO3","CO3","DIC","TA","Aragonite.Sat"),
+            mean) 
+sem.carb.output  <- carb.output %>% 
+  group_by(Exposure, Treatment) %>%
+   summarise_at(c("Salinity","Temperature","pH","CO2","pCO2","HCO3","CO3","DIC","TA","Aragonite.Sat"),
+            std.error) 
+N.carb.output  <- carb.output %>% 
+  group_by(Exposure, Treatment) %>%
+   summarise_at(c("Salinity","Temperature","pH","CO2","pCO2","HCO3","CO3","DIC","TA","Aragonite.Sat"),
+            length) 
+ 
 ```
-
-# ```{r}
-#Prepare input file for seacarb
-
-#apply mean TA to all values for the whole experiment
-
-
-# #Calculate CO2 parameters using seacarb
-# carb.output <- carb(flag=8, var1=SW.chem$pH.Total, var2=SW.chem$TA/1000000, S= SW.chem$Salinity, T=SW.chem$Temperature, P=0, Pt=0, Sit=0, pHscale="T", kf="pf", k1k2="l", ks="d") #calculate seawater chemistry parameters using seacarb
-# carb.output$ALK <- carb.output$ALK*1000000 #convert to µmol kg-1
-# carb.output$CO2 <- carb.output$CO2*1000000 #convert to µmol kg-1
-# carb.output$HCO3 <- carb.output$HCO3*1000000 #convert to µmol kg-1
-# carb.output$CO3 <- carb.output$CO3*1000000 #convert to µmol kg-1
-# carb.output$DIC <- carb.output$DIC*1000000 #convert to µmol kg-1
-# carb.output <- cbind(SW.chem$Measure.Date,  SW.chem$Exposure, SW.chem$Tank,  SW.chem$Treatment, carb.output) #combine the sample information with the seacarb output
-# colnames(carb.output) <- c("Date", "Exposure", "Tank",  "Treatment",	"flag",	"Salinity",	"Temperature","Patm",	"Pressure",	"pH",	"CO2",	"fCO2", "pCO2",	"fCO2pot","pCO2pot","fCOinsitu", "pCOinsitu","HCO3",	"CO3",	"DIC", "TA",	"Aragonite.Sat", 	"Calcite.Sat") #Rename columns to describe contents
-# carb.output <- subset(carb.output, select= c("Exposure","Date",  "Tank",  "Treatment",	"Salinity",	"Temperature",		"pH",	"CO2",	"pCO2",	"HCO3",	"CO3",	"DIC", "TA",	"Aragonite.Sat"))
-# 
-# #Calculate descriptive stats for seawater chemistry by Exposure
-# ccarb <- melt(carb.output[,c(1,3,4,5:14)], id.vars=c("Exposure", "Treatment", "Tank")) #reshape data into long format
-# Exp1 <-subset(ccarb, Exposure == "Exposure1") #separate out exposure 1 for all data
-# Exp2 <-subset(ccarb, Exposure == "Exposure2") #separate out exposure 2 for all data
-# 
-# SWC.Tanks <- ddply(ccarb, c("Exposure", "Tank", "variable"), summarise, #apply functions to sewater chem data
-#       N = length(na.omit(value)), #count the sample size removing NA
-#       mean = mean(value), #calculate average 
-#       sem = sd(value)/sqrt(N)) #calcualte the standard error of the mean
-# 
-# #Test for tank and treatment differences in Temperature and Total Alkalinity in Exposure 1
-# Exp1.Temp <-subset(Exp1, variable=="Temperature") #separate out exposure 1 for all data
-# temp1.tank <- aov(value ~Tank, data=Exp1.Temp) #test the hypothesis there is no difference in temperature between tanks
-# temp1.tank.res <-anova(temp1.tank) #view results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(temp1.tank$residuals) #plot histogram of residuals
-# boxplot(temp1.tank$residuals) #plot boxplot of residuals
-# plot(temp1.tank) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# temp1.trt <- aov(value ~Treatment, data=Exp1.Temp) #test the hypothesis there is no difference in temperature between treatments
-# temp1.trt.res <- anova(temp1.trt) #statistical results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(temp1.trt$residuals) #plot histogram of residuals
-# boxplot(temp1.trt$residuals) #plot boxplot of residuals
-# plot(temp1.trt) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# Exp1.TA <-subset(Exp1, variable=="TA") #separate out exposure 1 for all data
-# TA1.tank <- aov(value ~Tank, data=Exp1.TA) #test the hypothesis there is no difference in total alkalinity between tanks
-# TA1.tank.res <- anova(temp1.trt) #statistical results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(TA1.tank$residuals) #plot histogram of residuals
-# boxplot(TA1.tank$residuals) #plot boxplot of residuals
-# plot(TA1.tank) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# TA1.trt <- aov(value ~Treatment, data=Exp1.TA) #test the hypothesis there is no difference in total alkalinity between treatments
-# TA1.trt.res <- anova(temp1.trt) #statistical results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(TA1.trt$residuals) #plot histogram of residuals
-# boxplot(TA1.trt$residuals) #plot boxplot of residuals
-# plot(TA1.trt) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# #Test for tank and treatment differences in Temperature and Total Alkalinity in Exposure 2
-# Exp2.Temp <-subset(Exp2, variable=="Temperature") #separate out exposure 2 for all data
-# temp2.tank <- aov(value ~Tank, data=Exp2.Temp) #test the hypothesis there is no difference in temperature between tanks
-# temp2.tank.res <-anova(temp2.tank) #view results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(temp2.tank$residuals) #plot histogram of residuals
-# boxplot(temp2.tank$residuals) #plot boxplot of residuals
-# plot(temp2.tank) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# temp2.trt <- aov(value ~Treatment, data=Exp2.Temp) #test the hypothesis there is no difference in temperature between treatments
-# temp2.trt.res <- anova(temp2.trt) #statistical results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(temp2.trt$residuals) #plot histogram of residuals
-# boxplot(temp2.trt$residuals) #plot boxplot of residuals
-# plot(temp2.trt) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# Exp2.TA <-subset(Exp2, variable=="TA") #separate out exposure 2 for all data
-# TA2.tank <- aov(value ~Tank, data=Exp2.TA) #test the hypothesis there is no difference in total alkalinity between tanks
-# TA2.tank.res <- anova(temp2.trt) #statistical results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(TA2.tank$residuals) #plot histogram of residuals
-# boxplot(TA2.tank$residuals) #plot boxplot of residuals
-# plot(TA2.tank) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# TA2.trt <- aov(value ~Treatment, data=Exp2.TA) #test the hypothesis there is no difference in total alkalinity between treatments
-# TA2.trt.res <- anova(temp2.trt) #statistical results
-# par(mfrow=c(3,2)) #set plotting configuration
-# par(mar=c(1,1,1,1)) #set margins for plots
-# hist(TA2.trt$residuals) #plot histogram of residuals
-# boxplot(TA2.trt$residuals) #plot boxplot of residuals
-# plot(TA2.trt) #display residuals versus fitter, normal QQ plot, leverage plot
-# 
-# #Calculate descriptive stats by Treatment
-# SWC.Treatments <- ddply(ccarb, c("Exposure", "Treatment", "variable"), summarise,
-#       N = length(na.omit(value)), #count the sample size removing NA
-#       mean = mean(value), #calculate average 
-#       sem = sd(value)/sqrt(N)) #calcualte the standard error of the mean
-# 
-# Exposure1 <-subset(SWC.Treatments, Exposure == "Exposure1") #separate out exposure 1
-# Exposure2 <-subset(SWC.Treatments, Exposure == "Exposure2") #separate out exposure 2
-# Exposure1.long <- reshape(Exposure1, idvar="Treatment", direction="wide", timevar = "variable", drop = c("Exposure", "N")) #reshape data format for table layout
-# Exposure2.long <- reshape(Exposure2, idvar="Treatment", direction="wide", timevar = "variable", drop = c("Exposure", "N")) #reshape data format for table layout
-# write.table (Exposure1.long, file="/Users/hputnam/MyProjects/Geoduck_Epi/project_juvenile_geoduck_oa/RAnalysis/Output/Seawater_chemistry_table_Output_Seed_exposure1.csv", sep=",", row.names = FALSE) #save data to output file
-# write.table (Exposure2.long, file="/Users/hputnam/MyProjects/Geoduck_Epi/project_juvenile_geoduck_oa/RAnalysis/Output/Seawater_chemistry_table_Output_Seed_exposure2.csv", sep=",", row.names = FALSE) #save data to output file
-# 
-# ```
 
 ```{r Shell Size}
 ##### Shell Size
