@@ -204,10 +204,8 @@ dev.off()
 d10DMR_1way_aov_pH <- d10DMRs_STACKED_asin %>% group_by(ID) %>%
 do(meth_aov_models = aov(perc.meth~Initial.Treatment, data =  . ))
 #summarize ANOVA data
-d10DMR_1way_aov_pH_modelsumm <- glance(d10DMR_1way_aov_pH, meth_aov_models)
+d10DMR_1way_aov_pH_modelsumm <- data.frame(glance(d10DMR_1way_aov_pH, meth_aov_models))
 
-#add a comparison column
-d10DMR_1way_aov_pH_modelsumm$comparison <- "Day_10"
 ```
 
 **Hypotehsis: there is no effect from pH at day135**
@@ -215,19 +213,17 @@ d10DMR_1way_aov_pH_modelsumm$comparison <- "Day_10"
 d135DMR_1way_aov_pH <- d135DMRs_STACKED_asin %>% group_by(ID) %>%
 do(meth_aov_models = aov(perc.meth~Initial.Treatment, data =  . ))
 #summarize ANOVA data
-d135DMR_1way_aov_pH_modelsumm <- glance(d135DMR_1way_aov_pH, meth_aov_models)
-#add a comparison column
-d135DMR_1way_aov_pH_modelsumm$comparison <- "Day_135"
+d135DMR_1way_aov_pH_modelsumm <- data.frame(glance(d135DMR_1way_aov_pH, meth_aov_models))
+
 ```
 
-**Hypotehsis: there is no effect from pH at day145**
+**Hypotehsis: there is no effect from initital pH, secondary pH, or their interaction at day145**
 ```{r}
-d145DMR_1way_aov_pH <- d145DMRs_STACKED_asin %>% group_by(ID) %>%
-do(meth_aov_models = aov(perc.meth~Treatment, data =  . ))
+d145DMR_2way_aov_pH <- d145DMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~Initial.Treatment*Secondary.Treatment, data =  . ))
 #summarize ANOVA data
-d145DMR_1way_aov_pH_modelsumm <- glance(d145DMR_1way_aov_pH, meth_aov_models)
-#add a comparison column
-d145DMR_1way_aov_pH_modelsumm$comparison <- "Day_145"
+d145DMR_2way_aov_pH_modelsumm <- data.frame(tidyr::pivot_wider(tidy(d145DMR_2way_aov_pH, meth_aov_models),names_from = term, values_from = c("df", "sumsq", "meansq","statistic","p.value"),names_sep = "_" ))
+
 
 ```
 
@@ -237,17 +233,10 @@ d145DMR_1way_aov_pH_modelsumm$comparison <- "Day_145"
 ambDMR_1way_aov_pH <- ambDMRs_STACKED_asin %>% group_by(ID) %>%
 do(meth_aov_models = aov(perc.meth~TimePoint, data =  . ))
 #summarize ANOVA data
-ambDMR_1way_aov_pH_modelsumm <- glance(ambDMR_1way_aov_pH, meth_aov_models)
+ambDMR_1way_aov_pH_modelsumm <- data.frame(glance(ambDMR_1way_aov_pH, meth_aov_models))
 
-#add a comparison column
-ambDMR_1way_aov_pH_modelsumm$comparison <- "All_ambient"
 ```
 
-write out ANOVA data to file
-```{r}
-#write ANOVA output to file
-write.csv(rbind(d10DMR_1way_aov_pH_modelsumm,d135DMR_1way_aov_pH_modelsumm,d145DMR_1way_aov_pH_modelsumm,ambDMR_1way_aov_pH_modelsumm), "RAnalysis/Output/DMR_1way_aov_modelsumm.csv", row.names = FALSE, quote = FALSE)
-```
 
 plot heatmap of 1way aov for pH p.val 0.05 sig DMRs
 ```{r}
@@ -317,7 +306,7 @@ dev.off()
 aov_0.05pH_d145DMR_m <- as.matrix(d145DMRs[,7:30])
 rownames(aov_0.05pH_d145DMR_m) <- d145DMRs$ID
 
-aov_0.05pH_d145DMR_m <- aov_0.05pH_d145DMR_m[which(rownames(aov_0.05pH_d145DMR_m) %in% pull(d145DMR_1way_aov_pH_modelsumm[which(d145DMR_1way_aov_pH_modelsumm$p.value < 0.05),],ID)),]
+aov_0.05pH_d145DMR_m <- aov_0.05pH_d145DMR_m[which(rownames(aov_0.05pH_d145DMR_m) %in% pull(d145DMR_2way_aov_pH_modelsumm[which(d145DMR_2way_aov_pH_modelsumm$`p.value_Initial.Treatment.Secondary.Treatment` < 0.05),],ID)),]
 #remove extra text from column names
 colnames(aov_0.05pH_d145DMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_d145DMR_m))
 
@@ -347,7 +336,7 @@ aov_0.05pH_d145DMR_mean_m <- as.matrix(data.frame(cbind(Meand145pHambamb,Meand14
 colnames(aov_0.05pH_d145DMR_mean_m) <- c("pH 8.0 -> pH 8.0", "pH 8.0 -> pH 7.4","pH 7.4 -> pH 8.0","pH 7.4 -> pH 7.4", "pH 7.0 -> pH 8.0", "pH 7.0 -> pH 7.4")
 
 jpeg("RAnalysis/Output/D145.DMR_heatmap.jpg", width = 800, height = 1000)
-heatmap.2(aov_0.05pH_d145DMR_mean_m,margins = c(12,15), cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), lmat = rbind(c(0,3),c(2,1),c(4,0)),na.color = "black", density.info = "none", trace = "none", scale = "row", keysize=1, key.par = list(cex=1),labRow = FALSE,sepwidth=c(0.1,0.01), lhei=c(1.5,4,1),lwid= c(1.0, 5), sepcolor="white",colsep=seq(2,ncol(aov_0.05pH_d145DMR_mean_m),2),rowsep=1:nrow(aov_0.05pH_d145DMR_mean_m))
+heatmap.2(aov_0.05pH_d145DMR_mean_m,margins = c(12,15), cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), lmat = rbind(c(0,3),c(2,1),c(4,0)),na.color = "black", density.info = "none", trace = "none", scale = "row", keysize=0.5, key.par = list(cex=1),labRow = FALSE,sepwidth=c(0.1,0.01), lhei=c(1.5,4,1),lwid= c(1.5, 4),sepcolor="white",colsep=seq(2,ncol(aov_0.05pH_d145DMR_mean_m),2),rowsep=1:nrow(aov_0.05pH_d145DMR_mean_m))
 dev.off()
 
 ##### AMBIENT SAMPLES ######
@@ -385,78 +374,74 @@ heatmap.2(aov_0.05pH_ambDMR_mean_m,margins = c(10,20), cexCol = 2, distfun = fun
 dev.off()
 ```
 
-Write out bedfiles
+Write out ANOVA summary stats tables
 ```{r}
 #write out d10 DMR bed file
-aov_0.05pH_d10DMR_bed <- data.frame(aov_0.05pH_d10DMR_m)
-aov_0.05pH_d10DMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_d10DMR_m))
-aov_0.05pH_d10DMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_d10DMR_m))
-aov_0.05pH_d10DMR_bed$start <- gsub("-.*","", aov_0.05pH_d10DMR_bed$start)
-aov_0.05pH_d10DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d10DMR_m))
-aov_0.05pH_d10DMR_bed$comparison <- "d10"
-aov_0.05pH_d10DMR_bed <- aov_0.05pH_d10DMR_bed[,c((ncol(aov_0.05pH_d10DMR_bed)-3):ncol(aov_0.05pH_d10DMR_bed)) ]
-write.table(aov_0.05pH_d10DMR_bed,"RAnalysis/Output/aov_0.05pH_d10DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+d10DMR_1way_aov_pH_modelsumm$scaffold <- gsub("\\:.*","", d10DMR_1way_aov_pH_modelsumm$ID)
+d10DMR_1way_aov_pH_modelsumm$start <- gsub(".*\\:","", d10DMR_1way_aov_pH_modelsumm$ID)
+d10DMR_1way_aov_pH_modelsumm$start <- gsub("-.*","", d10DMR_1way_aov_pH_modelsumm$start)
+d10DMR_1way_aov_pH_modelsumm$end <- gsub(".*-","",  d10DMR_1way_aov_pH_modelsumm$ID)
+d10DMR_1way_aov_pH_modelsumm <- d10DMR_1way_aov_pH_modelsumm[,c(1,(ncol(d10DMR_1way_aov_pH_modelsumm)-2):ncol(d10DMR_1way_aov_pH_modelsumm),2:(ncol(d10DMR_1way_aov_pH_modelsumm)-3))]
+#order by pvalue
+d10DMR_1way_aov_pH_modelsumm <- d10DMR_1way_aov_pH_modelsumm[order(d10DMR_1way_aov_pH_modelsumm$p.value),]
+write.csv(d10DMR_1way_aov_pH_modelsumm,"RAnalysis/Output/aov_pH_d10DMR.csv", row.names = FALSE, quote = FALSE)
 
 #write out d135 DMR bed file
-aov_0.05pH_d135DMR_bed <- data.frame(aov_0.05pH_d135DMR_m)
-aov_0.05pH_d135DMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_d135DMR_m))
-aov_0.05pH_d135DMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_d135DMR_m))
-aov_0.05pH_d135DMR_bed$start <- gsub("-.*","", aov_0.05pH_d135DMR_bed$start)
-aov_0.05pH_d135DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d135DMR_m))
-aov_0.05pH_d135DMR_bed$comparison <- "d135"
-aov_0.05pH_d135DMR_bed <- aov_0.05pH_d135DMR_bed[,c((ncol(aov_0.05pH_d135DMR_bed)-3):ncol(aov_0.05pH_d135DMR_bed)) ]
-write.table(aov_0.05pH_d135DMR_bed,"RAnalysis/Output/aov_0.05pH_d135DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+d135DMR_1way_aov_pH_modelsumm$scaffold <- gsub("\\:.*","", d135DMR_1way_aov_pH_modelsumm$ID)
+d135DMR_1way_aov_pH_modelsumm$start <- gsub(".*\\:","", d135DMR_1way_aov_pH_modelsumm$ID)
+d135DMR_1way_aov_pH_modelsumm$start <- gsub("-.*","", d135DMR_1way_aov_pH_modelsumm$start)
+d135DMR_1way_aov_pH_modelsumm$end <- gsub(".*-","",  d135DMR_1way_aov_pH_modelsumm$ID)
+d135DMR_1way_aov_pH_modelsumm <- d135DMR_1way_aov_pH_modelsumm[,c(1,(ncol(d135DMR_1way_aov_pH_modelsumm)-2):ncol(d135DMR_1way_aov_pH_modelsumm),2:(ncol(d135DMR_1way_aov_pH_modelsumm)-3))]
+#order by pvalue
+d135DMR_1way_aov_pH_modelsumm <- d135DMR_1way_aov_pH_modelsumm[order(d135DMR_1way_aov_pH_modelsumm$p.value),]
+write.csv(d135DMR_1way_aov_pH_modelsumm,"RAnalysis/Output/aov_pH_d135DMR.csv", row.names = FALSE, quote = FALSE)
 
 #write out d145 DMR bed file
-aov_0.05pH_d145DMR_bed <- data.frame(aov_0.05pH_d145DMR_m)
-aov_0.05pH_d145DMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_d145DMR_m))
-aov_0.05pH_d145DMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_d145DMR_m))
-aov_0.05pH_d145DMR_bed$start <- gsub("-.*","", aov_0.05pH_d145DMR_bed$start)
-aov_0.05pH_d145DMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_d145DMR_m))
-aov_0.05pH_d145DMR_bed$comparison <- "d145"
-aov_0.05pH_d145DMR_bed <- aov_0.05pH_d145DMR_bed[,c((ncol(aov_0.05pH_d145DMR_bed)-3):ncol(aov_0.05pH_d145DMR_bed)) ]
-write.table(aov_0.05pH_d145DMR_bed,"RAnalysis/Output/aov_0.05pH_d145DMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+d145DMR_2way_aov_pH_modelsumm$scaffold <- gsub("\\:.*","", d145DMR_2way_aov_pH_modelsumm$ID)
+d145DMR_2way_aov_pH_modelsumm$start <- gsub(".*\\:","", d145DMR_2way_aov_pH_modelsumm$ID)
+d145DMR_2way_aov_pH_modelsumm$start <- gsub("-.*","", d145DMR_2way_aov_pH_modelsumm$start)
+d145DMR_2way_aov_pH_modelsumm$end <- gsub(".*-","",  d145DMR_2way_aov_pH_modelsumm$ID)
+d145DMR_2way_aov_pH_modelsumm <- d145DMR_2way_aov_pH_modelsumm[,c(1,(ncol(d145DMR_2way_aov_pH_modelsumm)-2):ncol(d145DMR_2way_aov_pH_modelsumm),2:(ncol(d145DMR_2way_aov_pH_modelsumm)-3))]
+#order by pvalue
+d145DMR_2way_aov_pH_modelsumm <- d145DMR_2way_aov_pH_modelsumm[order(d145DMR_2way_aov_pH_modelsumm$p.value_Initial.Treatment.Secondary.Treatment),]
+write.csv(d145DMR_2way_aov_pH_modelsumm,"RAnalysis/Output/aov_pH_d145DMR.csv", row.names = FALSE, quote = FALSE)
 
 
 #write out amb DMR bed file
-aov_0.05pH_ambDMR_bed <- data.frame(aov_0.05pH_ambDMR_m)
-aov_0.05pH_ambDMR_bed$Scaffold <- gsub("\\:.*","", rownames(aov_0.05pH_ambDMR_m))
-aov_0.05pH_ambDMR_bed$start <- gsub(".*\\:","", rownames(aov_0.05pH_ambDMR_m))
-aov_0.05pH_ambDMR_bed$start <- gsub("-.*","", aov_0.05pH_ambDMR_bed$start)
-aov_0.05pH_ambDMR_bed$end <- gsub(".*-","",  rownames(aov_0.05pH_ambDMR_m))
-aov_0.05pH_ambDMR_bed$comparison <- "time"
-aov_0.05pH_ambDMR_bed <- aov_0.05pH_ambDMR_bed[,c((ncol(aov_0.05pH_ambDMR_bed)-3):ncol(aov_0.05pH_ambDMR_bed)) ]
-write.table(aov_0.05pH_ambDMR_bed,"RAnalysis/Output/aov_0.05pH_ambDMR.bed", row.names = FALSE,col.names = FALSE, quote = FALSE,sep = "\t")
+ambDMR_1way_aov_pH_modelsumm$scaffold <- gsub("\\:.*","", ambDMR_1way_aov_pH_modelsumm$ID)
+ambDMR_1way_aov_pH_modelsumm$start <- gsub(".*\\:","", ambDMR_1way_aov_pH_modelsumm$ID)
+ambDMR_1way_aov_pH_modelsumm$start <- gsub("-.*","", ambDMR_1way_aov_pH_modelsumm$start)
+ambDMR_1way_aov_pH_modelsumm$end <- gsub(".*-","",  ambDMR_1way_aov_pH_modelsumm$ID)
+ambDMR_1way_aov_pH_modelsumm <- ambDMR_1way_aov_pH_modelsumm[,c(1,(ncol(ambDMR_1way_aov_pH_modelsumm)-2):ncol(ambDMR_1way_aov_pH_modelsumm),2:(ncol(ambDMR_1way_aov_pH_modelsumm)-3))]
+#order by pvalue
+ambDMR_1way_aov_pH_modelsumm <- ambDMR_1way_aov_pH_modelsumm[order(ambDMR_1way_aov_pH_modelsumm$p.value),]
+write.csv(ambDMR_1way_aov_pH_modelsumm,"RAnalysis/Output/aov_pH_timeDMR.csv", row.names = FALSE, quote = FALSE)
+
 ```
-
-
 
 Create boxplots of significant DMR sizes (not very interesting)
 ```{r}
-#bind together all DMR bed files
-aov_0.05_DMR_bed <- rbind(aov_0.05pH_ambDMR_bed, aov_0.05pH_d10DMR_bed,aov_0.05pH_d135DMR_bed,aov_0.05pH_d145DMR_bed)
-
-#replace "d" with "day" in the comparison column
-aov_0.05_DMR_bed$comparison <- gsub("d","day ",aov_0.05_DMR_bed$comparison)
-
+#bind together all DMR files
+aov_0.05_DMRs <- rbind(cbind(d10DMR_1way_aov_pH_modelsumm[which(d10DMR_1way_aov_pH_modelsumm$p.value < 0.05),c("scaffold","start","end")],comparison = rep("day10", nrow(d10DMR_1way_aov_pH_modelsumm[which(d10DMR_1way_aov_pH_modelsumm$p.value < 0.05),]))), cbind(d135DMR_1way_aov_pH_modelsumm[which(d135DMR_1way_aov_pH_modelsumm$p.value < 0.05),c("scaffold","start","end")],comparison = rep("day135", nrow(d135DMR_1way_aov_pH_modelsumm[which(d135DMR_1way_aov_pH_modelsumm$p.value < 0.05),]))),cbind(d145DMR_2way_aov_pH_modelsumm[which(d145DMR_2way_aov_pH_modelsumm$p.value_Initial.Treatment.Secondary.Treatment < 0.05),c("scaffold","start","end")],comparison = rep("day145", nrow(d145DMR_2way_aov_pH_modelsumm[which(d145DMR_2way_aov_pH_modelsumm$p.value_Initial.Treatment.Secondary.Treatment < 0.05),]))),cbind(ambDMR_1way_aov_pH_modelsumm[which(ambDMR_1way_aov_pH_modelsumm$p.value < 0.05),c("scaffold","start","end")],comparison = rep("time", nrow(ambDMR_1way_aov_pH_modelsumm[which(ambDMR_1way_aov_pH_modelsumm$p.value < 0.05),]))))
+                       
 #create a column for DMR length
-aov_0.05_DMR_bed$length <- (as.numeric(aov_0.05_DMR_bed$end) - as.numeric(aov_0.05_DMR_bed$start))
+aov_0.05_DMRs$length <- (as.numeric(aov_0.05_DMRs$end) - as.numeric(aov_0.05_DMRs$start))
 
 #make violin plots
 jpeg("RAnalysis/Output/DMR_size_distributions.jpg", width = 6, height = 4.5, units = "in", res = 300)
-ggplot(aov_0.05_DMR_bed,aes(comparison,length, fill = comparison)) + geom_violin(trim = FALSE) + geom_boxplot(width=0.1) + theme_bw() + theme(axis.text = element_text(size = 10))
+ggplot(aov_0.05_DMRs,aes(comparison,length, fill = comparison)) + geom_violin(trim = FALSE) + geom_boxplot(width=0.1) + theme_bw() + theme(axis.text = element_text(size = 10))
 dev.off()
 
 #transform to normalize
-ggplot(aov_0.05_DMR_bed,aes(log(length,2), fill = comparison, color = comparison)) + geom_density(alpha = 0.25)
+ggplot(aov_0.05_DMRs,aes(log(length,2), fill = comparison, color = comparison)) + geom_density(alpha = 0.25)
 
 #test if a pH or time ever has an affect on DMR length
-summary(aov(log(length,2)~comparison, data =  aov_0.05_DMR_bed ))
+summary(aov(log(length,2)~comparison, data =  aov_0.05_DMRs ))
 
 
 #plot distribution of DMRs across scaffolds
 jpeg("RAnalysis/Output/DMR_distribution_across_scaffolds.jpg", width = 10, height = 5, units = "in", res = 300)
-ggplot(aov_0.05_DMR_bed, aes(substr(Scaffold,10,11), group = comparison, color = comparison, fill = comparison)) + geom_bar(aes(y = (..prop..)*100), stat="count", position = "dodge") + xlab("Scaffold") + ylab("% DMRs") + theme_bw()
+ggplot(aov_0.05_DMRs, aes(substr(scaffold,10,11), group = comparison, color = comparison, fill = comparison)) + geom_bar(aes(y = (..prop..)*100), stat="count", position = "dodge") + xlab("Scaffold") + ylab("% DMRs") + theme_bw()
 dev.off()
 
 #read in file with scaffold lengths
@@ -465,15 +450,15 @@ pgen_scaffolds <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenero
 #remove extraneous info
 pgen_scaffolds <- pgen_scaffolds[,c(1,2)]
 #rename columns
-colnames(pgen_scaffolds) <- c("Scaffold", "total_scaff_length")
+colnames(pgen_scaffolds) <- c("scaffold", "total_scaff_length")
 #add scaffold lengths to DMR table
-aov_0.05_DMR_bed <- merge(aov_0.05_DMR_bed,pgen_scaffolds, by = "Scaffold")
+aov_0.05_DMRs <- merge(aov_0.05_DMRs,pgen_scaffolds, by = "scaffold")
 #create a scaffold position column
-aov_0.05_DMR_bed$Scaffold_position <- (as.numeric(aov_0.05_DMR_bed$start)/as.numeric(aov_0.05_DMR_bed$total_scaff_length))
+aov_0.05_DMRs$scaffold_position <- (as.numeric(aov_0.05_DMRs$start)/as.numeric(aov_0.05_DMRs$total_scaff_length))
 
 #plot histograms showing the number of DMRs x scaffold position for each comparison facetted by scaffold
 jpeg("RAnalysis/Output/DMR_distribution_by_scaffold_position.jpg", width = 6, height = 7, units = "in", res = 300)
-ggplot(aov_0.05_DMR_bed) + geom_histogram(aes(Scaffold_position, fill = comparison), position = "dodge", bins = 10) + facet_wrap(~Scaffold, nrow = 5) + xlab("relative scaffold position") + ylab("number of DMRs") + theme_bw() + theme(axis.text.x = element_text(size = 8, angle = 60, hjust= 1),axis.text.y = element_text(size = 10))
+ggplot(aov_0.05_DMRs) + geom_histogram(aes(scaffold_position, fill = comparison), position = "dodge", bins = 10) + facet_wrap(~scaffold, nrow = 5) + xlab("relative scaffold position") + ylab("number of DMRs") + theme_bw() + theme(axis.text.x = element_text(size = 8, angle = 60, hjust= 1),axis.text.y = element_text(size = 10))
 dev.off()
 
 ```
