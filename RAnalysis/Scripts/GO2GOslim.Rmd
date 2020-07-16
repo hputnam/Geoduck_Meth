@@ -5,6 +5,20 @@ date: "7/16/2020"
 output: html_document
 ---
 
+**install packages**
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("topGO")
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("GSEAbase")
+```
+
+
 **load libraries**
 ```{r, echo = FALSE}
 library(dplyr)
