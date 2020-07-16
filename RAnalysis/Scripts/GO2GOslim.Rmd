@@ -50,6 +50,7 @@ colnames(all_GO) <- c("gene","scaffold", "start", "end", "uniprot.id", "uniprot_
 ```{r}
 gene_slims <- data.frame()
 for (i in 1:length(all_GO$gene)){
+  print(i)
   if(!is.na(all_GO$GO.IDs[i])){
     GO_IDs <- unlist(strsplit(all_GO$GO.IDs[i], "; "))
     GO_collection <- GOCollection(GO_IDs)
@@ -81,11 +82,16 @@ for (i in 1:length(all_GO$gene)){
 #reformat data frame from long to wide with slim terms separated by commas
 gene_slims_summry_bp <- gene_slims %>% dplyr::group_by(geneein_ID) %>% dplyr::summarise(GO_slim_BP = toString(Term)) 
 
+#convert commas to semi colons
+gene_slims_summry_mf$GO_slim_BP <- gsub(",",";",gene_slims_summry_mf$GO_slim_BP)
+
+
 
 #do the same for CC
 
 gene_slims <- data.frame()
 for (i in 1:length(all_GO$gene)){
+  print(i)
   if(!is.na(all_GO$GO.IDs[i])){
     GO_IDs <- unlist(strsplit(all_GO$GO.IDs[i], "; "))
     GO_collection <- GOCollection(GO_IDs)
@@ -101,11 +107,14 @@ for (i in 1:length(all_GO$gene)){
 #reformat data frame from long to wide with slim terms separated by commas
 gene_slims_summry_cc <- gene_slims %>% dplyr::group_by(geneein_ID) %>% dplyr::summarise(GO_slim_CC = toString(Term)) 
 
+#convert commas to semi colons
+gene_slims_summry_mf$GO_slim_CC <- gsub(",",";",gene_slims_summry_mf$GO_slim_CC)
 
 #do the same for MF
 
 gene_slims <- data.frame()
 for (i in 1:length(all_GO$gene)){
+  print(i)
   if(!is.na(all_GO$GO.IDs[i])){
     GO_IDs <- unlist(strsplit(all_GO$GO.IDs[i], "; "))
     GO_collection <- GOCollection(GO_IDs)
@@ -121,10 +130,15 @@ for (i in 1:length(all_GO$gene)){
 #reformat data frame from long to wide with slim terms separated by commas
 gene_slims_summry_mf <- gene_slims %>% dplyr::group_by(geneein_ID) %>% dplyr::summarise(GO_slim_MF = toString(Term)) 
 
+#convert commas to semi colons
+gene_slims_summry_mf$GO_slim_MF <- gsub(",",";",gene_slims_summry_mf$GO_slim_MF)
+
 #merge GO slim tables from different categories together
 gene_slims_summry <- merge(gene_slims_summry_bp, gene_slims_summry_cc, by = "gene", all = T)
 
 gene_slims_summry <- merge(gene_slims_summry, gene_slims_summry_mf, by = "gene", all = T)
+
+
 
 ```
 
