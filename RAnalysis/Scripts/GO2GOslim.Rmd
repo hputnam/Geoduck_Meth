@@ -1,0 +1,126 @@
+---
+title: "Untitled"
+author: "Shelly Trigg"
+date: "7/16/2020"
+output: html_document
+---
+
+**load libraries**
+```{r, echo = FALSE}
+library(dplyr)
+library(tidyr)
+#library(MetStaT)
+#library(ggplot2)
+#library(heatmap3)
+#library(colorRamps)
+#library(plotrix)
+#library(plyr)
+library(GSEABase)
+#library(reshape2)
+#library(gplots)
+#library(viridis)
+library(topGO)
+```
+
+
+read in data
+```{r}
+
+all_GO <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-genes-annotations.tab", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = F, skip=0)
+
+colnames(all_GO) <- c("gene","scaffold", "start", "end", "uniprot.id", "uniprot_taxa.id", "Uniprot.Name", "GO.IDs", "GO.Descript")
+```
+
+
+
+```{r}
+gene_slims <- data.frame()
+for (i in 1:length(all_GO$gene)){
+  if(!is.na(all_GO$GO.IDs[i])){
+    GO_IDs <- unlist(strsplit(all_GO$GO.IDs[i], "; "))
+    GO_collection <- GOCollection(GO_IDs)
+    fl <- system.file("extdata", "goslim_generic.obo", package="GSEABase")
+    slim <- getOBOCollection(fl)
+    slims_bp <- data.frame(goSlim(GO_collection, slim, "BP"))
+    slims_bp$gene <- all_GO$gene[i]
+    slims_bp <- slims_bp[which(slims_bp$Count!=0),]
+    gene_slims <- rbind(gene_slims, slims_bp)
+    #replace truncated terms with full terms
+    gene_slims$Term <- gsub("nucleobase-containing compound cata...","nucleobase-containing compound catabolic process", gene_slims$Term)
+    
+    gene_slims$Term <- gsub("generation of precursor metabolites...","generation of precursor metabolites and energy", gene_slims$Term)
+    
+    gene_slims$Term <- gsub("cytoskeleton-dependent intracellula...","cytoskeleton-dependent intracellular transport", gene_slims$Term)
+    
+    gene_slims$Term <- gsub("cellular geneein modification proce...","cellular geneein modification process", gene_slims$Term)
+    
+    gene_slims$Term <- gsub("cellular nitrogen compound metaboli...","cellular nitrogen compound metabolic process", gene_slims$Term)
+    
+    gene_slims$Term <- gsub("cellular nitrogen compound metaboli...","cellular nitrogen compound metabolic p", gene_slims$Term)
+    
+    gene_slims$Term <- gsub("cellular amino acid metabolic proce...","cellular amino acid metabolic process", gene_slims$Term)
+    
+    gene_slims$Term <- gsub("anatomical structure formation invo...","anatomical structure formation involved in morphogenesis", gene_slims$Term)
+  }
+}
+
+#reformat data frame from long to wide with slim terms separated by commas
+gene_slims_summry_bp <- gene_slims %>% dplyr::group_by(geneein_ID) %>% dplyr::summarise(GO_slim_BP = toString(Term)) 
+
+
+#do the same for CC
+
+gene_slims <- data.frame()
+for (i in 1:length(all_GO$gene)){
+  if(!is.na(all_GO$GO.IDs[i])){
+    GO_IDs <- unlist(strsplit(all_GO$GO.IDs[i], "; "))
+    GO_collection <- GOCollection(GO_IDs)
+    fl <- system.file("extdata", "goslim_generic.obo", package="GSEABase")
+    slim <- getOBOCollection(fl)
+    slims_cc <- data.frame(goSlim(GO_collection, slim, "CC"))
+    slims_cc$gene <- all_GO$gene[i]
+    slims_cc <- slims_cc[which(slims_cc$Count!=0),]
+    gene_slims <- rbind(gene_slims, slims_cc)
+  }
+}
+
+#reformat data frame from long to wide with slim terms separated by commas
+gene_slims_summry_cc <- gene_slims %>% dplyr::group_by(geneein_ID) %>% dplyr::summarise(GO_slim_CC = toString(Term)) 
+
+
+#do the same for MF
+
+gene_slims <- data.frame()
+for (i in 1:length(all_GO$gene)){
+  if(!is.na(all_GO$GO.IDs[i])){
+    GO_IDs <- unlist(strsplit(all_GO$GO.IDs[i], "; "))
+    GO_collection <- GOCollection(GO_IDs)
+    fl <- system.file("extdata", "goslim_generic.obo", package="GSEABase")
+    slim <- getOBOCollection(fl)
+    slims_mf <- data.frame(goSlim(GO_collection, slim, "MF"))
+    slims_mf$gene <- all_GO$gene[i]
+    slims_mf <- slims_mf[which(slims_mf$Count!=0),]
+    gene_slims <- rbind(gene_slims, slims_mf)
+  }
+}
+
+#reformat data frame from long to wide with slim terms separated by commas
+gene_slims_summry_mf <- gene_slims %>% dplyr::group_by(geneein_ID) %>% dplyr::summarise(GO_slim_MF = toString(Term)) 
+
+#merge GO slim tables from different categories together
+gene_slims_summry <- merge(gene_slims_summry_bp, gene_slims_summry_cc, by = "gene", all = T)
+
+gene_slims_summry <- merge(gene_slims_summry, gene_slims_summry_mf, by = "gene", all = T)
+
+```
+
+merge back with gene annotation table
+```{r}
+all_GO_slim <- merge(all_GO,gene_slims_summry, by = "gene" , all = T)
+```
+
+
+write out file
+```{r}
+write.table(all_GO_slim, "RAnalysis/Data/Genome/Panopea-generosa-genes-annotations.slims.tab", sep = "\t", quote = F, row.names = F)
+```
