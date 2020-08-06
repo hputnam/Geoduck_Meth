@@ -58,11 +58,9 @@ This repository includes data and analysis scripts to accompany:
 		- **THIS DIRECTORY NEEDS AN OVERHAUL. Can any files be consolidated and/or removed if not needed?** 
 	
 	- **[Scripts](https://github.com/hputnam/Geoduck_Meth/tree/master/RAnalysis/Scripts):** R scripts for all statistical analysis
-		- [CarbChem.R](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/CarbChem.R):  
 		- [Circos_Plot.R](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/Circos_Plot.R):
 		- [DMR\_stats\_and\_anno.Rmd](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/DMR_stats_and_anno.Rmd): Script used to identify DMRs across treatment groups by ANOVA, generate DMR size and genomic location distribution plots, and heatmaps. Performs chi square test for genomic feature analysis and generates stacked bar plots. 
-		- [GM.Rmd](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/GM.Rmd):
-		- [Seed_Exp.R](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/Seed_Exp.R):
+		- [GM.Rmd](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/GM.Rmd): Script to perform differentially methylated gene analysis.
 		- **CONFIRM THESE ARE USED OR NEEDED IN MANUSCRIPT:**
 			- [Characterizing-CpG-Methylation.ipynb](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/Characterizing-CpG-Methylation.ipynb):
 			- [index.html](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/index.html):
