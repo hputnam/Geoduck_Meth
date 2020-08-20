@@ -620,6 +620,8 @@ Gene.GO.IDs.slims <- merge(Gene.GO.IDs, GoSlims, by="GO.IDs", all = TRUE)
 Gene.GO.IDs.slims <- Gene.GO.IDs.slims[-1,]
 
 All.Slims <-  unique(Gene.GO.IDs.slims$GO.Slim.Term)
+cytoact <- GoSlims %>% filter(GO.Slim.Term == "cytoskeletal activity")
+
 ```
 
 ## Filter and Concatenate Datasets
@@ -1118,8 +1120,6 @@ GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:B
 GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=FALSE)
 colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
 
-slim.cats <- Gene.GO.IDs.slims[,4:5]
-slim.cats <- slim.cats[!duplicated(slim.cats$GO.Slim.Term), ]
 GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
 
 #How many enriched GO terms do we have
@@ -1223,8 +1223,6 @@ GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:B
 GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=FALSE)
 colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
 
-slim.cats <- Gene.GO.IDs.slims[,4:5]
-slim.cats <- slim.cats[!duplicated(slim.cats$GO.Slim.Term), ]
 GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
 
 #How many enriched GO terms do we have
@@ -1330,8 +1328,6 @@ GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:B
 GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
 
-slim.cats <- Gene.GO.IDs.slims[,4:5]
-slim.cats <- slim.cats[!duplicated(slim.cats$GO.Slim.Term), ]
 GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
 
 #How many enriched GO terms do we have
@@ -1376,8 +1372,6 @@ GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:B
 GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
 
-slim.cats <- Gene.GO.IDs.slims[,4:5]
-slim.cats <- slim.cats[!duplicated(slim.cats$GO.Slim.Term), ]
 GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
 
 #How many enriched GO terms do we have
