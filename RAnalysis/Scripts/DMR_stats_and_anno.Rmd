@@ -518,7 +518,7 @@ d10DMR_sig.bed <- d10DMR_1way_aov_pH_modelsumm_wide[which(d10DMR_1way_aov_pH_mod
 d10DMR_sig.bed$test <- "pH_d10"
 
 #write out date
-write.table(d10DMR_sig.bed, "RAnalysis/Output/aov_pH_d10DMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+write.table(d10DMR_sig.bed, "RAnalysis/Output/aov_0.05_pH_d10DMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
 
 #subset model data for scaffold start and end positions for DMRs significant at p < 0.05
 d135DMR_sig.bed <- d135DMR_1way_aov_pH_modelsumm_wide[which(d135DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),c("scaffold","start", "end")]
@@ -527,7 +527,7 @@ d135DMR_sig.bed <- d135DMR_1way_aov_pH_modelsumm_wide[which(d135DMR_1way_aov_pH_
 d135DMR_sig.bed$test <- "pH_d135"
 
 #write out date
-write.table(d135DMR_sig.bed, "RAnalysis/Output/aov_pH_d135DMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+write.table(d135DMR_sig.bed, "RAnalysis/Output/aov_0.05_pH_d135DMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
 
 #subset model data for scaffold start and end positions for DMRs significant at p < 0.05
 d145DMR_sig.bed <- d145DMR_2way_aov_pH_modelsumm_wide[which(d145DMR_2way_aov_pH_modelsumm_wide$p.value_Initial.Treatment.Secondary.Treatment < 0.05),c("scaffold","start", "end")]
@@ -536,7 +536,7 @@ d145DMR_sig.bed <- d145DMR_2way_aov_pH_modelsumm_wide[which(d145DMR_2way_aov_pH_
 d145DMR_sig.bed$test <- "pH_d145"
 
 #write out date
-write.table(d145DMR_sig.bed, "RAnalysis/Output/aov_pH_d145DMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+write.table(d145DMR_sig.bed, "RAnalysis/Output/aov_0.05_pH_d145DMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
 
 
 #subset model data for scaffold start and end positions for DMRs significant at p < 0.05
@@ -546,7 +546,7 @@ ambDMR_sig.bed <- ambDMR_1way_aov_pH_modelsumm_wide[which(ambDMR_1way_aov_pH_mod
 ambDMR_sig.bed$test <- "time"
 
 #write out date
-write.table(ambDMR_sig.bed, "RAnalysis/Output/aov_time_ambDMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+write.table(ambDMR_sig.bed, "RAnalysis/Output/aov_0.05_time_ambDMR.bed", sep = "\t",row.names = F, col.names = F, quote = F)
 
 ```
 
