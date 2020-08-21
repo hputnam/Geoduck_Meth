@@ -554,13 +554,13 @@ write.table(ambDMR_sig.bed, "RAnalysis/Output/aov_0.05_time_ambDMR.bed", sep = "
 read in data
 ```{r}
 # read in features that DMRs overlap with
-amb_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_amb_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+amb_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200820/aov_0.05_time_amb_0820.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
-d10_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_d10_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+d10_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200820/aov_0.05_pH_d10_0820.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
-d135_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_d135_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+d135_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200820/aov_0.05_pH_d135_0820.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
-d145_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/aov_0.05pH_d145_0408.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+d145_DMR_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200820/aov_0.05_pH_d145_0820.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
 
 # read in features that covered regions (background) overlap with
 amb_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20200408/amb_features.3CpG.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
@@ -575,19 +575,18 @@ d145_feat <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/an
 
 format data for plotting
 ```{r}
-# ambient data 
+# retain only the comparison, the genome coordinates of the feature, and the feature
 
-amb_DMR_feat <- amb_DMR_feat[,-c(1:3)]
-d10_DMR_feat <- d10_DMR_feat[,-c(1:3)]
-d135_DMR_feat <- d135_DMR_feat[,-c(1:3)]
-d145_DMR_feat <- d145_DMR_feat[,-c(1:3)]
+amb_DMR_feat <- amb_DMR_feat[,-c(1:3,9)]
+d10_DMR_feat <- d10_DMR_feat[,-c(1:3,9)]
+d135_DMR_feat <- d135_DMR_feat[,-c(1:3,9)]
+d145_DMR_feat <- d145_DMR_feat[,-c(1:3,9)]
 
 DMR_feat <- rbind(amb_DMR_feat,d10_DMR_feat,d135_DMR_feat,d145_DMR_feat)
 
 colnames(DMR_feat) <- c("comparison", "scaffold", "start", "end", "feature")
 
-DMR_feat$comparison <- gsub("amb","time", DMR_feat$comparison)
-DMR_feat$comparison <- gsub("d", "day ", DMR_feat$comparison)
+DMR_feat$comparison <- gsub("pH_d", "day ", DMR_feat$comparison)
 
 amb_feat$comparison <- "time"
 d10_feat$comparison <- "day 10"
