@@ -307,7 +307,10 @@ aov_0.05pH_d10DMR_mean_m <- as.matrix(data.frame(cbind(MeanD10pHamb,MeanD10pHlow
 colnames(aov_0.05pH_d10DMR_mean_m) <- c("pH 7.9", "pH 7.4", "pH 7.0")
 
 jpeg("RAnalysis/Output/D10.DMR_heatmap.jpg", width = 600, height = 1000)
-heatmap.2(aov_0.05pH_d10DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d10DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d10DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+heatmap.2(aov_0.05pH_d10DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d10DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d10DMR_mean_m),lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
 
 ### DAY 135 ###
@@ -337,7 +340,10 @@ colnames(aov_0.05pH_d135DMR_mean_m) <- c("pH 7.9", "pH 7.4", "pH 7.0")
 
 
 jpeg("RAnalysis/Output/D135.DMR_heatmap.jpg", width = 600, height = 1000)
-heatmap.2(aov_0.05pH_d135DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), na.color = "black", density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d135DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d135DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+heatmap.2(aov_0.05pH_d135DMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), na.color = "black", density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d135DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d135DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
 dev.off()
 
 
@@ -375,9 +381,37 @@ aov_0.05pH_d145DMR_mean_m <- as.matrix(data.frame(cbind(Meand145pHambamb,Meand14
 #plot for day145 group mean comparison
 colnames(aov_0.05pH_d145DMR_mean_m) <- c("pH 7.9 -> pH 7.9", "pH 7.9 -> pH 7.4","pH 7.4 -> pH 7.9","pH 7.4 -> pH 7.4", "pH 7.0 -> pH 7.9", "pH 7.0 -> pH 7.4")
 
-jpeg("RAnalysis/Output/D145.DMR_heatmap.jpg", width = 800, height = 1000)
-heatmap.2(aov_0.05pH_d145DMR_mean_m,margins = c(12,15), cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), lmat = rbind(c(0,3),c(2,1),c(4,0)),na.color = "black", density.info = "none", trace = "none", scale = "row", keysize=0.5, key.par = list(cex=1),labRow = FALSE,sepwidth=c(0.1,0.01), lhei=c(1.5,4,1),lwid= c(1.5, 4),sepcolor="white",colsep=seq(2,ncol(aov_0.05pH_d145DMR_mean_m),2),rowsep=1:nrow(aov_0.05pH_d145DMR_mean_m))
+jpeg("RAnalysis/Output/D145.DMR_heatmap.jpg", width = 600, height = 1000)
+heatmap.2(aov_0.05pH_d145DMR_mean_m,margins = c(12,15), cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), lmat = rbind(c(0,3),c(2,1),c(4,0)),na.color = "black", density.info = "none", trace = "none", scale = "row", keysize=0.5, key.par = list(cex=1),labRow = FALSE,sepwidth=c(0.1,0.01), lhei=c(1.5,4,1),lwid= c(1.5, 4),sepcolor="white",colsep=seq(2,ncol(aov_0.05pH_d145DMR_mean_m),2),rowsep=1:nrow(aov_0.05pH_d145DMR_mean_m))
 dev.off()
+
+#calculated fold change in methylation between column pairs for d145
+x <- (aov_0.05pH_d145DMR_mean_m[,2]/aov_0.05pH_d145DMR_mean_m[,1])-1
+mean(x[x>0])
+#SE
+sd(x[x>0])/(sqrt(length(x[x>0])))
+mean(x[x<0])
+#SE
+sd(x[x<0])/(sqrt(length(x[x<0])))
+
+y <- (aov_0.05pH_d145DMR_mean_m[,4]/aov_0.05pH_d145DMR_mean_m[,3])-1
+mean(y[y>0])
+#SE
+sd(y[y>0])/(sqrt(length(y[y>0])))
+mean(y[y<0])
+#SE
+sd(y[y<0])/(sqrt(length(y[y<0])))
+
+z <- (aov_0.05pH_d145DMR_mean_m[,6]/aov_0.05pH_d145DMR_mean_m[,5])-1
+mean(z[z>0])
+#SE
+sd(z[z>0])/(sqrt(length(z[z>0])))
+mean(z[z<0])
+#SE
+sd(z[z<0])/(sqrt(length(z[z<0])))
 
 ##### AMBIENT SAMPLES ######
 
@@ -410,7 +444,10 @@ aov_0.05pH_ambDMR_mean_m <- as.matrix(data.frame(cbind(Meanambd0,Meanambd10, Mea
 colnames(aov_0.05pH_ambDMR_mean_m) <- c("Day 0", "Day 10", "Day 135", "Day 145")
 
 jpeg("RAnalysis/Output/Time.DMR_heatmap.jpg", width = 700, height = 1000)
-heatmap.2(aov_0.05pH_ambDMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_ambDMR_mean_m),rowsep=1:nrow(aov_0.05pH_ambDMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+heatmap.2(aov_0.05pH_ambDMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_ambDMR_mean_m),rowsep=1:nrow(aov_0.05pH_ambDMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
 dev.off()
 ```
 
