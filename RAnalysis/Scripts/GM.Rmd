@@ -619,9 +619,6 @@ colnames(GoSlims) <- c("GO.IDs", "GO.Term", "GO.Slim.Term", "Cat") #rename colum
 Gene.GO.IDs.slims <- merge(Gene.GO.IDs, GoSlims, by="GO.IDs", all = TRUE)
 Gene.GO.IDs.slims <- Gene.GO.IDs.slims[-1,]
 
-All.Slims <-  unique(Gene.GO.IDs.slims$GO.Slim.Term)
-cytoact <- GoSlims %>% filter(GO.Slim.Term == "cytoskeletal activity")
-
 ```
 
 ## Filter and Concatenate Datasets
@@ -980,7 +977,6 @@ Time.Amb.sig <- Time.Amb.sig[,c(1,3)]
 Time.Amb.sig <- Time.Amb.sig[order(Time.Amb.sig$adj.pval.TimePoint),]
 Time.Amb.sig <- Time.Amb.sig[which(Time.Amb.sig$adj.pval.TimePoint<0.05), ]
 
-#write.table(Time.Amb.sig, '/home/hputnam/MyPorjects/Geoduck_Meth/RAnalysis/Output/Time_sig.tsv', sep='\t', row.names=FALSE)
 
 sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100 #calculate percent methylation
 
@@ -1034,6 +1030,8 @@ nrow(GO.slim.wall)
 
 GOslim.Time <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.Time , file = "RAnalysis/Output/GOslim_Time.csv")
+sig.GOslim.Time <- GOslim.Time %>%
+  filter(over_represented_pvalue <0.07 | under_represented_pvalue<0.07)
 
 ```
 
@@ -1130,6 +1128,8 @@ nrow(GO.slim.wall)
 
 GOslim.D10 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.D10 , file = "RAnalysis/Output/GOslim_D10.csv")
+sig.GOslim.D10 <- GOslim.D10 %>%
+  filter(over_represented_pvalue <0.09 | under_represented_pvalue<0.09)
 
 ```
 
@@ -1233,6 +1233,8 @@ nrow(GO.slim.wall)
 
 GOslim.D135 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.D135 , file = "RAnalysis/Output/GOslim_D135.csv")
+sig.GOslim.D135 <- GOslim.D135 %>%
+  filter(over_represented_pvalue <0.09 | under_represented_pvalue<0.09)
 
 ```
 
@@ -1338,7 +1340,76 @@ nrow(GO.slim.wall)
 
 GOslim.D145 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.D145 , file = "RAnalysis/Output/GOslim_D145.csv")
+sig.GOslim.D145 <- GOslim.D145 %>%
+  filter(over_represented_pvalue <0.09 | under_represented_pvalue<0.09)
+  
 ```
+
+Genes in Over and Under-represented GO Slim terms
+```{r}
+All.Slims <-  unique(Gene.GO.IDs.slims$GO.Slim.Term)
+nrow(sig.GOslim.Time)
+Time.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[1,1]) #kinase activity
+Time.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[2,1]) #unknown
+Time.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[3,1]) #cytoskeleton
+Time.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[4,1]) #other metabolic processes
+
+#Day 10
+nrow(sig.GOslim.D10)
+D10.slim.terms.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[1,1]) #protein metabolism
+D10.slim.terms.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[2,1]) #other molecular function
+D10.slim.terms.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[3,1]) #transport
+D10.slim.terms.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[4,1]) #cytoskeleton
+D10.cytoskel <- unique(D10.slim.terms.4 %>% filter(as.character(D10.slim.terms.4$gene) %in% D10.sig.annot$gene))
+D10.cytoskel <- left_join(D10.cytoskel, D10.sig.annot, by="gene")
+
+D10.slim.terms.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[5,1]) #other biological processes
+D10.slim.terms.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[6,1]) #developmental processes
+D10.slim.terms.7 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[7,1]) #other cellular component
+D10.slim.terms.8 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[8,1]) #signal transduction
+D10.slim.terms.9 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[9,1]) #other membranes
+D10.slim.terms.10 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[10,1]) #plasma membrane
+
+write.csv(D10.cytoskel, file='RAnalysis/Output/D10.genes.of.interest.csv')
+
+#Day 135
+nrow(sig.GOslim.D135)
+D135.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[1,1]) #cytoskeletal activity
+D135.cytoskel.act <- unique(D135.slim.genes.1 %>% filter(as.character(D135.slim.genes.1$gene) %in% D135.sig.annot$gene))
+D135.cytoskel.act <- left_join(D135.cytoskel.act, D135.sig.annot, by="gene")
+D135.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[2,1]) #cytoskeleton
+D135.cytoskel <- unique(D135.slim.genes.2 %>% filter(as.character(D135.slim.genes.2$gene) %in% D135.sig.annot$gene))
+D135.cytoskel <- left_join(D135.cytoskel, D135.sig.annot, by="gene")
+D135.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[3,1]) #cell-cell signaling
+D135.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[4,1]) #nucleic acid binding activity
+D135.nuc_acid_bind <- unique(D135.slim.genes.4 %>% filter(as.character(D135.slim.genes.4$gene) %in% D135.sig.annot$gene))
+D135.nuc_acid_bind <- left_join(D135.nuc_acid_bind, D135.sig.annot, by="gene")
+D135.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[5,1]) #translational apparatus
+D135.trans.app <- unique(D135.slim.genes.5 %>% filter(as.character(D135.slim.genes.5$gene) %in% D135.sig.annot$gene))
+D135.trans.app <- left_join(D135.trans.app, D135.sig.annot, by="gene")
+
+D135.goi <- rbind(D135.cytoskel.act,D135.cytoskel,D135.nuc_acid_bind,D135.trans.app)
+write.csv(D135.goi, file='RAnalysis/Output/D135.genes.of.interest.csv')
+
+#Day 145
+nrow(sig.GOslim.D145)
+D145.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[1,1]) #unknown
+D145.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[2,1]) #other cellular component
+D145.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[3,1]) #other metabolic processes
+D145.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[4,1]) #nucleic acid binding activity
+D145.nuc_acid_bind <- unique(D145.slim.genes.4 %>% filter(as.character(D145.slim.genes.4$gene) %in% D145.sig.annot$gene))
+D145.nuc_acid_bind <- left_join(D145.nuc_acid_bind, D145.sig.annot, by="gene")
+D145.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[5,1]) #mitochondrion
+D145.slim.genes.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[6,1]) #translational apparatus
+D145.trans.app <- unique(D145.slim.genes.6 %>% filter(as.character(D145.slim.genes.6$gene) %in% D145.sig.annot$gene))
+D145.trans.app <- left_join(D145.trans.app, D145.sig.annot, by="gene")
+
+D145.goi <- rbind(D145.nuc_acid_bind,D145.trans.app)
+write.csv(D145.goi, file='RAnalysis/Output/D145.genes.of.interest.csv')
+
+```
+Plots of Methylation of Genes in Over and Under-represented GO Slim terms
+
 
 
 ```{r}
