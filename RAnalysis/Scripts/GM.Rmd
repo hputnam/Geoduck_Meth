@@ -1031,7 +1031,7 @@ nrow(GO.slim.wall)
 GOslim.Time <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.Time , file = "RAnalysis/Output/GOslim_Time.csv")
 sig.GOslim.Time <- GOslim.Time %>%
-  filter(over_represented_pvalue <0.07 | under_represented_pvalue<0.07)
+  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
 
 ```
 
@@ -1129,7 +1129,7 @@ nrow(GO.slim.wall)
 GOslim.D10 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.D10 , file = "RAnalysis/Output/GOslim_D10.csv")
 sig.GOslim.D10 <- GOslim.D10 %>%
-  filter(over_represented_pvalue <0.09 | under_represented_pvalue<0.09)
+  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
 
 ```
 
@@ -1234,7 +1234,7 @@ nrow(GO.slim.wall)
 GOslim.D135 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.D135 , file = "RAnalysis/Output/GOslim_D135.csv")
 sig.GOslim.D135 <- GOslim.D135 %>%
-  filter(over_represented_pvalue <0.09 | under_represented_pvalue<0.09)
+  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
 
 ```
 
@@ -1341,7 +1341,7 @@ nrow(GO.slim.wall)
 GOslim.D145 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
 write.csv(GOslim.D145 , file = "RAnalysis/Output/GOslim_D145.csv")
 sig.GOslim.D145 <- GOslim.D145 %>%
-  filter(over_represented_pvalue <0.09 | under_represented_pvalue<0.09)
+  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
   
 ```
 
@@ -1385,10 +1385,8 @@ D135.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135
 D135.nuc_acid_bind <- unique(D135.slim.genes.4 %>% filter(as.character(D135.slim.genes.4$gene) %in% D135.sig.annot$gene))
 D135.nuc_acid_bind <- left_join(D135.nuc_acid_bind, D135.sig.annot, by="gene")
 D135.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[5,1]) #translational apparatus
-D135.trans.app <- unique(D135.slim.genes.5 %>% filter(as.character(D135.slim.genes.5$gene) %in% D135.sig.annot$gene))
-D135.trans.app <- left_join(D135.trans.app, D135.sig.annot, by="gene")
 
-D135.goi <- rbind(D135.cytoskel.act,D135.cytoskel,D135.nuc_acid_bind,D135.trans.app)
+D135.goi <- rbind(D135.cytoskel.act,D135.cytoskel,D135.nuc_acid_bind)
 write.csv(D135.goi, file='RAnalysis/Output/D135.genes.of.interest.csv')
 
 #Day 145
@@ -1401,10 +1399,8 @@ D145.nuc_acid_bind <- unique(D145.slim.genes.4 %>% filter(as.character(D145.slim
 D145.nuc_acid_bind <- left_join(D145.nuc_acid_bind, D145.sig.annot, by="gene")
 D145.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[5,1]) #mitochondrion
 D145.slim.genes.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[6,1]) #translational apparatus
-D145.trans.app <- unique(D145.slim.genes.6 %>% filter(as.character(D145.slim.genes.6$gene) %in% D145.sig.annot$gene))
-D145.trans.app <- left_join(D145.trans.app, D145.sig.annot, by="gene")
 
-D145.goi <- rbind(D145.nuc_acid_bind,D145.trans.app)
+D145.goi <- D145.nuc_acid_bind
 write.csv(D145.goi, file='RAnalysis/Output/D145.genes.of.interest.csv')
 
 ```
