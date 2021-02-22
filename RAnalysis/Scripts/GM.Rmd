@@ -1459,9 +1459,19 @@ Time.Amb.meth_table.means <- Time.Amb.meth_table.means[Time.Amb.meth_table.means
 Time.Amb <- Time.Amb.meth_table.means %>% pivot_wider(names_from = c(TimePoint), values_from = per.meth)
 Time.Amb.mat <- as.matrix(Time.Amb[,-1])
 
-pdf("RAnalysis/Output/Time.DMG_Rel_HEATMAP.pdf")
-TimeHM <- heatmap.2(Time.Amb.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+
+#new code as of Feb 22, 2021 (S.A.T.)
+pdf("RAnalysis/Output/Time.DMG_Rel_HEATMAP_v2.pdf")
+heatmap.2(Time.Amb.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=FALSE, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE, lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
+
+#Old code
+#pdf("RAnalysis/Output/Time.DMG_Rel_HEATMAP.pdf")
+#TimeHM <- heatmap.2(Time.Amb.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+#dev.off()
 
 ```
 
@@ -1478,9 +1488,19 @@ col.order <- c( "Ambient",
                 "Super.Low")
 D10.mat <- D10.mat[,col.order]
 
-pdf("RAnalysis/Output/D10.DMG_Rel_HEATMAP.pdf")
-D10HM <- heatmap.2(D10.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+#new code as of Feb 22, 2021 (S.A.T.)
+colnames(D10.mat) <- c("pH 7.9", "pH 7.4", "pH 7.0")
+
+pdf("RAnalysis/Output/D10.DMG_Rel_HEATMAP_v2.pdf")
+heatmap.2(D10.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
+#Old code
+#pdf("RAnalysis/Output/D10.DMG_Rel_HEATMAP.pdf")
+#D10HM <- heatmap.2(D10.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+#dev.off()
 
 ```
 
@@ -1497,9 +1517,21 @@ col.order <- c( "Ambient",
                 "Super.Low")
 D135.mat <- D135.mat[,col.order]
 
-pdf("RAnalysis/Output/D135.DMG_Rel_HEATMAP.pdf")
-D135HM <- heatmap.2(D135.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+#new code as of Feb 22, 2021 (S.A.T.)
+
+colnames(D135.mat) <- c("pH 7.9", "pH 7.4", "pH 7.0")
+
+pdf("RAnalysis/Output/D135.DMG_Rel_HEATMAP_v2.pdf")
+heatmap.2(D135.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
+
+#Old code
+#pdf("RAnalysis/Output/D135.DMG_Rel_HEATMAP.pdf")
+#D135HM <- heatmap.2(D135.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
+#dev.off()
 ```
 
 ```{r}
@@ -1513,9 +1545,20 @@ D145.mat <- as.matrix(D145[,-1])
 col.order <- c("Ambient_Ambient", "Ambient_Low", "Low_Ambient", "Low_Low", "Super.Low_Ambient", "Super.Low_Low")
 D145.mat  <- D145.mat[,col.order]
 
-pdf("RAnalysis/Output/D145.DMG_Rel_HEATMAP.pdf")
-D145HM <- heatmap.2(D145.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.1,0.1), sepcolor="white", keysize = 1, colsep=c(0,2,4,6))
+#new code as of Feb 22, 2021 (S.A.T.)
+colnames(D145.mat) <- c("pH 7.9 -> pH 7.9", "pH 7.9 -> pH 7.4","pH 7.4 -> pH 7.9","pH 7.4 -> pH 7.4", "pH 7.0 -> pH 7.9", "pH 7.0 -> pH 7.4")
+
+pdf("RAnalysis/Output/D145.DMG_Rel_HEATMAP_v2.pdf")
+heatmap.2(D145.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=FALSE, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepcolor="white",sepwidth=c(0.1,0.01),colsep=c(0,2,4,6), lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
+
+#Old code
+#pdf("RAnalysis/Output/D145.DMG_Rel_HEATMAP.pdf")
+#D145HM <- heatmap.2(D145.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.1,0.1), sepcolor="white", keysize = 1, colsep=c(0,2,4,6))
+#dev.off()
 
 ```
 
