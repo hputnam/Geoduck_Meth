@@ -1,0 +1,39 @@
+"Table S17. GO enrichment analysis of significant differentially methylated genes between between the pH treatments at Day 145. Column name numDEInCat is 'number of differentially expressed genes in category; column name numInCat is 'number of genes in category'; column name Cat is 'category'; F = Molecular Function, P = Biological Process; C = Cellular Component",,,,,,
+,GO.Slim.Term,over_represented_pvalue,under_represented_pvalue,numDEInCat,numInCat,Cat
+1,unknown,0.017411147,0.986895039,333,11744,NA
+2,developmental processes,0.124084079,0.901544001,69,2259,P
+3,cell-cell signaling,0.16828637,0.887789898,18,525,P
+4,signal transduction activity,0.20751199,0.84415183,30,959,F
+5,other biological processes,0.27594992,0.763272618,88,3100,P
+6,transcription regulatory activity,0.325861194,0.775035194,12,382,F
+7,death,0.354071952,0.731035114,19,638,P
+8,non-structural extracellular,0.361425768,0.701400378,38,1336,C
+9,cytoskeletal activity,0.36673704,0.729523188,15,502,F
+10,extracellular matrix,0.393392852,0.757248287,6,188,C
+11,RNA metabolism,0.40795522,0.655489616,41,1474,P
+12,cytoskeleton,0.438414269,0.637181469,29,1041,C
+13,cell cycle and proliferation,0.510738474,0.564367159,31,1154,P
+14,DNA metabolism,0.568209625,0.554079506,11,420,P
+15,cell adhesion,0.632939655,0.469499987,15,599,P
+16,signal transduction,0.637811952,0.423659521,44,1714,P
+17,cytosol,0.669720172,0.392611781,40,1585,C
+18,plasma membrane,0.714194731,0.334701826,61,2425,C
+19,enzyme regulator activity,0.719338552,0.390042048,11,471,F
+20,transport,0.728871642,0.324665209,47,1890,P
+21,kinase activity,0.740256732,0.370883844,10,438,F
+22,cell organization and biogenesis,0.770649502,0.273996096,59,2390,P
+23,extracellular structural activity,0.788854112,0.54455818,1,58,F
+24,stress response,0.792762537,0.26489124,30,1275,P
+25,ER/Golgi,0.855134689,0.19231477,29,1289,C
+26,other membranes,0.87466514,0.150357332,101,4149,C
+27,other cytoplasmic organelle,0.898377514,0.15603149,14,700,C
+28,protein metabolism,0.914302987,0.112376347,46,2048,P
+29,other molecular function,0.921580936,0.094387896,150,6131,F
+30,nucleus,0.92374755,0.097248464,65,2832,C
+31,transporter activity,0.937069213,0.103273726,13,700,F
+32,other cellular component,0.942151641,0.072336937,98,4173,C
+33,other metabolic processes,0.943218736,0.075060329,54,2436,P
+34,nucleic acid binding activity,0.969947182,0.045322247,28,1428,F
+35,mitochondrion,0.989253472,0.023014352,9,633,C
+36,translation activity,1,0.452062566,0,29,F
+37,translational apparatus,1,0.07615798,0,96,C
