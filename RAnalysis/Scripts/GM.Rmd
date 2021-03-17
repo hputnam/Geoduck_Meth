@@ -20,18 +20,22 @@ library(pheatmap)
 library(dplyr)
 library(tidyverse)
 library(tidyr)
-library(topGO)
+#library(topGO)
 library(goseq)
 library(genefilter)
 library(gplots)
 library(cowplot)
 library(lsmeans)
-library(ontologyIndex)
-library(ontologySimilarity)
+#library(ontologyIndex)
+#library(ontologySimilarity)
 library(data.table)
 library(RColorBrewer)
-library(colorRamps)
+library(randomcoloR)
+#library(colorRamps)
 library(GSEABase)
+library(kableExtra)
+library(sjPlot)
+
 ```
 
 Flow Rates
@@ -132,11 +136,11 @@ boxplot(cells2.trt$residuals) #plot boxplot of residuals
 plot(cells2.trt) #display residuals versus fitter, normal QQ plot, leverage plot
 ```
 
-Continuous pH data - Apex
+Continuous pH data 
 ```{r Continuous pH}
 #CONTINUOUS EXPERIMENTAL PH DATA 
-#Avtech_pH_data.csv
-pH <- read.csv("RAnalysis/Data/Avtech_pH_data.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+#DuraFET_pH_data.csv
+pH <- read.csv("RAnalysis/Data/DuraFET_pH_data.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
 pH$Date.Time <-as.POSIXct(pH$Date.Time, format="%m/%d/%y %H:%M") #convert date format
 pH$Date <- as.Date(pH$Date.Time) #convert Date only
 pH$Time <- format(as.POSIXct(pH$Date.Time) ,format = "%H:%M:%S") #convert Time only
@@ -144,11 +148,11 @@ pH$Time <- format(as.POSIXct(pH$Date.Time) ,format = "%H:%M:%S") #convert Time o
 pH.low <- do.call(data.frame,aggregate(Low ~ Date, data = pH, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Day
 pH.med <- do.call(data.frame,aggregate(Medium ~ Date, data = pH, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Day
 pH.amb <- do.call(data.frame,aggregate(Ambient ~ Date, data = pH, function(x) c(mean = mean(x), se = std.error(x)))) #calculate mean and sem of each treatment by Day
-pH.low$Treatment <- "Super Low" #Add treatment Information
+pH.low$Treatment <- "pH 7.0" #Add treatment Information
 colnames(pH.low) <- c("Date", "mean", "se", "Treatment") #rename columns to generic format
-pH.med$Treatment <- "Low" #Add treatment Information
+pH.med$Treatment <- "pH 7.4" #Add treatment Information
 colnames(pH.med) <- c("Date", "mean", "se", "Treatment") #rename columns to generic format
-pH.amb$Treatment <- "Ambient" #Add treatment Information
+pH.amb$Treatment <- "pH 7.9" #Add treatment Information
 colnames(pH.amb) <- c("Date", "mean", "se", "Treatment") #rename columns to generic format
 daily.pH <- rbind(pH.amb, pH.med, pH.low) #bind treatment data 
 daily.pH #view data
@@ -183,7 +187,7 @@ All.pH <- ggplot(daily.pH, aes(x=Date, y=mean, group=Treatment)) + #set up plot 
 All.pH #view plot
 ```
 
-Continuous Temperature data - Apex
+Continuous Temperature data - Avtech
 ```{r Continuous Temperature}
 #CONTINUOUS EXPERIMENTAL TEMPERATURE DATA
 #Avtech_temp_data.csv
@@ -229,7 +233,7 @@ All.temp <- ggplot(daily.temp, aes(x=Date, y=mean, group=Treatment)) + #set up p
 All.temp #view plot
 
 FigureS1 <- arrangeGrob(All.pH, All.temp, ncol=1)
-ggsave(file="RAnalysis/Figs/Fig.S1.pdf", FigureS1, width = 6, height = 8, units = c("in"))
+ggsave(file="RAnalysis/Figs/Supplementary_Figs/Fig.S5.pdf", FigureS1, width = 6, height = 8, units = c("in"))
 ```
 
 Discrete Seawater Chemistry
@@ -316,6 +320,8 @@ Shell Size
 ##### JUVENILE GEODUCK SHELL SIZE #####
 
 seed.size <- read.csv("RAnalysis/Data/Size_Juvenile_Geoduck.csv", header=TRUE, sep=",", na.strings="NA") #load data with a header, separated by commas, with NA as NA
+seed.size$Treatment <- factor(seed.size$Treatment, levels = c("pH 7.9", "pH 7.4", "pH 7.0"))
+seed.size$Secondary <- factor(seed.size$Secondary, levels = c("pH 7.9", "pH 7.4", "pH 7.0"))
 
 #Initial Exposure Experimental Component
 Initial <- subset(seed.size, Component=="Exp1", select = Date:Area) #subset dataframe to exposure 1 data
@@ -323,14 +329,14 @@ Initial$Ratio <- Initial$Length/Initial$Width #calculate the length:width of the
 
 #calculating shell area means for Exposure 1 normalizations
 E1.norms <- aggregate(Area ~ Day*Treatment, data=Initial, mean) #calculate mean area by Day and Treatment
-E1.norm.area.amb <- subset(E1.norms, Day=="Day1" & Treatment=="Ambient", select = Area) #subset mean area for day 1 ambient condition
-E1.norm.area.med <- subset(E1.norms, Day=="Day1" & Treatment=="Medium", select = Area) #subset mean area for day 1 medium condition
-E1.norm.area.low <- subset(E1.norms, Day=="Day1" & Treatment=="Low", select = Area) #subset mean area for day 1 low condition
+E1.norm.area.amb <- subset(E1.norms, Day=="Day1" & Treatment=="pH 7.9", select = Area) #subset mean area for day 1 ambient condition
+E1.norm.area.med <- subset(E1.norms, Day=="Day1" & Treatment=="pH 7.4", select = Area) #subset mean area for day 1 medium condition
+E1.norm.area.low <- subset(E1.norms, Day=="Day1" & Treatment=="pH 7.0", select = Area) #subset mean area for day 1 low condition
 
 E1.norms <- function(x) {  #write function
-  if(x == "Ambient") y <- E1.norm.area.amb #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
-  if(x == "Medium") y <- E1.norm.area.med #if Treatment equals Medium assign day 1 Medium mean as normalization factor
-  if(x == "Low") y <- E1.norm.area.low #if Treatment equals Low assign day 1 Low mean as normalization factor
+  if(x == "pH 7.9") y <- E1.norm.area.amb #if Treatment equals Ambient assign day 1 Ambient mean as normalization factor
+  if(x == "pH 7.4") y <- E1.norm.area.med #if Treatment equals Medium assign day 1 Medium mean as normalization factor
+  if(x == "pH 7.0") y <- E1.norm.area.low #if Treatment equals Low assign day 1 Low mean as normalization factor
   return(y) #return result
 }
 
@@ -369,9 +375,9 @@ Init.Shell.size$Day.Num <- c(1,10,23,1,10,23,1,10,23) #set days as numeric for p
 Fig.Exp1.size <- ggplot(Init.Shell.size, aes(x=Day.Num, y=avg.Arel, group=Treatment)) + 
   geom_errorbar(aes(ymin=avg.Arel-se.Arel, ymax=avg.Arel+se.Arel), colour="black", width=.1, position = position_dodge(width = 0.6)) +
   geom_line(aes(linetype=Treatment, colour = Treatment), size = 0.5, position = position_dodge(width = 0.6)) + 
-  scale_color_manual(values=c("blue","red", "mediumvioletred")) +
+  scale_color_manual(values=c("blue", "mediumvioletred","red")) +
   geom_point(aes(shape=Treatment, colour=Treatment), size = 3, position = position_dodge(width = 0.6)) +
-  scale_fill_manual(values=c("blue","red", "mediumvioletred")) +
+  scale_fill_manual(values=c("blue","mediumvioletred","red")) +
   scale_x_continuous(breaks=seq(0,160,10)) +
   annotate("text", x=9, y=0.73, label = "a", size = 3) + #add text to the graphic for posthoc letters
   annotate("text", x=1, y=1.2, label = "abc", size = 3) + #add text to the graphic for posthoc letters
@@ -402,14 +408,14 @@ CG.data <- subset(seed.size, Component=="Common.Garden", select = Date:Area) #su
 CG.data$Ratio <- CG.data$Length/CG.data$Width #calculate the length:width of the shell
 
 #calculating shell area means for Common Garden normalizations
-CG.norm.area.amb <- subset(Init.Shell.size, Day=="Day23" & Treatment=="Ambient", select = avg.area) #subset mean area for day 23 ambient condition
-CG.norm.area.med <- subset(Init.Shell.size, Day=="Day23" & Treatment=="Medium", select = avg.area) #subset mean area for day 23 medium condition
-CG.norm.area.low <- subset(Init.Shell.size, Day=="Day23" & Treatment=="Low", select = avg.area) #subset mean area for day 23 high condition
+CG.norm.area.amb <- subset(Init.Shell.size, Day=="Day23" & Treatment=="pH 7.9", select = avg.area) #subset mean area for day 23 ambient condition
+CG.norm.area.med <- subset(Init.Shell.size, Day=="Day23" & Treatment=="pH 7.4", select = avg.area) #subset mean area for day 23 medium condition
+CG.norm.area.low <- subset(Init.Shell.size, Day=="Day23" & Treatment=="pH 7.0", select = avg.area) #subset mean area for day 23 high condition
 
 CG.norms <- function(x) { 
-  if(x == "Ambient") y <- CG.norm.area.amb #if Treatment equals Ambient assign day 23 Ambient mean as normalization factor
-  if(x == "Medium") y <- CG.norm.area.med #if Treatment equals Medium assign day 23 Medium mean as normalization factor
-  if(x == "Low") y <- CG.norm.area.low #if Treatment equals Low assign day 23 Low mean as normalization factor
+  if(x == "pH 7.9") y <- CG.norm.area.amb #if Treatment equals Ambient assign day 23 Ambient mean as normalization factor
+  if(x == "pH 7.4") y <- CG.norm.area.med #if Treatment equals Medium assign day 23 Medium mean as normalization factor
+  if(x == "pH 7.0") y <- CG.norm.area.low #if Treatment equals Low assign day 23 Low mean as normalization factor
   return(y)
 }
 
@@ -456,10 +462,10 @@ CG.Shell.size$Day.Num <- c(135,135,135) #set days as numeric for plotting
 Fig.CG.size <- ggplot(CG.Shell.size, aes(x=Day, y=avg.Arel, group=Treatment)) + 
   geom_errorbar(aes(ymin=avg.Arel-se.Arel, ymax=avg.Arel+se.Arel), colour="black", width=.1, position = position_dodge(width = 0.6)) +
   geom_point(aes(shape=Treatment, colour=Treatment), size = 3, position = position_dodge(width = 0.6)) +
-  scale_color_manual(values=c("blue","red", "mediumvioletred")) +
+  scale_color_manual(values=c("blue", "mediumvioletred","red")) +
   annotate("text", x=0.8, y=2.55, label = "a", size = 3) + #add text to the graphic for posthoc letters
-  annotate("text", x=1, y=3.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
-  annotate("text", x=1.2, y=3.48, label = "b", size = 3) + #add text to the graphic for posthoc letters
+  annotate("text", x=1, y=3.48, label = "b", size = 3) + #add text to the graphic for posthoc letters
+  annotate("text", x=1.2, y=3.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
   xlab("Treatment") +
   ylab(expression(paste("Relative Size"))) +
   ylim(0.5,3.5) +
@@ -482,14 +488,14 @@ ReExp <- subset(seed.size, Day=="Day145" | Day=="Day158", select = Date:Area) #s
 ReExp$Ratio <- ReExp$Length/ReExp$Width #calculate the length:width of the shell
 
 #calculating mean for Exposure 2 normalizations
-E2.norm.area.amb <- subset(CG.Shell.size, Day=="Day135" & Treatment=="Ambient", select = avg.area) #subset mean area for day 135 ambient condition
-E2.norm.area.med <- subset(CG.Shell.size, Day=="Day135" & Treatment=="Medium", select = avg.area) #subset mean area for day 135 medium condition
-E2.norm.area.low<- subset(CG.Shell.size, Day=="Day135" & Treatment=="Low", select = avg.area) #subset mean area for day 135 low condition
+E2.norm.area.amb <- subset(CG.Shell.size, Day=="Day135" & Treatment=="pH 7.9", select = avg.area) #subset mean area for day 135 ambient condition
+E2.norm.area.med <- subset(CG.Shell.size, Day=="Day135" & Treatment=="pH 7.4", select = avg.area) #subset mean area for day 135 medium condition
+E2.norm.area.low<- subset(CG.Shell.size, Day=="Day135" & Treatment=="pH 7.0", select = avg.area) #subset mean area for day 135 low condition
 
 E2.norms <- function(x) { 
-  if(x == "Ambient") y <- E2.norm.area.amb #if Treatment equals Ambient assign day 135 Ambient mean as normalization factor
-  if(x == "Medium") y <- E2.norm.area.med #if Treatment equals Ambient assign day 135 Medium mean as normalization factor
-  if(x == "Low") y <- E2.norm.area.low #if Treatment equals Ambient assign day 135 Low mean as normalization factor
+  if(x == "pH 7.9") y <- E2.norm.area.amb #if Treatment equals Ambient assign day 135 Ambient mean as normalization factor
+  if(x == "pH 7.4") y <- E2.norm.area.med #if Treatment equals Ambient assign day 135 Medium mean as normalization factor
+  if(x == "pH 7.0") y <- E2.norm.area.low #if Treatment equals Ambient assign day 135 Low mean as normalization factor
   return(y)
 }
 
@@ -528,9 +534,9 @@ E2.pairs #view results
 Fig.Exp2.D10.size <- ggplot(Day145, aes(x=Secondary, y=avg.Arel, group=Treatment)) + 
   geom_errorbar(aes(ymin=avg.Arel-se.Arel, ymax=avg.Arel+se.Arel), colour="black", width=.1, position = position_dodge(width = 0.05)) +
   geom_line(aes(linetype=Treatment, colour=Treatment), size = 0.5, position = position_dodge(width = 0.05)) +
-  scale_color_manual(values=c("blue","red", "mediumvioletred")) +
+  scale_color_manual(values=c("blue", "mediumvioletred","red")) +
   geom_point(aes(shape=Treatment, colour=Treatment), size = 3, position = position_dodge(width = 0.05)) +
-  scale_fill_manual(values=c("blue","red", "mediumvioletred")) +
+  scale_fill_manual(values=c("blue", "mediumvioletred","red")) +
   annotate("text", x=0.85, y=1.3, label = "b", size = 3) + #add text to the graphic for posthoc letters
   annotate("text", x=0.85, y=0.88, label = "a", size = 3) + #add text to the graphic for posthoc letters
   annotate("text", x=c(0.85,2.2,2.2,2.25), y=c(0.94,0.94, 0.88,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
@@ -556,9 +562,9 @@ Fig.Exp2.D10.size
 Fig.Exp2.D23.size <- ggplot(Day158, aes(x=Secondary, y=avg.Arel, group=Treatment)) +
   geom_errorbar(aes(ymin=avg.Arel-se.Arel, ymax=avg.Arel+se.Arel), colour="black", width=.1, position = position_dodge(width = 0.05)) +
   geom_line(aes(linetype=Treatment, colour=Treatment), size = 0.5, position = position_dodge(width = 0.05)) +
-  scale_color_manual(values=c("blue","red", "mediumvioletred")) +
+  scale_color_manual(values=c("blue", "mediumvioletred","red")) +
   geom_point(aes(shape=Treatment, colour=Treatment), size = 3, position = position_dodge(width = 0.05)) +
-  scale_fill_manual(values=c("blue","red", "mediumvioletred")) +
+  scale_fill_manual(values=c("blue","mediumvioletred","red")) +
   annotate("text", x=2.2, y=0.78, label = "a", size = 3) + #add text to the graphic for posthoc letters
   annotate("text", x=c(0.85,0.85,0.85,2.2,2.2), y=c(0.95,1.04,1.15, 0.88,0.97), label = "ab", size = 3) + #add text to the graphic for posthoc letters
   xlab("Secondary Treatment") +
@@ -582,8 +588,24 @@ Fig.Exp2.D23.size
 ##### CAPTURE STATISTICAL OUTPUT AND FIGURES TO FILE #####
 #Capture Figures to File
 Figure1.Size <- arrangeGrob(Fig.Exp1.size,Fig.CG.size, Fig.Exp2.D10.size, Fig.Exp2.D23.size, ncol=4)
-ggsave(file="RAnalysis/Figs/Geoduck_Size.pdf", Figure1.Size, width = 10, height = 4, units = c("in"))
-ggsave(file="RAnalysis/Figs/Geoduck_Size.png", Figure1.Size, width = 10, height = 4, units = c("in"))
+ggsave(file="RAnalysis/Figs/Fig3_Geoduck_Size.pdf", Figure1.Size, width = 10, height = 4, units = c("in"))
+ggsave(file="RAnalysis/Figs/Fig3_Geoduck_Size.png", Figure1.Size, width = 10, height = 4, units = c("in"))
+
+#Table S2 Phenotype ANOVA Results
+# Title
+cat("Table_S2_ANOVA_ShellArea\n\n", file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt")
+# add 2 newlines
+cat("A) ANOVA results of shell area from initial exposure\n", file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+capture.output(Init.res, file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+cat("\n", file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+cat("B) ANOVA results of shell area from common garden exposure\n", file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+# add 2 newlines
+capture.output(CG.res, file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+cat("\n", file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+cat("C) ANOVA results of shell area from secondary exposure\n", file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+# add 2 newlines
+capture.output(Rexp.res, file = "RAnalysis/Tables/Supplementary_Tables/Table_S2_ANOVA_ShellArea.txt", append = TRUE)
+
 
 ```
 
@@ -603,7 +625,7 @@ Genes$gene <- gsub(";.*","",Genes$gene) #remove extra characters
 Genes$gene <- gsub("ID=","",Genes$gene) #remove extra characters
 
 #Load annotation file
-Annot <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-genes-annotations.tab", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = F, skip=0)
+Annot <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-genes-annotations.tab", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE, skip=0)
 colnames(Annot) <- c("gene","scaffold", "start", "end", "uniprot.id", "uniprot_taxa.id", "Uniprot.Name", "GO.IDs", "GO.Descript")
 GO.data <- Annot[,c(1,8)] #select names and GOs
 splitted <- strsplit(as.character(GO.data$GO.IDs), "; ") #split into multiple GO ids
@@ -614,10 +636,12 @@ Gene.GO.IDs$GO.IDs <- as.character(Gene.GO.IDs$GO.IDs)
 GO.IDs <-unique(Gene.GO.IDs$GO.IDs)
 
 #http://owl.fish.washington.edu/halfshell/bu-alanine-wd/17-07-20/GO-GOslim.sorted
-GoSlims <- read.csv("RAnalysis/Data/Genome/GO-GOslim.sorted", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = F, skip=0)
+GoSlims <- read.csv("RAnalysis/Data/Genome/GO-GOslim.sorted", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE, skip=0)
 colnames(GoSlims) <- c("GO.IDs", "GO.Term", "GO.Slim.Term", "Cat") #rename columns
 Gene.GO.IDs.slims <- merge(Gene.GO.IDs, GoSlims, by="GO.IDs", all = TRUE)
 Gene.GO.IDs.slims <- Gene.GO.IDs.slims[-1,]
+
+GO.IDs.slims <- Gene.GO.IDs.slims[,-2]
 
 ```
 
@@ -990,23 +1014,23 @@ write.table(Time.Amb.annot, 'RAnalysis/Output/Table_S1_Time_sig_annot.tsv', sep=
 ```{r}
 # GO Enrichment Analysis of Ambient samples through Time
 ##### GO enrichment of DMGs #####
-ALL<-as.data.frame(MD.ALL.Genes) #set the all gene list
-colnames(ALL) <-c("gene")
-DMG <- as.character(Time.Amb.sig$gene) #set the enrichment test list
-LENGTH <-cbind(Genes$gene,Genes$stop-Genes$start) #reads in a list of gene lengths
-colnames(LENGTH) <-c("gene", "length") #name columns
-LENGTH <- merge(LENGTH, ALL, by="gene") #merge gene names and length
-GOAL <- merge(ALL, Gene.GO.IDs.slims,by="gene", all=T) #merge GO, ID
-GOAL$GO.Slim.Term[is.na(GOAL$GO.Slim.Term)] <- "unknown" #list NA as unknown
-splitted <- strsplit(as.character(GOAL$GO.IDs), "; ") #slit into multiple GO ids
-GO.terms <- data.frame(v1 = rep.int(GOAL$gene, sapply(splitted, length)), v2 = unlist(splitted)) #list all genes with each of their GO terms in a single row 
-GO.slimmed.terms <-GOAL[,c(1,4)]
 
-#change contig lists to vectors
-ALL.vector <-c(t(ALL))
+ALL<-as.data.frame(MD.ALL.Genes) #set the all gene list
+colnames(ALL) <-c("gene") #name the column for merging
+DMG <- as.character(Time.Amb.sig$gene) #set the enrichment test list
+L <- left_join(ALL, Genes, by="gene") #generate at dataframe to calculate lengths
+L$length <- L$stop-L$start # calculated lengths from start and stop
+GOAL <- merge(ALL, Gene.GO.IDs.slims,by="gene", all=T) #merge the all gene list with GO ids
+GOAL$GO.Slim.Term[is.na(GOAL$GO.Slim.Term)] <- "unknown" #list NA as unknown
+splitted <- strsplit(as.character(GOAL$GO.IDs), "; ") #slit into multiple GO ids to get them all in a single row
+GO.terms <- data.frame(v1 = rep.int(GOAL$gene, sapply(splitted, length)), v2 = unlist(splitted)) #list all genes with each of their GO terms in a single row 
+GO.slimmed.terms <-GOAL[,c(1,4)] #subset slims only
+
+#change to vectors
+ALL.vector <-c(t(L$gene))
 DMG.vector <-c(t(DMG))
-ID.vector <- LENGTH$gene
-LENGTH.vector <-LENGTH$length
+ID.vector <- L$gene
+LENGTH.vector <-L$length
 
 gene.vector=as.integer(ALL.vector%in%DMG.vector) #Construct new vector with 1 for DEG and 0 for others
 names(gene.vector)=ALL.vector #set names
@@ -1015,23 +1039,39 @@ DEG.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector b
 #Find enriched GO terms, 
 GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 
-GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=FALSE)
-colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
+GO.Time <- GO.wall[order(GO.wall$over_represented_pvalue),]
+write.csv(GO.Time , file = "RAnalysis/Output/GO.Time.csv")
 
-slim.cats <- Gene.GO.IDs.slims[,4:5]
-slim.cats <- slim.cats[!duplicated(slim.cats$GO.Slim.Term), ]
-GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
+colnames(GO.Time)[1] <- "GO.IDs"
+GO.Time <- left_join(GO.Time, GO.IDs.slims, by="GO.IDs")
+GO.Time <- GO.Time[!duplicated(GO.Time$GO.IDs), ]
 
-#How many enriched GO terms do we have
-class(GO.slim.wall)
-head(GO.slim.wall)
-tail(GO.slim.wall)
-nrow(GO.slim.wall)
+sig.GO.Time <- GO.Time %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
 
-GOslim.Time <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
-write.csv(GOslim.Time , file = "RAnalysis/Output/GOslim_Time.csv")
-sig.GOslim.Time <- GOslim.Time %>%
-  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
+sig.GO.Time <- GO.Time %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  filter(ontology != "CC") %>%
+  filter(ontology == "BP") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+
+sig.GO.Time$term <- factor(sig.GO.Time$term, levels = sig.GO.Time$term[nrow(sig.GO.Time):1])
+
+#plot significantly enriched GO terms by Slim Category
+TimeGO <-  ggplot(sig.GO.Time, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+
+ggsave(file="RAnalysis/Figs/TimeGO.pdf", TimeGO, width = 7, height = 10, units = c("in"))
 
 ```
 
@@ -1103,33 +1143,50 @@ write.table(D10.sig.annot, 'RAnalysis/Output/Table_S2_D10_sig_annot.tsv', sep='\
 ```{r}
 # GO Enrichment Analysis of Treatment at Day 10
 ##### GO enrichment of DMGs #####
-DMG <- as.character(D10.sig$gene) #set the enrichment test list
 
-#change contig lists to vectors
-DMG.vector <-c(t(DMG))
-
-gene.vector=as.integer(ALL.vector%in%DMG.vector) #Construct new vector with 1 for DEG and 0 for others
+DMG.D10 <- as.character(D10.sig$gene) #set the enrichment test list
+DMG.D10.vector <-c(t(DMG.D10)) #change to vectors
+gene.vector=as.integer(ALL.vector%in%DMG.D10.vector) #Construct new vector with 1 for DEG and 0 for others
 names(gene.vector)=ALL.vector #set names
-DEG.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector by length of gene
+DEG.D10.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector by length of gene
 
 #Find enriched GO terms, 
-GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
+GO.D10.wall<-goseq(DEG.D10.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 
-GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=FALSE)
-colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
+GO.D10 <- GO.D10.wall[order(GO.D10.wall$over_represented_pvalue),]
+write.csv(GO.D10 , file = "RAnalysis/Output/GO.D10.csv")
 
-GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
+colnames(GO.D10)[1] <- "GO.IDs"
+GO.D10 <- left_join(GO.D10, GO.IDs.slims, by="GO.IDs")
+GO.D10 <- GO.D10[!duplicated(GO.D10$GO.IDs), ]
 
-#How many enriched GO terms do we have
-class(GO.slim.wall)
-head(GO.slim.wall)
-tail(GO.slim.wall)
-nrow(GO.slim.wall)
+sig.GO.D10 <- GO.D10 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+write.csv(sig.GO.D10 , file = "RAnalysis/Output/sig.GO.D10.csv")
 
-GOslim.D10 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
-write.csv(GOslim.D10 , file = "RAnalysis/Output/GOslim_D10.csv")
-sig.GOslim.D10 <- GOslim.D10 %>%
-  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
+sig.GO.D10 <- GO.D10 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  filter(ontology != "CC") %>%
+  filter(ontology == "BP") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+
+sig.GO.D10$term <- factor(sig.GO.D10$term, levels = sig.GO.D10$term[nrow(sig.GO.D10):1])
+
+#plot significantly enriched GO terms by Slim Category
+D10GO <-  ggplot(sig.GO.D10, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+
+ggsave(file="RAnalysis/Figs/GO.D10.pdf", D10GO, width = 7, height = 12, units = c("in"))
+
 
 ```
 
@@ -1208,34 +1265,49 @@ write.table(D135.sig.annot, 'RAnalysis/Output/Table_S3_D135_sig_annot.tsv', sep=
 ```{r}
 # GO Enrichment Analysis of Treatment at Day 135
 ##### GO enrichment of DMGs #####
-DMG <- as.character(D135.sig$gene) #set the enrichment test list
+DMG.D135 <- as.character(D135.sig$gene) #set the enrichment test list
 
-#change contig lists to vectors
-DMG.vector <-c(t(DMG))
-
-gene.vector=as.integer(ALL.vector%in%DMG.vector) #Construct new vector with 1 for DEG and 0 for others
+DMG.D135.vector <-c(t(DMG.D135)) #change to vectors
+gene.vector=as.integer(ALL.vector%in%DMG.D135.vector) #Construct new vector with 1 for DEG and 0 for others
 names(gene.vector)=ALL.vector #set names
-DEG.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector by length of gene
+DEG.D135.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector by length of gene
 
 #Find enriched GO terms, 
-GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
+GO.D135.wall<-goseq(DEG.D135.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 
-GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=FALSE)
-colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
+GO.D135 <- GO.D135.wall[order(GO.D135.wall$over_represented_pvalue),]
+write.csv(GO.D135 , file = "RAnalysis/Output/GO.D135.csv")
 
-GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
+colnames(GO.D135)[1] <- "GO.IDs"
+GO.D135 <- left_join(GO.D135, GO.IDs.slims, by="GO.IDs")
+GO.D135 <- GO.D135[!duplicated(GO.D135$GO.IDs), ]
 
-#How many enriched GO terms do we have
-class(GO.slim.wall)
-head(GO.slim.wall)
-tail(GO.slim.wall)
-nrow(GO.slim.wall)
+sig.GO.D135 <- GO.D135 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
 
-GOslim.D135 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
-write.csv(GOslim.D135 , file = "RAnalysis/Output/GOslim_D135.csv")
-sig.GOslim.D135 <- GOslim.D135 %>%
-  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
+sig.GO.D135 <- GO.D135 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  filter(ontology != "CC") %>%
+  filter(ontology == "BP") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
+sig.GO.D135$term <- factor(sig.GO.D135$term, levels = sig.GO.D135$term[nrow(sig.GO.D135):1])
+
+#plot significantly enriched GO terms by Slim Category
+D135GO <-  ggplot(sig.GO.D135, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+
+ggsave(file="RAnalysis/Figs/GO.D135.pdf", D135GO, width = 7, height = 12, units = c("in"))
 ```
 
 ```{r}
@@ -1315,93 +1387,116 @@ write.table(D145.sig.annot, 'RAnalysis/Output/Table_S4_D145_sig_annot.tsv', sep=
 ```{r}
 # GO Enrichment Analysis of Treatment at Day 145
 ##### GO enrichment of DMGs #####
-DMG <- as.character(D145.sig$gene) #set the enrichment test list
+DMG.D145 <- as.character(D145.sig$gene) #set the enrichment test list
 
-#change contig lists to vectors
-DMG.vector <-c(t(DMG))
-
-gene.vector=as.integer(ALL.vector%in%DMG.vector) #Construct new vector with 1 for DEG and 0 for others
+DMG.D145.vector <-c(t(DMG.D145)) #change to vectors
+gene.vector=as.integer(ALL.vector%in%DMG.D145.vector) #Construct new vector with 1 for DEG and 0 for others
 names(gene.vector)=ALL.vector #set names
-DEG.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector by length of gene
+DEG.D145.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector by length of gene
 
 #Find enriched GO terms, 
-GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
+GO.D145.wall<-goseq(DEG.D145.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 
-GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
-colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
+GO.D145 <- GO.D145.wall[order(GO.D145.wall$over_represented_pvalue),]
+write.csv(GO.D145 , file = "RAnalysis/Output/GO.D145.csv")
 
-GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
+colnames(GO.D145)[1] <- "GO.IDs"
+GO.D145 <- left_join(GO.D145, GO.IDs.slims, by="GO.IDs")
+GO.D145 <- GO.D145[!duplicated(GO.D145$GO.IDs), ]
 
-#How many enriched GO terms do we have
-class(GO.slim.wall)
-head(GO.slim.wall)
-tail(GO.slim.wall)
-nrow(GO.slim.wall)
+sig.GO.D145 <- GO.D145 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
 
-GOslim.D145 <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
-write.csv(GOslim.D145 , file = "RAnalysis/Output/GOslim_D145.csv")
-sig.GOslim.D145 <- GOslim.D145 %>%
-  filter(over_represented_pvalue <0.08 | under_represented_pvalue<0.08)
-  
+sig.GO.D145 <- GO.D145 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  filter(ontology != "CC") %>%
+  filter(ontology == "BP") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+
+sig.GO.D145$term <- factor(sig.GO.D145$term, levels = sig.GO.D145$term[nrow(sig.GO.D145):1])
+
+#plot significantly enriched GO terms by Slim Category
+D145GO <-  ggplot(sig.GO.D145, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+
+ggsave(file="RAnalysis/Figs/GO.D145.pdf", D145GO, width = 7, height = 12, units = c("in"))
+```
+
+Plotting all BP
+```{r}
+DEG.GO.Enrichment <- arrangeGrob(D10GO,D135GO,D145GO, ncol=3)
+ggsave(file="RAnalysis/Figs/Figx_DEG.GO.Enrichment.pdf", DEG.GO.Enrichment, width = 21, height = 12, units = c("in"))
+ggsave(file="RAnalysis/Figs/Figx_DEG.GO.Enrichment.png", DEG.GO.Enrichment, width = 21, height = 12, units = c("in"))
+
 ```
 
 Genes in Over and Under-represented GO Slim terms
 ```{r}
-All.Slims <-  unique(Gene.GO.IDs.slims$GO.Slim.Term)
-nrow(sig.GOslim.Time)
-Time.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[1,1]) #kinase activity
-Time.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[2,1]) #unknown
-Time.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[3,1]) #cytoskeleton
-Time.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[4,1]) #other metabolic processes
-
-#Day 10
-nrow(sig.GOslim.D10)
-D10.slim.terms.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[1,1]) #protein metabolism
-D10.slim.terms.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[2,1]) #other molecular function
-D10.slim.terms.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[3,1]) #transport
-D10.slim.terms.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[4,1]) #cytoskeleton
-D10.cytoskel <- unique(D10.slim.terms.4 %>% filter(as.character(D10.slim.terms.4$gene) %in% D10.sig.annot$gene))
-D10.cytoskel <- left_join(D10.cytoskel, D10.sig.annot, by="gene")
-
-D10.slim.terms.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[5,1]) #other biological processes
-D10.slim.terms.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[6,1]) #developmental processes
-D10.slim.terms.7 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[7,1]) #other cellular component
-D10.slim.terms.8 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[8,1]) #signal transduction
-D10.slim.terms.9 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[9,1]) #other membranes
-D10.slim.terms.10 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[10,1]) #plasma membrane
-
-write.csv(D10.cytoskel, file='RAnalysis/Output/D10.genes.of.interest.csv')
-
-#Day 135
-nrow(sig.GOslim.D135)
-D135.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[1,1]) #cytoskeletal activity
-D135.cytoskel.act <- unique(D135.slim.genes.1 %>% filter(as.character(D135.slim.genes.1$gene) %in% D135.sig.annot$gene))
-D135.cytoskel.act <- left_join(D135.cytoskel.act, D135.sig.annot, by="gene")
-D135.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[2,1]) #cytoskeleton
-D135.cytoskel <- unique(D135.slim.genes.2 %>% filter(as.character(D135.slim.genes.2$gene) %in% D135.sig.annot$gene))
-D135.cytoskel <- left_join(D135.cytoskel, D135.sig.annot, by="gene")
-D135.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[3,1]) #cell-cell signaling
-D135.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[4,1]) #nucleic acid binding activity
-D135.nuc_acid_bind <- unique(D135.slim.genes.4 %>% filter(as.character(D135.slim.genes.4$gene) %in% D135.sig.annot$gene))
-D135.nuc_acid_bind <- left_join(D135.nuc_acid_bind, D135.sig.annot, by="gene")
-D135.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[5,1]) #translational apparatus
-
-D135.goi <- rbind(D135.cytoskel.act,D135.cytoskel,D135.nuc_acid_bind)
-write.csv(D135.goi, file='RAnalysis/Output/D135.genes.of.interest.csv')
-
-#Day 145
-nrow(sig.GOslim.D145)
-D145.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[1,1]) #unknown
-D145.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[2,1]) #other cellular component
-D145.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[3,1]) #other metabolic processes
-D145.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[4,1]) #nucleic acid binding activity
-D145.nuc_acid_bind <- unique(D145.slim.genes.4 %>% filter(as.character(D145.slim.genes.4$gene) %in% D145.sig.annot$gene))
-D145.nuc_acid_bind <- left_join(D145.nuc_acid_bind, D145.sig.annot, by="gene")
-D145.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[5,1]) #mitochondrion
-D145.slim.genes.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[6,1]) #translational apparatus
-
-D145.goi <- D145.nuc_acid_bind
-write.csv(D145.goi, file='RAnalysis/Output/D145.genes.of.interest.csv')
+# All.Slims <-  unique(Gene.GO.IDs.slims$GO.Slim.Term)
+# nrow(sig.GOslim.Time)
+# Time.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[1,1]) #kinase activity
+# Time.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[2,1]) #unknown
+# Time.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[3,1]) #cytoskeleton
+# Time.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[4,1]) #other metabolic processes
+# 
+# #Day 10
+# nrow(sig.GOslim.D10)
+# D10.slim.terms.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[1,1]) #protein metabolism
+# D10.slim.terms.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[2,1]) #other molecular function
+# D10.slim.terms.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[3,1]) #transport
+# D10.slim.terms.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[4,1]) #cytoskeleton
+# D10.cytoskel <- unique(D10.slim.terms.4 %>% filter(as.character(D10.slim.terms.4$gene) %in% D10.sig.annot$gene))
+# D10.cytoskel <- left_join(D10.cytoskel, D10.sig.annot, by="gene")
+# 
+# D10.slim.terms.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[5,1]) #other biological processes
+# D10.slim.terms.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[6,1]) #developmental processes
+# D10.slim.terms.7 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[7,1]) #other cellular component
+# D10.slim.terms.8 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[8,1]) #signal transduction
+# D10.slim.terms.9 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[9,1]) #other membranes
+# D10.slim.terms.10 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[10,1]) #plasma membrane
+# 
+# write.csv(D10.cytoskel, file='RAnalysis/Output/D10.genes.of.interest.csv')
+# 
+# #Day 135
+# nrow(sig.GOslim.D135)
+# D135.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[1,1]) #cytoskeletal activity
+# D135.cytoskel.act <- unique(D135.slim.genes.1 %>% filter(as.character(D135.slim.genes.1$gene) %in% D135.sig.annot$gene))
+# D135.cytoskel.act <- left_join(D135.cytoskel.act, D135.sig.annot, by="gene")
+# D135.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[2,1]) #cytoskeleton
+# D135.cytoskel <- unique(D135.slim.genes.2 %>% filter(as.character(D135.slim.genes.2$gene) %in% D135.sig.annot$gene))
+# D135.cytoskel <- left_join(D135.cytoskel, D135.sig.annot, by="gene")
+# D135.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[3,1]) #cell-cell signaling
+# D135.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[4,1]) #nucleic acid binding activity
+# D135.nuc_acid_bind <- unique(D135.slim.genes.4 %>% filter(as.character(D135.slim.genes.4$gene) %in% D135.sig.annot$gene))
+# D135.nuc_acid_bind <- left_join(D135.nuc_acid_bind, D135.sig.annot, by="gene")
+# D135.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[5,1]) #translational apparatus
+# 
+# D135.goi <- rbind(D135.cytoskel.act,D135.cytoskel,D135.nuc_acid_bind)
+# write.csv(D135.goi, file='RAnalysis/Output/D135.genes.of.interest.csv')
+# 
+# #Day 145
+# nrow(sig.GOslim.D145)
+# D145.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[1,1]) #unknown
+# D145.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[2,1]) #other cellular component
+# D145.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[3,1]) #other metabolic processes
+# D145.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[4,1]) #nucleic acid binding activity
+# D145.nuc_acid_bind <- unique(D145.slim.genes.4 %>% filter(as.character(D145.slim.genes.4$gene) %in% D145.sig.annot$gene))
+# D145.nuc_acid_bind <- left_join(D145.nuc_acid_bind, D145.sig.annot, by="gene")
+# D145.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[5,1]) #mitochondrion
+# D145.slim.genes.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[6,1]) #translational apparatus
+# 
+# D145.goi <- D145.nuc_acid_bind
+# write.csv(D145.goi, file='RAnalysis/Output/D145.genes.of.interest.csv')
 
 ```
 Plots of Methylation of Genes in Over and Under-represented GO Slim terms
@@ -1417,17 +1512,18 @@ ints_135_145 <- merge(D135.sig, D145.sig, by="gene")
 ints_all <- merge(ints_10_135, D145.sig, by="gene")
 ints_all.annot <- merge(ints_all, Annot, by="gene", all.x=TRUE)
 ints_all.annot <- ints_all.annot[!duplicated(ints_all.annot$gene),]
-write.table(ints_all.annot, 'RAnalysis/Output/Table_S5_DMGs_consistent_INT.tsv', sep='\t', row.names=FALSE)
+write.table(ints_all.annot, 'RAnalysis/Output/Table_S5_DMGs_persist.tsv', sep='\t', row.names=FALSE)
+ints_all.annot <- na.omit(ints_all.annot)
 
 ```
 
 ```{r}
 # GO Enrichment Analysis of DMG present in all comparisons
 #### GO enrichment of DMGs #####
-DMG <- as.character(ints_all$gene) #set the enrichment test list
+DMG.Persist <- as.character(ints_all$gene) #set the enrichment test list
 
 #change contig lists to vectors
-DMG.vector <-c(t(DMG))
+DMG.vector <-c(t(DMG.Persist))
 
 gene.vector=as.integer(ALL.vector%in%DMG.vector) #Construct new vector with 1 for DEG and 0 for others
 names(gene.vector)=ALL.vector #set names
@@ -1436,19 +1532,40 @@ DEG.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vector b
 #Find enriched GO terms, 
 GO.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 
-GO.slim.wall<-goseq(DEG.pwf, ID.vector, gene2cat=GO.slimmed.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
-colnames(GO.slim.wall)[1] <- "GO.Slim.Term"
+GO.Persist <- GO.wall[order(GO.wall$over_represented_pvalue),]
+write.csv(GO.Persist  , file = "RAnalysis/Output/GO.Persist .csv")
 
-GO.slim.wall <- left_join(GO.slim.wall, slim.cats)
+colnames(GO.Persist )[1] <- "GO.IDs"
+GO.Persist <- left_join(GO.Persist, GO.IDs.slims, by="GO.IDs")
+GO.Persist  <- GO.Persist [!duplicated(GO.Persist$GO.IDs), ]
 
-#How many enriched GO terms do we have
-class(GO.slim.wall)
-head(GO.slim.wall)
-tail(GO.slim.wall)
-nrow(GO.slim.wall)
+sig.GO.Persist <- GO.Persist %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+write.csv(sig.GO.Persist , file = "RAnalysis/Output/sig.GO.Persist.csv")
 
-GOslim.INT_ALL <- GO.slim.wall[order(GO.slim.wall$over_represented_pvalue),]
-write.csv(GOslim.INT_ALL , file = "RAnalysis/Output/GOslim_INT_ALL.csv")
+sig.GO.Persist <- GO.Persist %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >5) %>%
+  filter(ontology != "CC") %>%
+  filter(ontology == "BP") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+
+sig.GO.Persist$term <- factor(sig.GO.Persist$term, levels = sig.GO.Persist$term[nrow(sig.GO.Persist):1])
+
+#plot significantly enriched GO terms by Slim Category
+PersistGO <-  ggplot(sig.GO.Persist, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+
+ggsave(file="RAnalysis/Figs/GO.Persist.pdf", PersistGO, width = 7, height = 12, units = c("in"))
+
 ```
 
 ```{r}
@@ -1467,11 +1584,6 @@ heatmap.2(Time.Amb.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.
   #breaks = breaks[c(1,length(breaks))]
   list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=FALSE, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE, lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
-
-#Old code
-#pdf("RAnalysis/Output/Time.DMG_Rel_HEATMAP.pdf")
-#TimeHM <- heatmap.2(Time.Amb.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
-#dev.off()
 
 ```
 
@@ -1497,10 +1609,7 @@ heatmap.2(D10.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.dist(
   #breaks = breaks[c(1,length(breaks))]
   list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
-#Old code
-#pdf("RAnalysis/Output/D10.DMG_Rel_HEATMAP.pdf")
-#D10HM <- heatmap.2(D10.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
-#dev.off()
+
 
 ```
 
@@ -1528,10 +1637,6 @@ heatmap.2(D135.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.dist
   list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
 
-#Old code
-#pdf("RAnalysis/Output/D135.DMG_Rel_HEATMAP.pdf")
-#D135HM <- heatmap.2(D135.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.025,0.025), sepcolor="darkgray", keysize = 1)
-#dev.off()
 ```
 
 ```{r}
@@ -1555,11 +1660,6 @@ heatmap.2(D145.mat,margins = c(5,20),cexCol = 1.5, distfun = function(x) as.dist
   list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=FALSE, col= rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepcolor="white",sepwidth=c(0.1,0.01),colsep=c(0,2,4,6), lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=1, key.par = list(cex=0.65),lhei=c(1.5,4,1), lwid = c(1.5,4))
 dev.off()
 
-#Old code
-#pdf("RAnalysis/Output/D145.DMG_Rel_HEATMAP.pdf")
-#D145HM <- heatmap.2(D145.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.1,0.1), sepcolor="white", keysize = 1, colsep=c(0,2,4,6))
-#dev.off()
-
 ```
 
 ```{r}
@@ -1568,119 +1668,32 @@ dev.off()
 D145.mat.1 <- D145.mat[,c(1:2)]
 D145.mat.1 <- as.data.frame(D145.mat.1)
 D145.mat.1$gene <-rownames(D145.mat.1)
-D145.mat.1$diff <- D145.mat.1$Ambient_Low - D145.mat.1$Ambient_Ambient
-mean(D145.mat.1$diff)
+D145.mat.1$diff <- D145.mat.1$`pH 7.9 -> pH 7.9` - D145.mat.1$`pH 7.9 -> pH 7.4`
+A <- round(mean(D145.mat.1$diff),2)
 std.error(D145.mat.1$diff)
 var(D145.mat.1$diff)
 
 D145.mat.2 <- D145.mat[,c(3:4)]
 D145.mat.2 <- as.data.frame(D145.mat.2)
 D145.mat.2$gene <-rownames(D145.mat.2)
-D145.mat.2$diff <- D145.mat.2$Low_Low - D145.mat.2$Low_Ambient
-mean(D145.mat.2$diff)
+D145.mat.2$diff <- D145.mat.2$`pH 7.4 -> pH 7.9` - D145.mat.2$`pH 7.4 -> pH 7.4`
+M <-round(mean(D145.mat.2$diff),2)
 std.error(D145.mat.2$diff)
 var(D145.mat.2$diff)
 
 D145.mat.3 <- D145.mat[,c(5:6)]
 D145.mat.3 <- as.data.frame(D145.mat.3)
 D145.mat.3$gene <-rownames(D145.mat.3)
-D145.mat.3$diff <- D145.mat.3$Super.Low_Low - D145.mat.3$Super.Low_Ambient
-mean(D145.mat.3$diff)
+D145.mat.3$diff <- D145.mat.3$`pH 7.0 -> pH 7.9` - D145.mat.3$`pH 7.0 -> pH 7.4`
+L <-round(mean(D145.mat.3$diff), 2)
 std.error(D145.mat.3$diff)
 var(D145.mat.3$diff)
 
-labs1 <- c(2.2, -0.4, -0.5)
-labs2 <- c(0.4, 0.3, 0.3)
+labs1 <- c(A, M, L)
 
-pdf("RAnalysis/Output/D145.DMG_Rel_HEATMAP_withDiff.pdf")
-heatmap.2(D145.mat, margins = c(10,20), cexRow = 1.2, cexCol = 1, Colv=FALSE, dendrogram="row", labRow=FALSE, col = rev(RColorBrewer::brewer.pal(name = "RdYlBu", n = 10)), na.color = "black", density.info = "none", trace = "none", scale = "row", sepwidth=c(0.1,0.1), sepcolor="white", keysize = 1, colsep=c(0,2,4,6), add.expr=text(x=c(2,4,6), y=c(420,420,420), labels=labs1))
-dev.off()
-```
-
-
-```{r}
-##### Gene Ontology Plots
-BPplot.10 <- BP.D10 %>% head(., n = 10L) %>%
-  #filter(numDEInCat > 3) %>%
-  ggplot(aes(x=reorder(term, numDEInCat), y= numDEInCat) ) +
-      geom_segment(aes(x=reorder(term, numDEInCat) ,xend=reorder(term, -numDEInCat), y=0, yend=numDEInCat), color="black") +
-      geom_point(size=1, color="black") +
-  coord_flip()+
-      theme(
-        panel.grid.minor.y = element_blank(),
-        panel.grid.major.y = element_blank(),
-        legend.position="none") +
-  xlab("") +
-  ylab("") +
-  ylim(0,20) +
-  ggtitle("Day 10 Biological Process") + #add a main title
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0)) +
-  theme_bw() + #Set background color 
-  theme(panel.border = element_blank(), # Set border
-                     panel.grid.major = element_blank(), #Set major gridlines
-                     panel.grid.minor = element_blank(), #Set minor gridlines
-                     axis.line = element_line(colour = "black"), #Set axes color
-        plot.background=element_blank()) + #Set the plot background
-        theme(axis.text = element_text(size=8) )#Set axis text size
-BPplot.10
-
-BPplot.135 <- BP.D135 %>% head(., n = 10L) %>%
-  #filter(numDEInCat > 3) %>%
-  ggplot(aes(x=reorder(term, numDEInCat), y= numDEInCat) ) +
-      geom_segment(aes(x=reorder(term, numDEInCat) ,xend=reorder(term, -numDEInCat), y=0, yend=numDEInCat), color="black") +
-      geom_point(size=1, color="black") +
-  coord_flip()+
-      theme(
-        panel.grid.minor.y = element_blank(),
-        panel.grid.major.y = element_blank(),
-        legend.position="none") +
-  xlab("") +
-  ylab("") +
-  ylim(0,20) +
-  ggtitle("Day 135 Biological Process") + #add a main title
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0)) +
-  theme_bw() + #Set background color 
-  theme(panel.border = element_blank(), # Set border
-                     panel.grid.major = element_blank(), #Set major gridlines
-                     panel.grid.minor = element_blank(), #Set minor gridlines
-                     axis.line = element_line(colour = "black"), #Set axes color
-        plot.background=element_blank()) + #Set the plot background
-        theme(axis.text = element_text(size=8) )#Set axis text size
-BPplot.135
-
-BPplot.145 <- BP.D145 %>% head(., n = 10L) %>%
-  #filter(numDEInCat > 3) %>%
-  ggplot(aes(x=reorder(term, numDEInCat), y= numDEInCat) ) +
-      geom_segment(aes(x=reorder(term, numDEInCat) ,xend=reorder(term, -numDEInCat), y=0, yend=numDEInCat), color="black") +
-      geom_point(size=1, color="black") +
-  coord_flip()+
-      theme(
-        panel.grid.minor.y = element_blank(),
-        panel.grid.major.y = element_blank(),
-        legend.position="none") +
-  xlab("") +
-  ylab("") +
-  ylim(0,20) +
-  ggtitle("Day 145 Biological Process") + #add a main title
-  theme(plot.title = element_text(face = 'bold', 
-                                  size = 12, 
-                                  hjust = 0)) +
-  theme_bw() + #Set background color 
-  theme(panel.border = element_blank(), # Set border
-                     panel.grid.major = element_blank(), #Set major gridlines
-                     panel.grid.minor = element_blank(), #Set minor gridlines
-                     axis.line = element_line(colour = "black"), #Set axes color
-        plot.background=element_blank()) + #Set the plot background
-        theme(axis.text = element_text(size=8) )#Set axis text size
-BPplot.145
-
-
-plot_grid(BPplot.10, BPplot.135, BPplot.145, ncol=1, align="v")
-ggsave("RAnalysis/Output/BP_GOPlots.pdf")
+A
+L
+M
 ```
 
 
@@ -1688,17 +1701,17 @@ ggsave("RAnalysis/Output/BP_GOPlots.pdf")
 ```{r}
 
 
-D10.topBPGO.genes.1 <- D10.sig.annot[grep(as.character(BP.D10[1,1]),D10.sig.annot$GO.IDs), ]
-D135.topBPGO.genes.1 <- D135.sig.annot[grep(as.character(BP.D135[1,1]),D135.sig.annot$GO.IDs), ]
-D145.topBPGO.genes.1 <- D145.sig.annot[grep(as.character(BP.D145[1,1]),D145.sig.annot$GO.IDs), ]
-
-D10.topBPGO.genes.2 <- D10.sig.annot[grep(as.character(BP.D10[2,1]),D10.sig.annot$GO.IDs), ]
-D135.topBPGO.genes.2 <- D135.sig.annot[grep(as.character(BP.D135[2,1]),D135.sig.annot$GO.IDs), ]
-D145.topBPGO.genes.2 <- D145.sig.annot[grep(as.character(BP.D145[2,1]),D145.sig.annot$GO.IDs), ]
-
-D10.topBPGO.genes.3 <- D10.sig.annot[grep(as.character(BP.D10[3,1]),D10.sig.annot$GO.IDs), ]
-D135.topBPGO.genes.3 <- D135.sig.annot[grep(as.character(BP.D135[3,1]),D135.sig.annot$GO.IDs), ]
-D145.topBPGO.genes.3 <- D145.sig.annot[grep(as.character(BP.D145[3,1]),D145.sig.annot$GO.IDs), ]
+# D10.topBPGO.genes.1 <- D10.sig.annot[grep(as.character(BP.D10[1,1]),D10.sig.annot$GO.IDs), ]
+# D135.topBPGO.genes.1 <- D135.sig.annot[grep(as.character(BP.D135[1,1]),D135.sig.annot$GO.IDs), ]
+# D145.topBPGO.genes.1 <- D145.sig.annot[grep(as.character(BP.D145[1,1]),D145.sig.annot$GO.IDs), ]
+# 
+# D10.topBPGO.genes.2 <- D10.sig.annot[grep(as.character(BP.D10[2,1]),D10.sig.annot$GO.IDs), ]
+# D135.topBPGO.genes.2 <- D135.sig.annot[grep(as.character(BP.D135[2,1]),D135.sig.annot$GO.IDs), ]
+# D145.topBPGO.genes.2 <- D145.sig.annot[grep(as.character(BP.D145[2,1]),D145.sig.annot$GO.IDs), ]
+# 
+# D10.topBPGO.genes.3 <- D10.sig.annot[grep(as.character(BP.D10[3,1]),D10.sig.annot$GO.IDs), ]
+# D135.topBPGO.genes.3 <- D135.sig.annot[grep(as.character(BP.D135[3,1]),D135.sig.annot$GO.IDs), ]
+# D145.topBPGO.genes.3 <- D145.sig.annot[grep(as.character(BP.D145[3,1]),D145.sig.annot$GO.IDs), ]
 
 
 #Day 10 

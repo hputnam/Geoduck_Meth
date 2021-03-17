@@ -1,0 +1,17 @@
+"","GO.IDs","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology","GO.Term","GO.Slim.Term","Cat"
+"1","GO:0048813",0.0383224243779995,0.996393445608452,2,32,"dendrite morphogenesis","BP","dendrite morphogenesis","cell organization and biogenesis","P"
+"2","GO:0042475",0.0143327484724055,0.999224473890145,2,20,"odontogenesis of dentin-containing tooth","BP","odontogenesis of dentine-containing tooth","developmental processes","P"
+"3","GO:0060173",0.0168382988311238,0.999004464227735,2,21,"limb development","BP","limb development","developmental processes","P"
+"4","GO:0009953",0.0347073249314023,0.996904236926506,2,32,"dorsal/ventral pattern formation","BP","dorsal/ventral pattern formation","developmental processes","P"
+"5","GO:0045740",0.00439315676561025,0.999880164626219,2,11,"positive regulation of DNA replication","BP","positive regulation of DNA replication","DNA metabolism","P"
+"6","GO:0014070",0.0339819370350359,0.997003306124843,2,32,"response to organic cyclic compound","BP","response to organic cyclic substance","other biological processes","P"
+"7","GO:0045907",0.0497653126586182,0.998954742016148,1,6,"positive regulation of vasoconstriction","BP","positive regulation of vasoconstriction","other biological processes","P"
+"8","GO:0031397",0.0150908092516382,0.999157802190306,2,21,"negative regulation of protein ubiquitination","BP","negative regulation of protein ubiquitination","protein metabolism","P"
+"9","GO:0007596",0.0331108046038378,0.997125117154645,2,31,"blood coagulation","BP","blood coagulation","stress response","P"
+"10","GO:0071300",0.00644701485211534,0.999782687364384,2,12,"cellular response to retinoic acid","BP",NA,NA,NA
+"11","GO:0019897",0.000378546991611042,0.999989017927662,3,16,"extrinsic component of plasma membrane","CC","extrinsic to plasma membrane","plasma membrane","C"
+"12","GO:0062023",0.0490521661277224,0.987699953665138,4,146,"collagen-containing extracellular matrix","CC",NA,NA,NA
+"13","GO:0048306",0.0307352355743922,0.997444866496446,2,29,"calcium-dependent protein binding","MF","calcium-dependent protein binding","other molecular function","F"
+"14","GO:0004518",0.0325331131884831,0.997193677239945,2,33,"nuclease activity","MF","nuclease activity","other molecular function","F"
+"15","GO:0000149",0.0337472264388485,0.997039617496657,2,31,"SNARE binding","MF","SNARE binding","other molecular function","F"
+"16","GO:0016888",0.0498459538687702,0.998951317428314,1,6,"endodeoxyribonuclease activity, producing 5'-phosphomonoesters","MF","endodeoxyribonuclease activity, producing 5'-phosphomonoesters","other molecular function","F"
