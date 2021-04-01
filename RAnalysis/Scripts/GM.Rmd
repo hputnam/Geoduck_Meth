@@ -28,6 +28,7 @@ library(lsmeans)
 library(data.table)
 library(RColorBrewer)
 library(randomcoloR)
+library(GSEABase)
 
 ```
 
@@ -628,6 +629,19 @@ Gene.GO.IDs$GO.IDs <- as.character(Gene.GO.IDs$GO.IDs)
 #Gene.GO.IDs$GO.IDs[is.na(Gene.GO.IDs$GO.IDs)] <- "unknown" #replace NA with unknown
 GO.IDs <-unique(Gene.GO.IDs$GO.IDs)
 
+#GO Slim Setup
+slim <- getOBOCollection("http://current.geneontology.org/ontology/subsets/goslim_generic.obo") #get GO database
+
+#Write function mappedIds to get the query terms that mapped to the slim categories
+mappedIds <-
+  function(df, collection, OFFSPRING) #the command to run requires a dataframe of slim terms, like slims_MF above, your list of query terms, and the offspring from the GOCollection by goSlim
+  {
+    map <- as.list(OFFSPRING[rownames(df)]) # Subset GOcollection offspring by the rownames of your dataframe
+    mapped <- lapply(map, intersect, ids(collection)) #Find the terms that intersect between the subset made above of your query terms and the GOids from the GO collection
+    df[["go_terms"]] <- vapply(unname(mapped), paste, collapse = ";", character(1L)) #Add column "go_terms" with matching terms 
+    df #show resulting dataframe
+  }
+
 #http://owl.fish.washington.edu/halfshell/bu-alanine-wd/17-07-20/GO-GOslim.sorted
 GoSlims <- read.csv("RAnalysis/Data/Genome/GO-GOslim.sorted", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE, skip=0)
 colnames(GoSlims) <- c("GO.IDs", "GO.Term", "GO.Slim.Term", "Cat") #rename columns
@@ -1003,7 +1017,7 @@ write.table(Time.Amb.annot, 'RAnalysis/Output/Table_S1_Time_sig_annot.tsv', sep=
 
 #Sanity check plotting of top DMGs by time
 high <- MD.Time %>%	
-  filter(gene== Time.Amb.sig$gene[2])
+  filter(gene== Time.Amb.sig$gene[1])
 means <- aggregate(per.meth ~ TimePoint, data=high, FUN=mean)
 ses <- aggregate(per.meth ~ TimePoint, data=high, FUN=std.error)
 means$ses <- ses$per.meth
@@ -1061,16 +1075,16 @@ sig.GO.Time <- GO.Time %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
 
-sig.GO.Time <- GO.Time %>%
+sig.GO.Time.BP <- GO.Time %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
   filter(ontology == "BP") %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
-sig.GO.Time$term <- factor(sig.GO.Time$term, levels = sig.GO.Time$term[nrow(sig.GO.Time):1])
+sig.GO.Time.BP$term <- factor(sig.GO.Time.BP$term, levels = sig.GO.Time.BP$term[nrow(sig.GO.Time.BP):1])
 
 #plot significantly enriched GO terms by Slim Category
-TimeGO <-  ggplot(sig.GO.Time, aes(x = ontology, y = term)) + 
+TimeGO.BP <-  ggplot(sig.GO.Time.BP, aes(x = ontology, y = term)) + 
   geom_tile(aes(fill =over_represented_pvalue)) + 
   facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -1079,7 +1093,36 @@ TimeGO <-  ggplot(sig.GO.Time, aes(x = ontology, y = term)) +
   strip.text.x = element_text(size = 20),
   axis.text = element_text(size = 8))
 
-ggsave(file="RAnalysis/Figs/TimeGO.pdf", TimeGO, width = 7, height = 10, units = c("in"))
+sig.GO.Time.MF <- GO.Time %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >1) %>%
+  filter(ontology == "MF") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+
+sig.GO.Time.MF$term <- factor(sig.GO.Time.MF$term, levels = sig.GO.Time.MF$term[nrow(sig.GO.Time.MF):1])
+
+#plot significantly enriched GO terms by Slim Category
+TimeGO.MF <-  ggplot(sig.GO.Time.MF, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+
+Time.GO.Sig <- arrangeGrob(TimeGO.BP,TimeGO.MF, ncol=2)
+ggsave(file="RAnalysis/Figs/TimeGO.pdf", Time.GO.Sig, width = 15, height = 10, units = c("in"))
+
+TimeGO <- ggplot(na.omit(sig.GO.Time), aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+ggsave(file="RAnalysis/Figs/TimeGO_BPMF.pdf", TimeGO, width = 15, height = 10, units = c("in"))
 
 ```
 
@@ -1192,17 +1235,16 @@ sig.GO.D10 <- GO.D10 %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D10 , file = "RAnalysis/Output/sig.GO.D10.csv")
 
-sig.GO.D10 <- GO.D10 %>%
+sig.GO.D10.BP <- GO.D10 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
-  filter(ontology != "CC") %>%
   filter(ontology == "BP") %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
-sig.GO.D10$term <- factor(sig.GO.D10$term, levels = sig.GO.D10$term[nrow(sig.GO.D10):1])
+sig.GO.D10.BP$term <- factor(sig.GO.D10.BP$term, levels = sig.GO.D10.BP$term[nrow(sig.GO.D10.BP):1])
 
 #plot significantly enriched GO terms by Slim Category
-D10GO <-  ggplot(sig.GO.D10, aes(x = ontology, y = term)) + 
+D10GO.BP <-  ggplot(sig.GO.D10.BP, aes(x = ontology, y = term)) + 
   geom_tile(aes(fill =over_represented_pvalue)) + 
   facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -1211,7 +1253,26 @@ D10GO <-  ggplot(sig.GO.D10, aes(x = ontology, y = term)) +
   strip.text.x = element_text(size = 20),
   axis.text = element_text(size = 8))
 
-ggsave(file="RAnalysis/Figs/GO.D10.pdf", D10GO, width = 7, height = 12, units = c("in"))
+sig.GO.D10.MF <- GO.D10 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >1) %>%
+  filter(ontology == "MF") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+
+sig.GO.D10.MF$term <- factor(sig.GO.D10.MF$term, levels = sig.GO.D10.MF$term[nrow(sig.GO.D10.MF):1])
+
+#plot significantly enriched GO terms by Slim Category
+D10GO.MF <-  ggplot(sig.GO.D10.MF, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8))
+
+D10.GO.Sig <- arrangeGrob(D10GO.BP,D10GO.MF, ncol=2)
+ggsave(file="RAnalysis/Figs/GO.D10.pdf", D10.GO.Sig, width = 15, height = 10, units = c("in"))
 
 
 ```

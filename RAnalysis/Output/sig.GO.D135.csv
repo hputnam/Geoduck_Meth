@@ -1,40 +1,40 @@
 "","GO.IDs","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology","GO.Term","GO.Slim.Term","Cat"
-"1","GO:0000226",0.0324910471050126,0.990343785691639,6,43,"microtubule cytoskeleton organization","BP","microtubule cytoskeleton organization","cell organization and biogenesis","P"
-"2","GO:0070830",0.0435742550622202,0.993332997563045,3,11,"bicellular tight junction assembly","BP","","cell organization and biogenesis","None"
-"3","GO:0022604",0.0439405239474477,0.992782202627932,3,16,"regulation of cell morphogenesis","BP","regulation of cell morphogenesis","cell organization and biogenesis","P"
-"4","GO:0048709",0.0160476246096193,0.998336434898971,3,11,"oligodendrocyte differentiation","BP","oligodendrocyte differentiation","developmental processes","P"
-"5","GO:0010832",0.0240822331968054,0.997154792121295,3,10,"negative regulation of myotube differentiation","BP","negative regulation of myotube differentiation","developmental processes","P"
-"6","GO:0021587",0.0285086039209782,0.998205623623979,2,6,"cerebellum morphogenesis","BP","cerebellum morphogenesis","developmental processes","P"
-"7","GO:0001890",0.0307264656291951,0.995706009469951,3,14,"placenta development","BP","placenta development","developmental processes","P"
-"8","GO:0031175",0.0398078175073649,0.986137858420631,7,56,"neuron projection development","BP","neuron projection development","developmental processes","P"
-"9","GO:0045165",0.0310185876271511,0.993851783020302,4,20,"cell fate commitment","BP","cell fate commitment","other biological processes","P"
-"10","GO:0050892",0.0368201069573497,0.997334396843453,2,6,"intestinal absorption","BP","intestinal absorption","other biological processes","P"
-"11","GO:0032880",0.0382832669514175,0.989977583541257,5,27,"regulation of protein localization","BP","regulation of protein localization","other biological processes","P"
-"12","GO:0042417",0.036282002199288,0.994741034362906,3,12,"dopamine metabolic process","BP","dopamine metabolic process","other metabolic processes","P"
-"13","GO:0035278",0.0323410602080954,0.997819493092144,2,6,"miRNA mediated inhibition of translation","BP","gene silencing by miRNA, negative regulation of translation","protein metabolism","P"
-"14","GO:0006351",0.0261364500962348,0.993682138352862,5,34,"transcription, DNA-templated","BP","transcription, DNA-dependent","RNA metabolism","P"
-"15","GO:0019933",0.0371652571062283,0.992199406103563,4,20,"cAMP-mediated signaling","BP","cAMP-mediated signaling","signal transduction","P"
-"16","GO:0030514",0.038123207433335,0.989835385973036,5,33,"negative regulation of BMP signaling pathway","BP","negative regulation of BMP signaling pathway","signal transduction","P"
-"17","GO:0060392",0.040717433318632,0.996883889945434,2,6,"negative regulation of SMAD protein signal transduction","BP","negative regulation of SMAD protein nuclear translocation","signal transduction","P"
-"18","GO:0010753",0.046765326727083,0.992197238537931,3,15,"positive regulation of cGMP-mediated signaling","BP","positive regulation of cGMP-mediated signaling","signal transduction","P"
-"19","GO:0045088",0.00641500768816545,0.999236663028225,4,16,"regulation of innate immune response","BP","regulation of innate immune response","stress response","P"
-"20","GO:0070417",0.0284766732354272,0.998208724916618,2,6,"cellular response to cold","BP","cellular response to cold","stress response","P"
-"21","GO:0050729",0.0356463535553405,0.99248875642284,4,23,"positive regulation of inflammatory response","BP","positive regulation of inflammatory response","stress response","P"
-"22","GO:0007589",0.0105463794046497,0.999118559606028,3,9,"body fluid secretion","BP","body fluid secretion","transport","P"
-"23","GO:0043271",0.0353680113261697,0.997495557021733,2,6,"negative regulation of ion transport","BP","negative regulation of ion transport","transport","P"
-"24","GO:0003429",0.0308337195998204,0.995741583829442,3,13,"growth plate cartilage chondrocyte morphogenesis","BP",NA,NA,NA
-"25","GO:0035815",0.0346869368736804,0.997569869390627,2,6,"positive regulation of renal sodium excretion","BP",NA,NA,NA
-"26","GO:0070886",0.0355452690606503,0.997476082103669,2,6,"positive regulation of calcineurin-NFAT signaling cascade","BP",NA,NA,NA
-"27","GO:0090090",0.0393953166665207,0.987688545334918,6,46,"negative regulation of canonical Wnt signaling pathway","BP",NA,NA,NA
-"28","GO:0086091",0.0469891898164445,0.996105790620267,2,6,"regulation of heart rate by cardiac conduction","BP",NA,NA,NA
-"29","GO:1903779",0.0497110141493141,0.991976973617111,3,11,"regulation of cardiac conduction","BP",NA,NA,NA
-"30","GO:0030286",0.0149555084475757,0.99544684166292,8,43,"dynein complex","CC","dynein complex","cytoskeleton","C"
-"31","GO:0000812",0.00622634133130189,0.999615173102303,3,7,"Swr1 complex","CC","Swr1 complex","nucleus","C"
-"32","GO:0000124",0.00797987805469965,0.999398634003922,3,9,"SAGA complex","CC","SAGA complex","nucleus","C"
-"33","GO:0035267",0.0132971875456501,0.998715856248373,3,11,"NuA4 histone acetyltransferase complex","CC","NuA4 histone acetyltransferase complex","nucleus","C"
-"34","GO:0060076",0.0150577624571913,0.997626720120582,4,19,"excitatory synapse","CC","excitatory synapse","other cellular component","C"
-"35","GO:0019897",0.0483637792744785,0.991744502476838,3,16,"extrinsic component of plasma membrane","CC","extrinsic to plasma membrane","plasma membrane","C"
-"36","GO:0062023",0.02305949781786,0.98902695758897,15,146,"collagen-containing extracellular matrix","CC",NA,NA,NA
-"37","GO:0044615",0.0478818221600925,0.995625802495867,2,8,"nuclear pore nuclear basket","CC",NA,NA,NA
-"38","GO:0042806",0.0349694368789853,0.997539145217237,2,6,"fucose binding","MF","fucose binding","other molecular function","F"
-"39","GO:0031698",0.0458152073963696,0.996256304621088,2,6,"beta-2 adrenergic receptor binding","MF","beta-2 adrenergic receptor binding","signal transduction activity","F"
+"1","GO:0000226",0.0324948627160586,0.990342385210702,6,43,"microtubule cytoskeleton organization","BP","microtubule cytoskeleton organization","cell organization and biogenesis","P"
+"2","GO:0070830",0.0435779748558462,0.993332199033497,3,11,"bicellular tight junction assembly","BP","","cell organization and biogenesis","None"
+"3","GO:0022604",0.0439415217219145,0.992781973325579,3,16,"regulation of cell morphogenesis","BP","regulation of cell morphogenesis","cell organization and biogenesis","P"
+"4","GO:0048709",0.0160493201933898,0.998336192573799,3,11,"oligodendrocyte differentiation","BP","oligodendrocyte differentiation","developmental processes","P"
+"5","GO:0010832",0.0240850971576292,0.997154322432863,3,10,"negative regulation of myotube differentiation","BP","negative regulation of myotube differentiation","developmental processes","P"
+"6","GO:0021587",0.028509965517928,0.998205491334578,2,6,"cerebellum morphogenesis","BP","cerebellum morphogenesis","developmental processes","P"
+"7","GO:0001890",0.0307274902570102,0.995705810367314,3,14,"placenta development","BP","placenta development","developmental processes","P"
+"8","GO:0031175",0.0398142647547406,0.986135129543044,7,56,"neuron projection development","BP","neuron projection development","developmental processes","P"
+"9","GO:0045165",0.0310206383788323,0.993851248720062,4,20,"cell fate commitment","BP","cell fate commitment","other biological processes","P"
+"10","GO:0050892",0.0368210396679225,0.9973342921448,2,6,"intestinal absorption","BP","intestinal absorption","other biological processes","P"
+"11","GO:0032880",0.0382886989428629,0.989975773810076,5,27,"regulation of protein localization","BP","regulation of protein localization","other biological processes","P"
+"12","GO:0042417",0.0362848681303365,0.994740454265986,3,12,"dopamine metabolic process","BP","dopamine metabolic process","other metabolic processes","P"
+"13","GO:0035278",0.0323411923621789,0.997819479309335,2,6,"miRNA mediated inhibition of translation","BP","gene silencing by miRNA, negative regulation of translation","protein metabolism","P"
+"14","GO:0006351",0.0261375883411199,0.993681791044771,5,34,"transcription, DNA-templated","BP","transcription, DNA-dependent","RNA metabolism","P"
+"15","GO:0019933",0.0371683580542198,0.992198547631101,4,20,"cAMP-mediated signaling","BP","cAMP-mediated signaling","signal transduction","P"
+"16","GO:0030514",0.0381265734577389,0.989834245437051,5,33,"negative regulation of BMP signaling pathway","BP","negative regulation of BMP signaling pathway","signal transduction","P"
+"17","GO:0060392",0.0407187379835152,0.996883734823025,2,6,"negative regulation of SMAD protein signal transduction","BP","negative regulation of SMAD protein nuclear translocation","signal transduction","P"
+"18","GO:0010753",0.0467660896694147,0.992197060122448,3,15,"positive regulation of cGMP-mediated signaling","BP","positive regulation of cGMP-mediated signaling","signal transduction","P"
+"19","GO:0045088",0.00641509390882176,0.99923664980398,4,16,"regulation of innate immune response","BP","regulation of innate immune response","stress response","P"
+"20","GO:0070417",0.0284777425665183,0.998208621088491,2,6,"cellular response to cold","BP","cellular response to cold","stress response","P"
+"21","GO:0050729",0.0356486737688707,0.992488112695054,4,23,"positive regulation of inflammatory response","BP","positive regulation of inflammatory response","stress response","P"
+"22","GO:0007589",0.0105466893787707,0.999118524028873,3,9,"body fluid secretion","BP","body fluid secretion","transport","P"
+"23","GO:0043271",0.0353673317907653,0.997495631574361,2,6,"negative regulation of ion transport","BP","negative regulation of ion transport","transport","P"
+"24","GO:0003429",0.0308345757633162,0.995741419323083,3,13,"growth plate cartilage chondrocyte morphogenesis","BP",NA,NA,NA
+"25","GO:0035815",0.0346869470667675,0.997569868284598,2,6,"positive regulation of renal sodium excretion","BP",NA,NA,NA
+"26","GO:0070886",0.0355454247209809,0.997476064977317,2,6,"positive regulation of calcineurin-NFAT signaling cascade","BP",NA,NA,NA
+"27","GO:0090090",0.0394000689329074,0.987686705514867,6,46,"negative regulation of canonical Wnt signaling pathway","BP",NA,NA,NA
+"28","GO:0086091",0.0469913037657413,0.996105517605384,2,6,"regulation of heart rate by cardiac conduction","BP",NA,NA,NA
+"29","GO:1903779",0.0497152276821438,0.991976016530414,3,11,"regulation of cardiac conduction","BP",NA,NA,NA
+"30","GO:0030286",0.0149578103090391,0.99544601241748,8,43,"dynein complex","CC","dynein complex","cytoskeleton","C"
+"31","GO:0000812",0.00622658260664598,0.99961515269931,3,7,"Swr1 complex","CC","Swr1 complex","nucleus","C"
+"32","GO:0000124",0.00797987424803095,0.999398634396676,3,9,"SAGA complex","CC","SAGA complex","nucleus","C"
+"33","GO:0035267",0.0132970682052595,0.998715872098286,3,11,"NuA4 histone acetyltransferase complex","CC","NuA4 histone acetyltransferase complex","nucleus","C"
+"34","GO:0060076",0.0150583194055021,0.997626605986264,4,19,"excitatory synapse","CC","excitatory synapse","other cellular component","C"
+"35","GO:0019897",0.0483663853255811,0.991743878796917,3,16,"extrinsic component of plasma membrane","CC","extrinsic to plasma membrane","plasma membrane","C"
+"36","GO:0062023",0.0230629372164069,0.989025115757155,15,146,"collagen-containing extracellular matrix","CC",NA,NA,NA
+"37","GO:0044615",0.0478832368938953,0.995625601473066,2,8,"nuclear pore nuclear basket","CC",NA,NA,NA
+"38","GO:0042806",0.0349709408703923,0.997538981267812,2,6,"fucose binding","MF","fucose binding","other molecular function","F"
+"39","GO:0031698",0.045815338564267,0.99625628792787,2,6,"beta-2 adrenergic receptor binding","MF","beta-2 adrenergic receptor binding","signal transduction activity","F"
