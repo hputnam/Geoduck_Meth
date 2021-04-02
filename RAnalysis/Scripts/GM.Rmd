@@ -29,6 +29,7 @@ library(data.table)
 library(RColorBrewer)
 library(randomcoloR)
 library(GSEABase)
+library(ggpubr)
 
 ```
 
@@ -1091,7 +1092,9 @@ TimeGO.BP <-  ggplot(sig.GO.Time.BP, aes(x = ontology, y = term)) +
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
 sig.GO.Time.MF <- GO.Time %>%
   filter(over_represented_pvalue <0.05) %>%
@@ -1109,20 +1112,13 @@ TimeGO.MF <-  ggplot(sig.GO.Time.MF, aes(x = ontology, y = term)) +
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
-Time.GO.Sig <- arrangeGrob(TimeGO.BP,TimeGO.MF, ncol=2)
-ggsave(file="RAnalysis/Figs/TimeGO.pdf", Time.GO.Sig, width = 15, height = 10, units = c("in"))
+Time.GO.Sig <- ggarrange(TimeGO.BP,TimeGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/TimeGO.pdf", Time.GO.Sig, width = 15, height = 12, units = c("in"))
 
-TimeGO <- ggplot(na.omit(sig.GO.Time), aes(x = ontology, y = term)) + 
-  geom_tile(aes(fill =over_represented_pvalue)) + 
-  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
-  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
-  strip.text.y = element_text(angle=0, size = 10),
-  strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
-ggsave(file="RAnalysis/Figs/TimeGO_BPMF.pdf", TimeGO, width = 15, height = 10, units = c("in"))
 
 ```
 
@@ -1251,7 +1247,9 @@ D10GO.BP <-  ggplot(sig.GO.D10.BP, aes(x = ontology, y = term)) +
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
 sig.GO.D10.MF <- GO.D10 %>%
   filter(over_represented_pvalue <0.05) %>%
@@ -1269,10 +1267,12 @@ D10GO.MF <-  ggplot(sig.GO.D10.MF, aes(x = ontology, y = term)) +
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
-D10.GO.Sig <- arrangeGrob(D10GO.BP,D10GO.MF, ncol=2)
-ggsave(file="RAnalysis/Figs/GO.D10.pdf", D10.GO.Sig, width = 15, height = 10, units = c("in"))
+D10.GO.Sig <- ggarrange(D10GO.BP,D10GO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/GO.D10.pdf", D10.GO.Sig, width = 15, height = 12, units = c("in"))
 
 
 ```
@@ -1388,30 +1388,52 @@ GO.D135 <- GO.D135[!duplicated(GO.D135$GO.IDs), ]
 
 sig.GO.D135 <- GO.D135 %>%
   filter(over_represented_pvalue <0.05) %>%
-  filter(numInCat >5) %>%
+  #filter(numInCat >5) %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
 
-sig.GO.D135 <- GO.D135 %>%
+sig.GO.D135.BP <- GO.D135 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
-  filter(ontology != "CC") %>%
   filter(ontology == "BP") %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
-sig.GO.D135$term <- factor(sig.GO.D135$term, levels = sig.GO.D135$term[nrow(sig.GO.D135):1])
+sig.GO.D135.BP$term <- factor(sig.GO.D135.BP$term, levels = sig.GO.D135.BP$term[nrow(sig.GO.D135.BP):1])
 
 #plot significantly enriched GO terms by Slim Category
-D135GO <-  ggplot(sig.GO.D135, aes(x = ontology, y = term)) + 
+D135GO.BP <-  ggplot(sig.GO.D135.BP, aes(x = ontology, y = term)) + 
   geom_tile(aes(fill =over_represented_pvalue)) + 
   facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
-ggsave(file="RAnalysis/Figs/GO.D135.pdf", D135GO, width = 7, height = 12, units = c("in"))
+sig.GO.D135.MF <- GO.D135 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >1) %>%
+  filter(ontology == "MF") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
+
+sig.GO.D135.MF$term <- factor(sig.GO.D135.MF$term, levels = sig.GO.D135.MF$term[nrow(sig.GO.D135.MF):1])
+
+#plot significantly enriched GO terms by Slim Category
+D135GO.MF <-  ggplot(sig.GO.D135.MF, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
+
+D135.GO.Sig <- ggarrange(D135GO.BP,D135GO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/GO.D135.pdf", D135.GO.Sig, width = 15, height = 12, units = c("in"))
 ```
 
 ```{r}
@@ -1528,105 +1550,54 @@ GO.D145 <- GO.D145[!duplicated(GO.D145$GO.IDs), ]
 
 sig.GO.D145 <- GO.D145 %>%
   filter(over_represented_pvalue <0.05) %>%
-  filter(numInCat >5) %>%
-  arrange(., ontology, over_represented_pvalue)
+  #filter(numInCat >5) %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
 
-sig.GO.D145 <- GO.D145 %>%
+sig.GO.D145.BP <- GO.D145 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
   filter(ontology == "BP") %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
-sig.GO.D145$term <- factor(sig.GO.D145$term, levels = sig.GO.D145$term[nrow(sig.GO.D145):1])
+sig.GO.D145.BP$term <- factor(sig.GO.D145.BP$term, levels = sig.GO.D145.BP$term[nrow(sig.GO.D145.BP):1])
 
 #plot significantly enriched GO terms by Slim Category
-D145GO <-  ggplot(sig.GO.D145, aes(x = ontology, y = term)) + 
+D145GO.BP <-  ggplot(sig.GO.D145.BP, aes(x = ontology, y = term)) + 
   geom_tile(aes(fill =over_represented_pvalue)) + 
   facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
-ggsave(file="RAnalysis/Figs/GO.D145.pdf", D145GO, width = 7, height = 12, units = c("in"))
+sig.GO.D145.MF <- GO.D145 %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >1) %>%
+  filter(ontology == "MF") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
+sig.GO.D145.MF$term <- factor(sig.GO.D145.MF$term, levels = sig.GO.D145.MF$term[nrow(sig.GO.D145.MF):1])
 
-D145.sig.annot[grep(as.character(sig.GO.D145[17,1]),D145.sig.annot$GO.IDs), ]
+#plot significantly enriched GO terms by Slim Category
+D145GO.MF <-  ggplot(sig.GO.D145.MF, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
-```
-
-Plotting all BP
-```{r}
-DEG.GO.Enrichment <- arrangeGrob(D10GO,D135GO,D145GO, ncol=3)
-ggsave(file="RAnalysis/Figs/Figx_DEG.GO.Enrichment.pdf", DEG.GO.Enrichment, width = 21, height = 12, units = c("in"))
-ggsave(file="RAnalysis/Figs/Figx_DEG.GO.Enrichment.png", DEG.GO.Enrichment, width = 21, height = 12, units = c("in"))
-
-```
-
-Genes in Over and Under-represented GO Slim terms
-```{r}
-# All.Slims <-  unique(Gene.GO.IDs.slims$GO.Slim.Term)
-# nrow(sig.GOslim.Time)
-# Time.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[1,1]) #kinase activity
-# Time.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[2,1]) #unknown
-# Time.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[3,1]) #cytoskeleton
-# Time.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.Time[4,1]) #other metabolic processes
-# 
-# #Day 10
-# nrow(sig.GOslim.D10)
-# D10.slim.terms.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[1,1]) #protein metabolism
-# D10.slim.terms.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[2,1]) #other molecular function
-# D10.slim.terms.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[3,1]) #transport
-# D10.slim.terms.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[4,1]) #cytoskeleton
-# D10.cytoskel <- unique(D10.slim.terms.4 %>% filter(as.character(D10.slim.terms.4$gene) %in% D10.sig.annot$gene))
-# D10.cytoskel <- left_join(D10.cytoskel, D10.sig.annot, by="gene")
-# 
-# D10.slim.terms.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[5,1]) #other biological processes
-# D10.slim.terms.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[6,1]) #developmental processes
-# D10.slim.terms.7 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[7,1]) #other cellular component
-# D10.slim.terms.8 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[8,1]) #signal transduction
-# D10.slim.terms.9 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[9,1]) #other membranes
-# D10.slim.terms.10 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D10[10,1]) #plasma membrane
-# 
-# write.csv(D10.cytoskel, file='RAnalysis/Output/D10.genes.of.interest.csv')
-# 
-# #Day 135
-# nrow(sig.GOslim.D135)
-# D135.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[1,1]) #cytoskeletal activity
-# D135.cytoskel.act <- unique(D135.slim.genes.1 %>% filter(as.character(D135.slim.genes.1$gene) %in% D135.sig.annot$gene))
-# D135.cytoskel.act <- left_join(D135.cytoskel.act, D135.sig.annot, by="gene")
-# D135.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[2,1]) #cytoskeleton
-# D135.cytoskel <- unique(D135.slim.genes.2 %>% filter(as.character(D135.slim.genes.2$gene) %in% D135.sig.annot$gene))
-# D135.cytoskel <- left_join(D135.cytoskel, D135.sig.annot, by="gene")
-# D135.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[3,1]) #cell-cell signaling
-# D135.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[4,1]) #nucleic acid binding activity
-# D135.nuc_acid_bind <- unique(D135.slim.genes.4 %>% filter(as.character(D135.slim.genes.4$gene) %in% D135.sig.annot$gene))
-# D135.nuc_acid_bind <- left_join(D135.nuc_acid_bind, D135.sig.annot, by="gene")
-# D135.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D135[5,1]) #translational apparatus
-# 
-# D135.goi <- rbind(D135.cytoskel.act,D135.cytoskel,D135.nuc_acid_bind)
-# write.csv(D135.goi, file='RAnalysis/Output/D135.genes.of.interest.csv')
-# 
-# #Day 145
-# nrow(sig.GOslim.D145)
-# D145.slim.genes.1 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[1,1]) #unknown
-# D145.slim.genes.2 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[2,1]) #other cellular component
-# D145.slim.genes.3 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[3,1]) #other metabolic processes
-# D145.slim.genes.4 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[4,1]) #nucleic acid binding activity
-# D145.nuc_acid_bind <- unique(D145.slim.genes.4 %>% filter(as.character(D145.slim.genes.4$gene) %in% D145.sig.annot$gene))
-# D145.nuc_acid_bind <- left_join(D145.nuc_acid_bind, D145.sig.annot, by="gene")
-# D145.slim.genes.5 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[5,1]) #mitochondrion
-# D145.slim.genes.6 <- GO.slimmed.terms %>% filter(GO.Slim.Term == sig.GOslim.D145[6,1]) #translational apparatus
-# 
-# D145.goi <- D145.nuc_acid_bind
-# write.csv(D145.goi, file='RAnalysis/Output/D145.genes.of.interest.csv')
+D145.GO.Sig <- ggarrange(D145GO.BP,D145GO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/GO.D145.pdf", D145.GO.Sig, width = 15, height = 12, units = c("in"))
 
 ```
-Plots of Methylation of Genes in Over and Under-represented GO Slim terms
-
-
 
 ```{r}
 ##### DMGs in all comparisons #####
@@ -1649,7 +1620,7 @@ ints_all.annot <- na.omit(ints_all.annot)
 ```{r}
 # GO Enrichment Analysis of DMG present in all comparisons
 #### GO enrichment of DMGs #####
-DMG.Persist <- as.character(ints_10_135 $gene) #set the enrichment test list
+DMG.Persist <- as.character(ints_all.annot$gene) #set the enrichment test list
 
 #change contig lists to vectors
 DMG.vector <-c(t(DMG.Persist))
@@ -1670,64 +1641,52 @@ GO.Persist  <- GO.Persist [!duplicated(GO.Persist$GO.IDs), ]
 
 sig.GO.Persist <- GO.Persist %>%
   filter(over_represented_pvalue <0.05) %>%
-  filter(numInCat >5) %>%
+  #filter(numInCat >5) %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.Persist , file = "RAnalysis/Output/sig.GO.Persist.csv")
 
-sig.GO.Persist <- GO.Persist %>%
+sig.GO.Persist.BP <- GO.Persist %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
-  filter(ontology != "CC") %>%
   filter(ontology == "BP") %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
-sig.GO.Persist$term <- factor(sig.GO.Persist$term, levels = sig.GO.Persist$term[nrow(sig.GO.Persist):1])
+sig.GO.Persist.BP$term <- factor(sig.GO.Persist.BP$term, levels = sig.GO.Persist.BP$term[nrow(sig.GO.Persist.BP):1])
 
 #plot significantly enriched GO terms by Slim Category
-PersistGO <-  ggplot(sig.GO.Persist, aes(x = ontology, y = term)) + 
+PersistGO.BP <-  ggplot(sig.GO.Persist.BP, aes(x = ontology, y = term)) + 
   geom_tile(aes(fill =over_represented_pvalue)) + 
   facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-  axis.text = element_text(size = 8))
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
-ggsave(file="RAnalysis/Figs/GO.Persist.pdf", PersistGO, width = 7, height = 12, units = c("in"))
+sig.GO.Persist.MF <- GO.Persist %>%
+  filter(over_represented_pvalue <0.05) %>%
+  filter(numInCat >1) %>%
+  filter(ontology == "MF") %>%
+  arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 
+sig.GO.Persist.MF$term <- factor(sig.GO.Persist.MF$term, levels = sig.GO.Persist.MF$term[nrow(sig.GO.D145.MF):1])
 
-ints_10_135.annot[grep(as.character(sig.GO.Persist[1,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[2,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[3,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[4,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[5,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[6,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[7,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[8,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[9,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[10,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[11,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[12,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[13,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[14,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[15,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[16,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[17,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[18,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[19,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[20,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[21,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[22,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[23,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[24,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[25,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[26,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[27,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[28,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[29,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[30,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[31,1]),ints_10_135.annot$GO.IDs), ]
+#plot significantly enriched GO terms by Slim Category
+PersistGO.MF <-  ggplot(sig.GO.Persist.MF, aes(x = ontology, y = term)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 10),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
+Persist.GO.Sig <- ggarrange(PersistGO.BP,PersistGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/GO.Persist.pdf", Persist.GO.Sig, width = 15, height = 12, units = c("in"))
 
 ```
 
