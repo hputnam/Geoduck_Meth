@@ -30,6 +30,7 @@ library(RColorBrewer)
 library(randomcoloR)
 library(GSEABase)
 library(ggpubr)
+library(hrbrthemes)
 
 ```
 
@@ -1080,7 +1081,7 @@ write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
 #save GO enrichment table with gene IDs and protein names
 
 for (i in 1:nrow(sig.GO.Time)){
-  sig.GO.Time$genes[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"gene"]), collapse = "; ")
+  sig.GO.Time$gene[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"gene"]), collapse = "; ")
   sig.GO.Time$uniprot[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
   sig.GO.Time$uniprot_taxa.id[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
   sig.GO.Time$uniprot.name[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
@@ -1250,7 +1251,7 @@ write.csv(sig.GO.D10 , file = "RAnalysis/Output/sig.GO.D10.csv")
 #save GO enrichment table with gene IDs and protein names
 
 for (i in 1:nrow(sig.GO.D10)){
-  sig.GO.D10$genes[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"gene"]), collapse = "; ")
+  sig.GO.D10$gene[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"gene"]), collapse = "; ")
   sig.GO.D10$uniprot[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
   sig.GO.D10$uniprot_taxa.id[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
   sig.GO.D10$uniprot.name[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
@@ -1425,7 +1426,7 @@ write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
 #save GO enrichment table with gene IDs and protein names
 #for D135
 for (i in 1:nrow(sig.GO.D135)){
-  sig.GO.D135$genes[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"gene"]), collapse = "; ")
+  sig.GO.D135$gene[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"gene"]), collapse = "; ")
   sig.GO.D135$uniprot[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
   sig.GO.D135$uniprot_taxa.id[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
   sig.GO.D135$uniprot.name[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
@@ -1537,22 +1538,22 @@ results$adj.pval.treatment1_x_treatment2 <- p.adjust(results$pval.treatment1_x_t
 
 D145.sig <-results
 D145.sig <- D145.sig[,c(1,5:7)]
-D145.sig <- D145.sig[order(results$adj.pval.treatment1_x_treatment2),]
-D145.sig <- D145.sig[which(D145.sig$adj.pval.treatment1_x_treatment2<0.05), ]
-write.table(D145.sig, 'RAnalysis/Output/D145_sig.tsv', sep='\t', row.names=FALSE)
 
-sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100
-sub_meth_table.D145 <- sub_meth_table
+# Identifying DMG with significant interaction
+D145.sig.int <- D145.sig[order(D145.sig$adj.pval.treatment1_x_treatment2),]
+D145.sig.int <- D145.sig.int[which(D145.sig$adj.pval.treatment1_x_treatment2<0.05), ]
+write.table(D145.sig, 'RAnalysis/Output/D145_sig.int.tsv', sep='\t', row.names=FALSE)
 
 # Annotation of Secondary Exposure Interaction DMG 
-D145.sig.annot <- merge(D145.sig, Annot, by="gene", all.x=TRUE)
-D145.sig.annot <- D145.sig.annot[order(D145.sig.annot$adj.pval.treatment1_x_treatment2),]
-D145.sig.annot <- D145.sig.annot[!duplicated(D145.sig.annot$gene),]
-write.table(D145.sig.annot, 'RAnalysis/Output/Table_S4_D145_sig_annot.tsv', sep='\t', row.names=FALSE)
+D145.sig.int.annot <- merge(D145.sig.int, Annot, by="gene", all.x=TRUE)
+D145.sig.int.annot <- D145.sig.int.annot[order(D145.sig.int.annot$adj.pval.treatment1_x_treatment2),]
+D145.sig.int.annot <- D145.sig.annot[!duplicated(D145.sig.annot$gene),]
+write.table(D145.sig.annot, 'RAnalysis/Output/Table_S4_D145_sig_annot_Interactions.tsv', sep='\t', row.names=FALSE)
 
-#Sanity check plotting of top DMGs
+
+#Sanity check plotting of top DMGs with sig interaction
 high <- MD.D145 %>%	
-  filter(gene== D145.sig$gene[2])
+  filter(gene== D145.sig$gene[1])
 means <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=high, FUN=mean)
 ses <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=high, FUN=std.error)
 means$ses <- ses$per.meth
@@ -1567,12 +1568,68 @@ ggplot(data=means, aes(x=Secondary.Treatment, y=per.meth, group=Initial.Treatmen
     ylab("Percent Methylation") + #plot y axis label
     theme_bw()
 
+# Identifying DMG with significant main effect of Exposure 1
+D145.sig.Exp1 <- D145.sig[which(D145.sig$adj.pval.treatment1<0.05), ]
+write.table(D145.sig.Exp1, 'RAnalysis/Output/D145_sig.Exp1.tsv', sep='\t', row.names=FALSE)
+
+# Annotation of Main Effect of Initial for 145 DMGs 
+D145.sig.Exp1.annot <- merge(D145.sig.Exp1 , Annot, by="gene", all.x=TRUE)
+D145.sig.Exp1.annot <- D145.sig.Exp1.annot[!duplicated(D145.sig.Exp1.annot$gene),]
+write.table(D145.sig.Exp1.annot , 'RAnalysis/Output/D145_sig_annot_Exposure1.tsv', sep='\t', row.names=FALSE)
+
+#Sanity check plotting of top DMGs with sig Exposure 1
+high <- MD.D145 %>%	
+  filter(gene== D145.sig.Exp1$gene[1])
+means <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=high, FUN=mean)
+ses <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=high, FUN=std.error)
+means$ses <- ses$per.meth
+ggplot(data=means, aes(x=Secondary.Treatment, y=per.meth, group=Initial.Treatment, colour=Initial.Treatment, shape=Initial.Treatment)) + #plot data
+    geom_line(size=0.7, position=position_dodge(.1)) + #plot lines
+    scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
+    geom_point(size=4, position=position_dodge(.1), colour="black") + #set point characteristics
+    scale_shape_manual(values=c(1,18,16)) + #set shapes
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), #plot error bars
+    width=0, position=position_dodge(.1), colour="black") + #set error bar characteristics
+    xlab("Secondary Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    theme_bw()
+
+
+# Identifying DMG with significant main effect of Exposure 2
+D145.sig.Exp2 <- D145.sig[which(D145.sig$adj.pval.treatment2<0.05), ]
+write.table(D145.sig.Exp2, 'RAnalysis/Output/D145_sig.Exp2.tsv', sep='\t', row.names=FALSE)
+
+# Annotation of Main Effect of Secondary for 145 DMGs 
+D145.sig.Exp2.annot <- merge(D145.sig.Exp2 , Annot, by="gene", all.x=TRUE)
+D145.sig.Exp2.annot <- D145.sig.Exp2.annot[!duplicated(D145.sig.Exp2.annot$gene),]
+#write.table(D145.sig.Exp2.annot , 'RAnalysis/Output/D145_sig_annot_Exposure2.tsv', sep='\t', row.names=FALSE)
+
+#Sanity check plotting of top DMGs with sig Exposure 1
+high <- MD.D145 %>%	
+  filter(gene== D145.sig.Exp2$gene[66])
+means <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=high, FUN=mean)
+ses <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=high, FUN=std.error)
+means$ses <- ses$per.meth
+ggplot(data=means, aes(x=Secondary.Treatment, y=per.meth, group=Initial.Treatment, colour=Initial.Treatment, shape=Initial.Treatment)) + #plot data
+    geom_line(size=0.7, position=position_dodge(.1)) + #plot lines
+    scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
+    geom_point(size=4, position=position_dodge(.1), colour="black") + #set point characteristics
+    scale_shape_manual(values=c(1,18,16)) + #set shapes
+    geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), #plot error bars
+    width=0, position=position_dodge(.1), colour="black") + #set error bar characteristics
+    xlab("Secondary Treatment") + #plot x axis label
+    ylab("Percent Methylation") + #plot y axis label
+    theme_bw()
+
+
+
+
 ```
 
 ```{r}
 # GO Enrichment Analysis of Treatment at Day 145
 ##### GO enrichment of DMGs #####
-DMG.D145 <- as.character(D145.sig$gene) #set the enrichment test list
+DMG.D145 <- as.character(D145.sig.int$gene) #set the enrichment test list
 
 DMG.D145.vector <-c(t(DMG.D145)) #change to vectors
 gene.vector=as.integer(ALL.vector%in%DMG.D145.vector) #Construct new vector with 1 for DEG and 0 for others
@@ -1583,7 +1640,7 @@ DEG.D145.pwf<-nullp(gene.vector, ID.vector, bias.data=LENGTH.vector) #weight vec
 GO.D145.wall<-goseq(DEG.D145.pwf, ID.vector, gene2cat=GO.terms, test.cats=c("GO:CC", "GO:BP", "GO:MF"), method="Wallenius", use_genes_without_cat=TRUE)
 
 GO.D145 <- GO.D145.wall[order(GO.D145.wall$over_represented_pvalue),]
-write.csv(GO.D145 , file = "RAnalysis/Output/GO.D145.csv")
+write.csv(GO.D145 , file = "RAnalysis/Output/GO.D145.Interaction.csv")
 
 colnames(GO.D145)[1] <- "GO.IDs"
 GO.D145 <- left_join(GO.D145, GO.IDs.slims, by="GO.IDs")
@@ -1591,22 +1648,21 @@ GO.D145 <- GO.D145[!duplicated(GO.D145$GO.IDs), ]
 
 sig.GO.D145 <- GO.D145 %>%
   filter(over_represented_pvalue <0.05) %>%
-  #filter(numInCat >5) %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
 
 #save GO enrichment table with gene IDs and protein names
 for (i in 1:nrow(sig.GO.D145)){
-  sig.GO.D145$genes[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"gene"]), collapse = "; ")
-  sig.GO.D145$uniprot[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
-  sig.GO.D145$uniprot_taxa.id[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
-  sig.GO.D145$uniprot.name[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
+  sig.GO.D145$gene[i] <- paste(unname(D145.sig.int.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.int.annot$GO.IDs),"gene"]), collapse = "; ")
+  sig.GO.D145$uniprot[i] <- paste(unname(D145.sig.int.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.int.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
+  sig.GO.D145$uniprot_taxa.id[i] <- paste(unname(D145.sig.int.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.int.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
+  sig.GO.D145$uniprot.name[i] <- paste(unname(D145.sig.int.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.int.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
 }
 
-write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
+write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.Interactions.csv")
 
 
-sig.GO.D145.BP <- GO.D135 %>%
+sig.GO.D145.BP <- GO.D145 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
   filter(ontology == "BP") %>%
@@ -1652,15 +1708,15 @@ ggsave(file="RAnalysis/Figs/GO.D145.pdf", D145.GO.Sig, width = 15, height = 12, 
 ```
 
 ```{r}
-##### DMGs in all comparisons #####
+##### Persistent DMGs #####
 
+#Persistent from first exposure throughout common garden
 ints_10_135 <- merge(D10.sig, D135.sig, by="gene")
 ints_10_135.annot <- merge(ints_10_135, Annot, by="gene", all.x=TRUE)
 ints_10_135.annot <- ints_10_135.annot[!duplicated(ints_10_135.annot$gene),]
 ints_10_135.annot <- na.omit(ints_10_135.annot)
 
-ints_10_145 <- merge(D10.sig, D145.sig, by="gene")
-ints_135_145 <- merge(D135.sig, D145.sig, by="gene")
+#Persistent throughout all timepoints
 ints_all <- merge(ints_10_135, D145.sig, by="gene")
 ints_all.annot <- merge(ints_all, Annot, by="gene", all.x=TRUE)
 ints_all.annot <- ints_all.annot[!duplicated(ints_all.annot$gene),]
@@ -1693,9 +1749,22 @@ GO.Persist  <- GO.Persist [!duplicated(GO.Persist$GO.IDs), ]
 
 sig.GO.Persist <- GO.Persist %>%
   filter(over_represented_pvalue <0.05) %>%
-  #filter(numInCat >5) %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.Persist , file = "RAnalysis/Output/sig.GO.Persist.csv")
+
+
+#save GO enrichment table with gene IDs and protein names
+for (i in 1:nrow(sig.GO.Persist)){
+  sig.GO.Persist$gene[i] <- paste(unname(ints_all.annot[grep(sig.GO.Persist$GO.IDs[i],ints_all.annot$GO.IDs),"gene"]), collapse = "; ")
+  sig.GO.Persist$uniprot[i] <- paste(unname(ints_all.annot[grep(sig.GO.Persist$GO.IDs[i],ints_all.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
+  sig.GO.Persist$uniprot_taxa.id[i] <- paste(unname(ints_all.annot[grep(sig.GO.Persist$GO.IDs[i],ints_all.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
+  sig.GO.Persist$uniprot.name[i] <- paste(unname(ints_all.annot[grep(sig.GO.Persist$GO.IDs[i],ints_all.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
+}
+
+write.csv(sig.GO.Persist , file = "RAnalysis/Output/sig.GO.Persistent.annot.csv")
+
+
+
 
 sig.GO.Persist.BP <- GO.Persist %>%
   filter(over_represented_pvalue <0.05) %>%
@@ -1873,148 +1942,110 @@ M
 
 Plotting Percent methylation for Persistent DMGs
 ```{r}
+##### Heatmap  #####
 
-Persist.topBPGO.genes.D10 <- D10.sig.annot[grep(as.character(sig.GO.Persist[1,1]),D10.sig.annot$GO.IDs), ]
-Persist.topBPGO.genes.D135 <- D135.sig.annot[grep(as.character(sig.GO.Persist[1,1]),D135.sig.annot$GO.IDs), ]
-Persist.topBPGO.genes.D145 <- D145.sig.annot[grep(as.character(sig.GO.Persist[1,1]),D145.sig.annot$GO.IDs), ]
+#D10
+Persistant.meth_table.means.D10 <- MD.ALL %>% filter(TimePoint=="Day10") %>%
+  group_by(gene, Initial.Treatment) %>%
+  summarise(avg = mean(per.meth), sem = sd(per.meth)/sqrt(length(per.meth)))
 
-Persist.0048813 <- left_join(Persist.topBPGO.genes.D145, Persist.topBPGO.genes.D10,Persist.topBPGO.genes.D135, by="gene", keep = FALSE)
+Persistant.meth_table.means.D10  <- Persistant.meth_table.means.D10 [Persistant.meth_table.means.D10 $gene %in% ints_all$gene,]
 
-#GO:0048813
-#Persist.0048813$gene[1]
-#Persist.0048813$gene[2]
 
-D10.Pgene <- MD.D10 %>%	
-  filter(gene== Persist.0048813$gene[2])
-D135.Pgene <- MD.D135 %>%	
-  filter(gene== Persist.0048813$gene[2])
-D145.Pgene <- MD.D145 %>%	
-  filter(gene== Persist.0048813$gene[2])
+Pers.D10.HM <- Persistant.meth_table.means.D10 %>% 
+  ggplot(., aes(x = Initial.Treatment, y = gene, fill =avg)) + 
+  geom_tile() + 
+  scale_fill_viridis(discrete=FALSE)+
+  #scale_fill_gradientn(colours = c("black", "green","cyan", "red", "orange", "yellow"), values = c(0,20, 40, 60, 80,100))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 5),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
-Pgene <- rbind(D10.Pgene,D135.Pgene,D145.Pgene)
+#Persist.GO.Sig <- ggarrange(PersistGO.BP,PersistGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/Persist.D10.HM.pdf", Pers.D10.HM, width = 5, height = 30, units = c("in"))
 
-D10.PDMG <- Pgene %>%	
-  filter(TimePoint=="Day10") %>%
-  group_by(Initial.Treatment, Sample.ID) %>%
-  summarise(m = mean(per.meth)) %>%
-  group_by(Initial.Treatment) %>%
-  summarise(mean = mean(m), sem = sd(m)/(sqrt(4))) %>%
-ggplot(., aes(x=Initial.Treatment, y=mean, colour=Initial.Treatment, shape=Initial.Treatment)) +
-geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2, colour="black") +
-geom_point(size=4) + #set point characteristics
-scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
-xlab("Treatment") + #plot x axis label
-ylab("Percent Methylation") + #plot y axis label
-ylim(0,100)+ #set y limits to 0 and 100%
-theme_bw()
+#D135
+Persistant.meth_table.means.D135 <- MD.ALL %>% filter(TimePoint=="Day135") %>%
+  group_by(gene, Initial.Treatment) %>%
+  summarise(avg = mean(per.meth), sem = sd(per.meth)/sqrt(length(per.meth)))
 
-D135.PDMG <- Pgene %>%	
-  filter(TimePoint=="Day135") %>%
-  group_by(Initial.Treatment, Sample.ID) %>%
-  summarise(m = mean(per.meth)) %>%
-  group_by(Initial.Treatment) %>%
-  summarise(mean = mean(m), sem = sd(m)/(sqrt(4))) %>%
-ggplot(., aes(x=Initial.Treatment, y=mean, colour=Initial.Treatment, shape=Initial.Treatment)) +
-geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2, colour="black") +
-geom_point(size=4) + #set point characteristics
-scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
-xlab("Treatment") + #plot x axis label
-ylab("Percent Methylation") + #plot y axis label
-ylim(0,100)+ #set y limits to 0 and 100%
-theme_bw()
+Persistant.meth_table.means.D135  <- Persistant.meth_table.means.D135[Persistant.meth_table.means.D135$gene %in% ints_all$gene,]
 
-D145.PDMG <- Pgene %>%	
-  filter(TimePoint=="Day145") %>%
-  group_by(Initial.Treatment, Secondary.Treatment,Sample.ID) %>%
-  summarise(m = mean(per.meth)) %>%
-  group_by(Initial.Treatment, Secondary.Treatment) %>%
-  summarise(mean = mean(m), sem = sd(m)/(sqrt(4))) %>%
-ggplot(., aes(x=Secondary.Treatment, y=mean, group=Initial.Treatment, colour=Initial.Treatment, shape=Initial.Treatment)) + #plot data
-    geom_line(size=0.7, position=position_dodge(.1)) + #plot lines
-    scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
-    geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), #plot error bars
-    width=0, position=position_dodge(.1), colour="black") + #set error bar characteristics
-    geom_point(size=4, position=position_dodge(.1)) + #set point characteristics
-    xlab("Secondary Treatment") + #plot x axis label
-    ylab("Percent Methylation") + #plot y axis label
-    theme_bw()
 
-PDMG <- arrangeGrob(D10.PDMG,D135.PDMG,D145.PDMG, ncol=3)
-ggsave(file="RAnalysis/Figs/PDMG.pdf", PDMG, width = 10, height = 4, units = c("in"))
+Pers.D135.HM <- Persistant.meth_table.means.D135 %>% 
+  ggplot(., aes(x = Initial.Treatment, y = gene, fill =avg)) + 
+  geom_tile() + 
+  scale_fill_viridis(discrete=FALSE)+
+  #scale_fill_gradientn(colours = c("black", "green","cyan", "red", "orange", "yellow"), values = c(0,20, 40, 60, 80,100))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 5),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
 
+#Persist.GO.Sig <- ggarrange(PersistGO.BP,PersistGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/Persist.D135.HM.pdf", Pers.D135.HM, width = 5, height = 30, units = c("in"))
+
+#D145
+Persistant.meth_table.means.D145 <- MD.ALL %>% filter(TimePoint=="Day145") %>%
+  group_by(gene, Initial.Treatment, Secondary.Treatment) %>%
+  summarise(avg = mean(per.meth), sem = sd(per.meth)/sqrt(length(per.meth)))
+
+Persistant.meth_table.means.D145  <- Persistant.meth_table.means.D145[Persistant.meth_table.means.D145$gene %in% ints_all$gene,]
+
+Persistant.meth_table.means.D145$group <- paste0(Persistant.meth_table.means.D145$Initial.Treatment, "_", Persistant.meth_table.means.D145$Secondary.Treatment)
+
+Pers.D145.HM <- Persistant.meth_table.means.D145 %>% 
+  ggplot(., aes(x = group, y = gene, fill =avg)) + 
+  geom_tile() + 
+  scale_fill_viridis(discrete=FALSE)+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 5),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 8),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
+
+Persist.DMGs <- ggarrange(Pers.D10.HM,Pers.D135.HM, Pers.D145.HM, ncol=3, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/Persist.alltimes.HM.pdf", Persist.DMGs, width = 15, height = 30, units = c("in"))
 
 
 ```
 
 ```{r}
-# D10.topBPGO.genes.1 <- D10.sig.annot[grep(as.character(BP.D10[1,1]),D10.sig.annot$GO.IDs), ]
-# D135.topBPGO.genes.1 <- D135.sig.annot[grep(as.character(BP.D135[1,1]),D135.sig.annot$GO.IDs), ]
-# D145.topBPGO.genes.1 <- D145.sig.annot[grep(as.character(BP.D145[1,1]),D145.sig.annot$GO.IDs), ]
-# 
-# D10.topBPGO.genes.2 <- D10.sig.annot[grep(as.character(BP.D10[2,1]),D10.sig.annot$GO.IDs), ]
-# D135.topBPGO.genes.2 <- D135.sig.annot[grep(as.character(BP.D135[2,1]),D135.sig.annot$GO.IDs), ]
-# D145.topBPGO.genes.2 <- D145.sig.annot[grep(as.character(BP.D145[2,1]),D145.sig.annot$GO.IDs), ]
-# 
-# D10.topBPGO.genes.3 <- D10.sig.annot[grep(as.character(BP.D10[3,1]),D10.sig.annot$GO.IDs), ]
-# D135.topBPGO.genes.3 <- D135.sig.annot[grep(as.character(BP.D135[3,1]),D135.sig.annot$GO.IDs), ]
-# D145.topBPGO.genes.3 <- D145.sig.annot[grep(as.character(BP.D145[3,1]),D145.sig.annot$GO.IDs), ]
+#obtain genes from sig.GO.D10, sig.GO.D135, sig.GO.D145
+#plot geom_tile heatmap as above with only those genes faceted by goslim term
+sig.GO.D10$TP <- "Day10"
+sig.GO.D135$TP <- "Day135"
+sig.GO.D145$TP <- "Day145"
+byGO <- as.data.frame(rbind(sig.GO.D10, sig.GO.D135, sig.GO.D145))
+write.csv(byGO , file = "RAnalysis/Output/Shelly_GO_annot.csv")
+
+byGO$uniprot_taxa.id <- gsub("(.+?)(\\_.*)", "\\1", byGO$uniprot_taxa.id)
+
+XX<-  byGO %>% filter(ontology=="BP") %>%
+  ggplot(., aes(x = TP, y = uniprot_taxa.id)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 12),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 4),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
+
+#Persist.GO.Sig <- ggarrange(PersistGO.BP,PersistGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
+ggsave(file="RAnalysis/Figs/XX.pdf", XX, width = 5, height = 16, units = c("in"))
 
 
-#Day 10 
-#for (i in 1:nrow(D10.topBPGO.genes)){
-  #sig.gene <- subset(MD.D10, gene==D10.topBPGO.genes$gene[i])
-  #means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
-  #ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
-  #means$ses <- ses$per.meth
-  #temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
-    #geom_bar(stat="identity", color="black",
-             #position=position_dodge()) +
-    #geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
-                  #position=position_dodge(.9)) +
-    #xlab("Treatment") + #plot x axis label
-    #ylab("Percent Methylation") + #plot y axis label
-    #ylim(0,100)+ #set y limits to 0 and 100%
-    #scale_fill_manual(values = c("blue", "purple", "red"))+
-    #theme_bw()
-  #ggsave(temp_plot, file=paste0("RAnalysis/Output/NegRegGeneExpress_D10plot_", D10.topBPGO.genes$gene[i],"_",D10.topBPGO.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
-#}
-
-#Day 135 
-#for (i in 1:nrow(D135.topBPGO.genes)){
-  #sig.gene <- subset(MD.D135, gene==D135.topBPGO.genes$gene[i])
-  #means <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=mean)
-  #ses <- aggregate(per.meth ~ Initial.Treatment*gene, data=sig.gene, FUN=std.error)
-  #means$ses <- ses$per.meth
-  #temp_plot <- ggplot(means, aes(x=Initial.Treatment, y=per.meth, fill=Initial.Treatment)) +
-    #geom_bar(stat="identity", color="black",
-             #position=position_dodge()) +
-    #geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), width=.2,
-                  #position=position_dodge(.9)) +
-    #xlab("Treatment") + #plot x axis label
-    #ylab("Percent Methylation") + #plot y axis label
-    #ylim(0,100)+ #set y limits to 0 and 100%
-    #scale_fill_manual(values = c("blue", "purple", "red"))+
-    #theme_bw()
-  #ggsave(temp_plot, file=paste0("RAnalysis/Output/NegRegTransExpress_D135plot_", #D135.topBPGO.genes$gene[i],"_",D135.topBPGO.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
-#}
-
-#Day 145 
-#for (i in 1:nrow(D145.topBPGO.genes)){
-  #sig.gene <- subset(MD.D145, gene ==D145.topBPGO.genes$gene[i])
-  #means <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=sig.gene, FUN=mean)
-  #ses <- aggregate(per.meth ~ Initial.Treatment*Secondary.Treatment, data=sig.gene, FUN=std.error)
-  #means$ses <- ses$per.meth
-  #temp_plot <- ggplot(data=means, aes(x=Secondary.Treatment, y=per.meth, group=Initial.Treatment, colour=Initial.Treatment, shape=Initial.Treatment)) + #plot data
-    #geom_line(size=0.7, position=position_dodge(.1)) + #plot lines
-    #scale_colour_manual(values = c("blue", "purple", "red")) + #set line color
-    #geom_point(size=4, position=position_dodge(.1), colour="black") + #set point characteristics
-    #scale_shape_manual(values=c(1,18,16)) + #set shapes
-    #geom_errorbar(aes(ymin=per.meth-ses, ymax=per.meth+ses), #plot error bars
-                  #width=0, position=position_dodge(.1), colour="black") + #set error bar characteristics
-    #xlab("Secondary Treatment") + #plot x axis label
-    #ylab("Percent Methylation") + #plot y axis label
-    #theme_bw()
-  #ggsave(temp_plot, file=paste0("RAnalysis/Output/PosRegTrans_D145plot_", D145.topBPGO.genes$gene[i],"_",D145.topBPGO.genes$protein.name.short[i],".png"), width = 14, height = 10, units = "cm")
-#}
 ```
+
 
