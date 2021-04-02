@@ -1075,22 +1075,6 @@ sig.GO.Time <- GO.Time %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
 
-
-#save GO enrichment table with gene IDs and protein names
-
-for (i in 1:nrow(sig.GO.Time)){
-  sig.GO.Time$genes[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"gene"]), collapse = "; ")
-  sig.GO.Time$uniprot[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
-  sig.GO.Time$uniprot_taxa.id[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
-  sig.GO.Time$uniprot.name[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
-}
-
-write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
-
-
-
-
-
 sig.GO.Time.BP <- GO.Time %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
@@ -1251,20 +1235,6 @@ sig.GO.D10 <- GO.D10 %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D10 , file = "RAnalysis/Output/sig.GO.D10.csv")
 
-#save GO enrichment table with gene IDs and protein names
-
-for (i in 1:nrow(sig.GO.D10)){
-  sig.GO.D10$genes[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"gene"]), collapse = "; ")
-  sig.GO.D10$uniprot[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
-  sig.GO.D10$uniprot_taxa.id[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
-  sig.GO.D10$uniprot.name[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
-}
-
-write.csv(sig.GO.D10 , file = "RAnalysis/Output/sig.GO.D10.csv")
-
-
-
-
 sig.GO.D10.BP <- GO.D10 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
@@ -1422,20 +1392,6 @@ sig.GO.D135 <- GO.D135 %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
 
-#save GO enrichment table with gene IDs and protein names
-#for D135
-for (i in 1:nrow(sig.GO.D135)){
-  sig.GO.D135$genes[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"gene"]), collapse = "; ")
-  sig.GO.D135$uniprot[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
-  sig.GO.D135$uniprot_taxa.id[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
-  sig.GO.D135$uniprot.name[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
-}
-write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
-
-
-
-
-
 sig.GO.D135 <- GO.D135 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
@@ -1575,17 +1531,6 @@ sig.GO.D145 <- GO.D145 %>%
   filter(numInCat >5) %>%
   arrange(., ontology, over_represented_pvalue)
 write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
-
-#save GO enrichment table with gene IDs and protein names
-for (i in 1:nrow(sig.GO.D145)){
-  sig.GO.D145$genes[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"gene"]), collapse = "; ")
-  sig.GO.D145$uniprot[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
-  sig.GO.D145$uniprot_taxa.id[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
-  sig.GO.D145$uniprot.name[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
-}
-
-write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
-
 
 sig.GO.D145 <- GO.D145 %>%
   filter(over_represented_pvalue <0.05) %>%
@@ -1749,9 +1694,6 @@ PersistGO <-  ggplot(sig.GO.Persist, aes(x = ontology, y = term)) +
   axis.text = element_text(size = 8))
 
 ggsave(file="RAnalysis/Figs/GO.Persist.pdf", PersistGO, width = 7, height = 12, units = c("in"))
-
-
-
 
 
 ints_10_135.annot[grep(as.character(sig.GO.Persist[1,1]),ints_10_135.annot$GO.IDs), ]
