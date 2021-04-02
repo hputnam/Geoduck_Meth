@@ -1080,10 +1080,10 @@ write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
 #save GO enrichment table with gene IDs and protein names
 
 for (i in 1:nrow(sig.GO.Time)){
-  sig.GO.Time$genes[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"gene"]), collapse = "; ")
-  sig.GO.Time$uniprot[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
-  sig.GO.Time$uniprot_taxa.id[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
-  sig.GO.Time$uniprot.name[i] <- paste(unname(Time.sig.annot[grep(sig.GO.Time$GO.IDs[i],Time.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
+  sig.GO.Time$genes[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"gene"]), collapse = "; ")
+  sig.GO.Time$uniprot[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"uniprot.id"]), collapse = "; ")
+  sig.GO.Time$uniprot_taxa.id[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
+  sig.GO.Time$uniprot.name[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
 }
 
 write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
@@ -1422,9 +1422,6 @@ sig.GO.D135 <- GO.D135 %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
 
-<<<<<<< HEAD
-sig.GO.D135.BP <- GO.D135 %>%
-=======
 #save GO enrichment table with gene IDs and protein names
 #for D135
 for (i in 1:nrow(sig.GO.D135)){
@@ -1436,11 +1433,7 @@ for (i in 1:nrow(sig.GO.D135)){
 write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
 
 
-
-
-
-sig.GO.D135 <- GO.D135 %>%
->>>>>>> ba1d4294563244071f075ca365e7803e76287964
+sig.GO.D135.BP <- GO.D135 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
   filter(ontology == "BP") %>%
@@ -1602,9 +1595,6 @@ sig.GO.D145 <- GO.D145 %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
 
-<<<<<<< HEAD
-sig.GO.D145.BP <- GO.D145 %>%
-=======
 #save GO enrichment table with gene IDs and protein names
 for (i in 1:nrow(sig.GO.D145)){
   sig.GO.D145$genes[i] <- paste(unname(D145.sig.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.annot$GO.IDs),"gene"]), collapse = "; ")
@@ -1616,8 +1606,7 @@ for (i in 1:nrow(sig.GO.D145)){
 write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.csv")
 
 
-sig.GO.D145 <- GO.D145 %>%
->>>>>>> ba1d4294563244071f075ca365e7803e76287964
+sig.GO.D145.BP <- GO.D135 %>%
   filter(over_represented_pvalue <0.05) %>%
   filter(numInCat >5) %>%
   filter(ontology == "BP") %>%
@@ -1744,51 +1733,9 @@ PersistGO.MF <-  ggplot(sig.GO.Persist.MF, aes(x = ontology, y = term)) +
   panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
   strip.text.y = element_text(angle=0, size = 10),
   strip.text.x = element_text(size = 20),
-<<<<<<< HEAD
   axis.text = element_text(size = 8),
   axis.title.x = element_blank(),
   axis.title.y = element_blank())
-=======
-  axis.text = element_text(size = 8))
-
-ggsave(file="RAnalysis/Figs/GO.Persist.pdf", PersistGO, width = 7, height = 12, units = c("in"))
-
-
-
-
-
-ints_10_135.annot[grep(as.character(sig.GO.Persist[1,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[2,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[3,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[4,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[5,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[6,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[7,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[8,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[9,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[10,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[11,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[12,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[13,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[14,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[15,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[16,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[17,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[18,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[19,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[20,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[21,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[22,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[23,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[24,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[25,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[26,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[27,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[28,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[29,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[30,1]),ints_10_135.annot$GO.IDs), ]
-ints_10_135.annot[grep(as.character(sig.GO.Persist[31,1]),ints_10_135.annot$GO.IDs), ]
->>>>>>> ba1d4294563244071f075ca365e7803e76287964
 
 Persist.GO.Sig <- ggarrange(PersistGO.BP,PersistGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
 ggsave(file="RAnalysis/Figs/GO.Persist.pdf", Persist.GO.Sig, width = 15, height = 12, units = c("in"))
