@@ -613,14 +613,14 @@ sample.info <- read.csv("RAnalysis/Data/Sample.Info.csv", header=T, sep=",", na.
 samp <- sample.info$Sample.ID # set sample info
 samp <- gsub("[_]", "-", samp) #remove extra characters
 
-#load genes gff
+#load genes gff (see OSF repository: https://osf.io/bcxk7/)
 Genes <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.gene.gff3", header=F, sep="\t", na.string="NA", skip=3, stringsAsFactors = F) #read in data file
 Genes <- Genes[,c(1,4,5,9)] #select desired columns only
 colnames(Genes) <- c("scaffold", "start", "stop", "gene") #rename columns
 Genes$gene <- gsub(";.*","",Genes$gene) #remove extra characters
 Genes$gene <- gsub("ID=","",Genes$gene) #remove extra characters
 
-#Load annotation file
+#Load annotation file (see OSF repository)
 Annot <- read.csv("RAnalysis/Data/Genome/Panopea-generosa-genes-annotations.tab", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE, skip=0)
 colnames(Annot) <- c("gene","scaffold", "start", "end", "uniprot.id", "uniprot_taxa.id", "Uniprot.Name", "GO.IDs", "GO.Descript")
 GO.data <- Annot[,c(1,8)] #select names and GOs
@@ -631,22 +631,10 @@ Gene.GO.IDs$GO.IDs <- as.character(Gene.GO.IDs$GO.IDs)
 #Gene.GO.IDs$GO.IDs[is.na(Gene.GO.IDs$GO.IDs)] <- "unknown" #replace NA with unknown
 GO.IDs <-unique(Gene.GO.IDs$GO.IDs)
 
-#GO Slim Setup
-slim <- getOBOCollection("http://current.geneontology.org/ontology/subsets/goslim_generic.obo") #get GO database
+# downloaded 20210407: http://www.informatics.jax.org/gotools/data/input/map2MGIslim.txt
+GoSlims <- read.csv("RAnalysis/Data/20210407_map2MGIslim.csv", header=TRUE, sep=",", na.string="NA", stringsAsFactors = FALSE, skip=0)
+colnames(GoSlims) <- c("GO.IDs", "Cat","GO.Slim.Term")
 
-#Write function mappedIds to get the query terms that mapped to the slim categories
-mappedIds <-
-  function(df, collection, OFFSPRING) #the command to run requires a dataframe of slim terms, like slims_MF above, your list of query terms, and the offspring from the GOCollection by goSlim
-  {
-    map <- as.list(OFFSPRING[rownames(df)]) # Subset GOcollection offspring by the rownames of your dataframe
-    mapped <- lapply(map, intersect, ids(collection)) #Find the terms that intersect between the subset made above of your query terms and the GOids from the GO collection
-    df[["go_terms"]] <- vapply(unname(mapped), paste, collapse = ";", character(1L)) #Add column "go_terms" with matching terms 
-    df #show resulting dataframe
-  }
-
-#http://owl.fish.washington.edu/halfshell/bu-alanine-wd/17-07-20/GO-GOslim.sorted
-GoSlims <- read.csv("RAnalysis/Data/Genome/GO-GOslim.sorted", header=FALSE, sep="\t", na.string="NA", stringsAsFactors = FALSE, skip=0)
-colnames(GoSlims) <- c("GO.IDs", "GO.Term", "GO.Slim.Term", "Cat") #rename columns
 Gene.GO.IDs.slims <- merge(Gene.GO.IDs, GoSlims, by="GO.IDs", all = TRUE)
 Gene.GO.IDs.slims <- Gene.GO.IDs.slims[-1,]
 
@@ -865,7 +853,7 @@ done
 wc -l RAnalysis/Data/OSF/D145/*_CpG_D145.bed
 ```
 
-Load filtered methylation counts
+Load filtered methylation counts (see OSF Repository for all data files)
 ## Time dataset
 ```{r}
 # Time
@@ -1006,9 +994,6 @@ Time.Amb.sig <-results
 Time.Amb.sig <- Time.Amb.sig[,c(1,3)]
 Time.Amb.sig <- Time.Amb.sig[order(Time.Amb.sig$adj.pval.TimePoint),]
 Time.Amb.sig <- Time.Amb.sig[which(Time.Amb.sig$adj.pval.TimePoint<0.05), ]
-
-
-sub_meth_table$per.meth <- (sub_meth_table$meth/(sub_meth_table$meth+sub_meth_table$unmeth))*100 #calculate percent methylation
 
 # Annotation of DMG under ambient conditions through time
 Time.Amb.annot <- merge(Time.Amb.sig , Annot, by="gene", all.x=TRUE)
@@ -1244,7 +1229,6 @@ GO.D10 <- GO.D10[!duplicated(GO.D10$GO.IDs), ]
 
 sig.GO.D10 <- GO.D10 %>%
   filter(over_represented_pvalue <0.05) %>%
-  #filter(numInCat >5) %>%
   arrange(., ontology, GO.Slim.Term, over_represented_pvalue)
 write.csv(sig.GO.D10 , file = "RAnalysis/Output/sig.GO.D10.csv")
 
@@ -1547,8 +1531,8 @@ write.table(D145.sig, 'RAnalysis/Output/D145_sig.int.tsv', sep='\t', row.names=F
 # Annotation of Secondary Exposure Interaction DMG 
 D145.sig.int.annot <- merge(D145.sig.int, Annot, by="gene", all.x=TRUE)
 D145.sig.int.annot <- D145.sig.int.annot[order(D145.sig.int.annot$adj.pval.treatment1_x_treatment2),]
-D145.sig.int.annot <- D145.sig.annot[!duplicated(D145.sig.annot$gene),]
-write.table(D145.sig.annot, 'RAnalysis/Output/Table_S4_D145_sig_annot_Interactions.tsv', sep='\t', row.names=FALSE)
+D145.sig.int.annot <- D145.sig.int.annot[!duplicated(D145.sig.int.annot$gene),]
+write.table(D145.sig.int.annot, 'RAnalysis/Output/Table_S4_D145_sig_annot_Interactions.tsv', sep='\t', row.names=FALSE)
 
 
 #Sanity check plotting of top DMGs with sig interaction
