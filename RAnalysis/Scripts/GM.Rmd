@@ -2006,15 +2006,46 @@ ggsave(file="RAnalysis/Figs/Persist.alltimes.HM.pdf", Persist.DMGs, width = 15, 
 ```{r}
 #obtain genes from sig.GO.D10, sig.GO.D135, sig.GO.D145
 #plot geom_tile heatmap as above with only those genes faceted by goslim term
+
+
+#add column to sig.GO dataframes to denote sampling time point
 sig.GO.D10$TP <- "Day10"
 sig.GO.D135$TP <- "Day135"
 sig.GO.D145$TP <- "Day145"
+
+#bind data frames together
 byGO <- as.data.frame(rbind(sig.GO.D10, sig.GO.D135, sig.GO.D145))
-write.csv(byGO , file = "RAnalysis/Output/Shelly_GO_annot.csv")
 
-byGO$uniprot_taxa.id <- gsub("(.+?)(\\_.*)", "\\1", byGO$uniprot_taxa.id)
+#create list objects where each list item is a vector containing genes, uniprot ids, or taxa ids for each line 
+split_byGO_gene <- strsplit(as.character(byGO$gene), "; ") #split into multiple gene ids
+split_byGO_uniprot <- strsplit(as.character(byGO$uniprot), "; ") #split into multiple uniprot ids
+split_byGO_taxa <- strsplit(as.character(byGO$uniprot_taxa.id), "; ") #split into multiple taxa ids
 
-XX<-  byGO %>% filter(ontology=="BP") %>%
+#create a new data frame that lists each gene, uniprot ID, and taxa id on a separate line (so the GO IDs are listed multiple times for each gene). 
+#For the first data.frame Gene.byGO.IDs, I'm adding all the data from byGO and this will be maintained when it is merged with the uniprot info
+Gene.byGO.IDs <- data.frame(GO.IDs = rep.int(byGO$GO.IDs, sapply(split_byGO_gene, length)), over_represented_pvalue = rep.int(byGO$over_represented_pvalue, sapply(split_byGO_gene, length)), under_represented_pvalue = rep.int(byGO$under_represented_pvalue, sapply(split_byGO_gene, length)) , numDEInCat = rep.int(byGO$numDEInCat, sapply(split_byGO_gene, length)), numInCat = rep.int(byGO$numInCat, sapply(split_byGO_gene, length)), term = rep.int(byGO$term, sapply(split_byGO_gene, length)), ontology = rep.int(byGO$ontology, sapply(split_byGO_gene, length)), Cat = rep.int(byGO$Cat, sapply(split_byGO_gene, length)),GO.Slim.Term = rep.int(byGO$GO.Slim.Term, sapply(split_byGO_gene, length)),TP = rep.int(byGO$TP, sapply(split_byGO_gene, length)), gene = unlist(split_byGO_gene)) 
+
+#create a dataframe containing the GO.IDs and uniprot IDs all listed on separate lines
+unip.byGO.IDs <- data.frame(GO.IDs = rep.int(byGO$GO.IDs, sapply(split_byGO_uniprot, length)), uniprot = unlist(split_byGO_uniprot)) 
+
+#create a dataframe containing the GO.IDs and uniprot taxa IDs all listed on separate lines
+
+taxa.byGO.IDs <- data.frame(GO.IDs = rep.int(byGO$GO.IDs, sapply(split_byGO_taxa, length)), uniprot_taxa.id = unlist(split_byGO_taxa)) 
+
+#merge the dataframes with everything listed on separate lines
+byGO_long <- cbind(Gene.byGO.IDs, "uniprot" =unip.byGO.IDs[,"uniprot"],uniprot_taxa.id =taxa.byGO.IDs[,"uniprot_taxa.id"])
+
+#remove the species from the taxa id
+byGO_long$uniprot_taxa.id <- gsub("_.*", "",byGO_long$uniprot_taxa.id)
+
+#re-order the df by slim, timepoint, then pvalue
+byGO_long  <- byGO_long[order(byGO_long$GO.Slim.Term,byGO_long$TP,byGO_long$over_represented_pvalue),]
+
+write.csv(byGO_long , file = "RAnalysis/Output/Shelly_GO_annot.csv")
+
+#byGO$uniprot_taxa.id <- gsub("(.+?)(\\_.*)", "\\1", byGO$uniprot_taxa.id)
+
+XX<-  byGO_long %>% filter(ontology=="BP") %>%
   ggplot(., aes(x = TP, y = uniprot_taxa.id)) + 
   geom_tile(aes(fill =over_represented_pvalue)) + 
   facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
