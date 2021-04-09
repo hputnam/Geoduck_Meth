@@ -2090,6 +2090,26 @@ XXb<-  byGO_long_term_gene %>% filter(ontology=="BP", TP!= "Persistent") %>%
 #Persist.GO.Sig <- ggarrange(PersistGO.BP,PersistGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
 ggsave(file="RAnalysis/Figs/XXb.pdf", XXb, width = 10, height = 16, units = c("in"))
 
+
+
+
+#subsetting GO slims to reduce heatmap size and focus on rapid-inducible vs. persistent
+
+XXc<-  byGO_long_term_gene %>% filter(ontology=="BP", TP!= "Persistent",GO.Slim.Term %in% c("cell organization and biogenesis","signal transduction", "transport", "developmental processes", "protein metabolism")) %>%
+  ggplot(., aes(x = TP, y = term_gene)) + 
+  geom_tile(aes(fill =over_represented_pvalue)) + 
+  facet_grid(factor(GO.Slim.Term, levels = c("cell organization and biogenesis","signal transduction", "developmental processes", "protein metabolism", "transport")) ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
+  strip.text.y = element_text(angle=0, size = 12),
+  strip.text.x = element_text(size = 20),
+  axis.text = element_text(size = 4),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank())
+
+ggsave(file="RAnalysis/Figs/XXc.pdf", XXc, width = 8, height = 6, units = c("in"))
+
+
 ```
 
 
