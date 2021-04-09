@@ -2107,7 +2107,7 @@ XXc<-  byGO_long_term_gene %>% filter(ontology=="BP", TP!= "Persistent",GO.Slim.
   axis.title.x = element_blank(),
   axis.title.y = element_blank())
 
-ggsave(file="RAnalysis/Figs/XXc.pdf", XXc, width = 8, height = 6, units = c("in"))
+ggsave(file="RAnalysis/Figs/XXc.pdf", XXc, width = 8, height = 10, units = c("in"))
 
 
 ```
