@@ -2008,9 +2008,9 @@ ggsave(file="RAnalysis/Figs/Persist.alltimes.HM.pdf", Persist.DMGs, width = 15, 
 #plot geom_tile heatmap as above with only those genes faceted by goslim term
 
 #read in data if needed
-sig.GO.D10 <- read.csv("RAnalysis/Output/sig.GO.D10.csv", row.names = 1)
-sig.GO.D135 <- read.csv("RAnalysis/Output/sig.GO.D135.csv", row.names = 1)
-sig.GO.D145 <- read.csv("RAnalysis/Output/sig.GO.D145.Interactions.csv", row.names = 1)
+#sig.GO.D10 <- read.csv("RAnalysis/Output/sig.GO.D10.csv", row.names = 1)
+#sig.GO.D135 <- read.csv("RAnalysis/Output/sig.GO.D135.csv", row.names = 1)
+#sig.GO.D145 <- read.csv("RAnalysis/Output/sig.GO.D145.Interactions.csv", row.names = 1)
 #add column to sig.GO dataframes to denote sampling time point
 sig.GO.D10$TP <- "Day10"
 sig.GO.D135$TP <- "Day135"
@@ -2078,21 +2078,23 @@ byGO_long_term_gene <- unique(byGO_long[,-grep("^gene$|uniprot", colnames(byGO_l
 byGO_long_term_gene$term_gene <- paste0(byGO_long_term_gene$term, " (",byGO_long_term_gene$taxa.id,")")
 
 
-#add order column to order terms by p.value
+### add order column to order terms by p.value in heatmap
 byGO_long_term_gene <- byGO_long_term_gene %>% arrange(GO.Slim.Term, over_represented_pvalue) %>% mutate(order = row_number())
 
 
-#make the same order number for duplicate terms
-
+###make the same order number for duplicate terms so that terms found across timepoints can be plotted in the same row
+#extract the order number for the term with the lowest p.value
 byGO_long_term_gene_rank <- byGO_long_term_gene %>% group_by(term_gene) %>% slice(which.min(order))
+#save only the term_gene and order columns so these can be merged with the main df
 byGO_long_term_gene_rank <- byGO_long_term_gene_rank[,c("term_gene", "order")]
-
+#rename the order column that will be merged
 colnames(byGO_long_term_gene_rank) <- c("term_gene", "order2")                     
-                      
+#merge the new order numbers with the main df                      
 byGO_long_term_gene <- merge(byGO_long_term_gene, byGO_long_term_gene_rank, by = "term_gene")
-                                  
+                       
+#plot all BP categories           
 XXb<-  byGO_long_term_gene %>% filter(ontology=="BP", TP!= "Persistent") %>%
-  ggplot(., aes(x = TP, y = term_gene)) + 
+  ggplot(., aes(x = TP, y = order2)) + 
   geom_tile(aes(fill =over_represented_pvalue)) + 
   facet_grid(GO.Slim.Term ~ ., scales = "free_y", labeller = label_wrap_gen(width = 5, multi_line = TRUE))+
   theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -2101,7 +2103,8 @@ XXb<-  byGO_long_term_gene %>% filter(ontology=="BP", TP!= "Persistent") %>%
   strip.text.x = element_text(size = 20),
   axis.text = element_text(size = 4),
   axis.title.x = element_blank(),
-  axis.title.y = element_blank())
+  axis.title.y = element_blank()) + scale_y_continuous(breaks = unique(byGO_long_term_gene$order2),
+    labels = unique(byGO_long_term_gene$term_gene),expand = c(0,0)) 
 
 #Persist.GO.Sig <- ggarrange(PersistGO.BP,PersistGO.MF, ncol=2, common.legend = TRUE, legend="bottom")
 ggsave(file="RAnalysis/Figs/GOslim_BP_facetsXterm", XXb, width = 10, height = 16, units = c("in"))
@@ -2109,7 +2112,7 @@ ggsave(file="RAnalysis/Figs/GOslim_BP_facetsXterm", XXb, width = 10, height = 16
 
 
 
-#subsetting GO slims to reduce heatmap size and focus on rapid-inducible vs. persistent
+#subset GO slims to reduce heatmap size and focus on rapid-inducible vs. persistent
 
 XXc<-  byGO_long_term_gene %>% filter(ontology=="BP", TP!= "Persistent",GO.Slim.Term %in% c("cell organization and biogenesis","signal transduction", "transport", "developmental processes", "protein metabolism")) %>%
   ggplot(., aes(x = TP, y = order2)) + 
@@ -2158,7 +2161,7 @@ XXe<-  byGO_long_term_gene %>% filter(ontology=="MF",TP!= "Persistent") %>%
   axis.title.y = element_blank()) + scale_y_continuous(breaks = unique(byGO_long_term_gene$order2),
     labels = unique(byGO_long_term_gene$term_gene),expand = c(0,0)) 
 
-ggsave(file="RAnalysis/Figs/GOslim_MF_facetsXterm", XXe, width = 8, height = 20, units = c("in"))
+ggsave(file="RAnalysis/Figs/GOslim_MF_facetsXterm.pdf", XXe, width = 8, height = 20, units = c("in"))
 
 
 ```
