@@ -56,6 +56,7 @@ This repository includes data and analysis scripts to accompany:
 		
 	- **[Output](https://github.com/hputnam/Geoduck_Meth/tree/master/RAnalysis/Output):** The directory containing the analysis results, figures, tables, and supplementary material.
 		- **THIS DIRECTORY NEEDS AN OVERHAUL. Can any files be consolidated and/or removed if not needed?** 
+		- [Supplemental_Tables](https://github.com/hputnam/Geoduck_Meth/tree/master/RAnalysis/Output/Supplemental_Tables)
 	
 	- **[Scripts](https://github.com/hputnam/Geoduck_Meth/tree/master/RAnalysis/Scripts):** R scripts for all statistical analysis
 		- [Circos_Plot.R](https://github.com/hputnam/Geoduck_Meth/blob/master/RAnalysis/Scripts/Circos_Plot.R):
