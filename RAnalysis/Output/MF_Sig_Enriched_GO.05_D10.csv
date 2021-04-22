@@ -1,7 +1,0 @@
-"","category","over_represented_pvalue","under_represented_pvalue","numDEInCat","numInCat","term","ontology"
-"6","GO:0019904",0.00512280891440636,0.998014724023795,15,83,"protein domain specific binding","MF"
-"10","GO:0005313",0.00579472695951233,0.999731371189894,3,5,"L-glutamate transmembrane transporter activity","MF"
-"23","GO:0003918",0.00763295757140057,1,2,2,"DNA topoisomerase type II (ATP-hydrolyzing) activity","MF"
-"25","GO:0050694",0.00806637643107856,0.999104138030217,4,10,"galactose 3-O-sulfotransferase activity","MF"
-"26","GO:0005154",0.00822263974927192,0.999081566759936,4,10,"epidermal growth factor receptor binding","MF"
-"27","GO:0070064",0.00830650729718054,0.999069397719504,4,10,"proline-rich region binding","MF"
