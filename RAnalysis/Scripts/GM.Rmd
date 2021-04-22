@@ -999,7 +999,7 @@ Time.Amb.sig <- Time.Amb.sig[which(Time.Amb.sig$adj.pval.TimePoint<0.05), ]
 Time.Amb.annot <- merge(Time.Amb.sig , Annot, by="gene", all.x=TRUE)
 Time.Amb.annot <- Time.Amb.annot[order(Time.Amb.annot$adj.pval.TimePoint),]
 Time.Amb.annot <- Time.Amb.annot[!duplicated(Time.Amb.annot$gene),]
-write.table(Time.Amb.annot, 'RAnalysis/Output/Table_S1_Time_sig_annot.tsv', sep='\t', row.names=FALSE)
+write.table(Time.Amb.annot, 'RAnalysis/Output/Supplemental_Tables/TableS10_Time_sig_annot.tsv', sep='\t', row.names=FALSE)
 
 
 #Sanity check plotting of top DMGs by time
@@ -1072,7 +1072,7 @@ for (i in 1:nrow(sig.GO.Time)){
   sig.GO.Time$uniprot.name[i] <- paste(unname(Time.Amb.annot[grep(sig.GO.Time$GO.IDs[i],Time.Amb.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
 }
 
-write.csv(sig.GO.Time , file = "RAnalysis/Output/sig.GO.Time.csv")
+write.csv(sig.GO.Time , file = "RAnalysis/Output/Supplemental_Tables/TableS11_sig.GO.Time.csv")
 
 
 
@@ -1186,7 +1186,7 @@ write.table(D10.sig, 'RAnalysis/Output/D10_sig.tsv', sep='\t', row.names=FALSE)
 D10.sig.annot <- merge(D10.sig, Annot, by="gene", all.x=TRUE)
 D10.sig.annot <- D10.sig.annot[order(D10.sig.annot$adj.pval.Initial.Treatment),]
 D10.sig.annot <- D10.sig.annot[!duplicated(D10.sig.annot$gene),]
-write.table(D10.sig.annot, 'RAnalysis/Output/Table_S2_D10_sig_annot.tsv', sep='\t', row.names=FALSE)
+write.table(D10.sig.annot, 'RAnalysis/Output/Supplemental_Tables/TableS12_D10_sig_annot.tsv', sep='\t', row.names=FALSE)
 
 #Sanity check plotting of top DMGs
 high <- MD.D10 %>%	
@@ -1241,7 +1241,7 @@ for (i in 1:nrow(sig.GO.D10)){
   sig.GO.D10$uniprot.name[i] <- paste(unname(D10.sig.annot[grep(sig.GO.D10$GO.IDs[i],D10.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
 }
 
-write.csv(sig.GO.D10 , file = "RAnalysis/Output/sig.GO.D10.csv")
+write.csv(sig.GO.D10 , file = "RAnalysis/Output/Supplemental_Tables/TableS13_sig.GO.D10.csv")
 
 
 
@@ -1361,7 +1361,7 @@ write.table(D135.sig, 'RAnalysis/Output/D135_sig.tsv', sep='\t', row.names=FALSE
 D135.sig.annot <- merge(D135.sig, Annot, by="gene", all.x=TRUE)
 D135.sig.annot <- D135.sig.annot[order(D135.sig.annot$adj.pval.treatment),]
 D135.sig.annot <- D135.sig.annot[!duplicated(D135.sig.annot$gene),]
-write.table(D135.sig.annot, 'RAnalysis/Output/Table_S3_D135_sig_annot.tsv', sep='\t', row.names=FALSE)
+write.table(D135.sig.annot, 'RAnalysis/Output/Supplemental_Tables/TableS14_D135_sig_annot.tsv', sep='\t', row.names=FALSE)
 
 #Sanity check plotting of top DMGs
 high <- MD.D135 %>%	
@@ -1415,7 +1415,7 @@ for (i in 1:nrow(sig.GO.D135)){
   sig.GO.D135$uniprot_taxa.id[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"uniprot_taxa.id"]), collapse = "; ")
   sig.GO.D135$uniprot.name[i] <- paste(unname(D135.sig.annot[grep(sig.GO.D135$GO.IDs[i],D135.sig.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
 }
-write.csv(sig.GO.D135 , file = "RAnalysis/Output/sig.GO.D135.csv")
+write.csv(sig.GO.D135 , file = "RAnalysis/Output/Supplemental_Tables/TableS15_sig.GO.D135.csv")
 
 
 sig.GO.D135.BP <- GO.D135 %>%
@@ -1532,7 +1532,7 @@ write.table(D145.sig, 'RAnalysis/Output/D145_sig.int.tsv', sep='\t', row.names=F
 D145.sig.int.annot <- merge(D145.sig.int, Annot, by="gene", all.x=TRUE)
 D145.sig.int.annot <- D145.sig.int.annot[order(D145.sig.int.annot$adj.pval.treatment1_x_treatment2),]
 D145.sig.int.annot <- D145.sig.int.annot[!duplicated(D145.sig.int.annot$gene),]
-write.table(D145.sig.int.annot, 'RAnalysis/Output/Table_S4_D145_sig_annot_Interactions.tsv', sep='\t', row.names=FALSE)
+write.table(D145.sig.int.annot, 'RAnalysis/Output/Supplemental_Tables/TableS16_D145_sig_annot_Interactions.tsv', sep='\t', row.names=FALSE)
 
 
 #Sanity check plotting of top DMGs with sig interaction
@@ -1643,7 +1643,7 @@ for (i in 1:nrow(sig.GO.D145)){
   sig.GO.D145$uniprot.name[i] <- paste(unname(D145.sig.int.annot[grep(sig.GO.D145$GO.IDs[i],D145.sig.int.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
 }
 
-write.csv(sig.GO.D145 , file = "RAnalysis/Output/sig.GO.D145.Interactions.csv")
+write.csv(sig.GO.D145 , file = "RAnalysis/Output/Supplemental_Tables/TableS17_sig.GO.D145.Interactions.csv")
 
 
 sig.GO.D145.BP <- GO.D145 %>%
@@ -1704,7 +1704,7 @@ ints_10_135.annot <- na.omit(ints_10_135.annot)
 ints_all <- merge(ints_10_135, D145.sig, by="gene")
 ints_all.annot <- merge(ints_all, Annot, by="gene", all.x=TRUE)
 ints_all.annot <- ints_all.annot[!duplicated(ints_all.annot$gene),]
-write.table(ints_all.annot, 'RAnalysis/Output/Table_S5_DMGs_persist.tsv', sep='\t', row.names=FALSE)
+write.table(ints_all.annot, 'RAnalysis/Output/Supplemental_Tables/TableS18_DMGs_persist.tsv', sep='\t', row.names=FALSE)
 ints_all.annot <- na.omit(ints_all.annot)
 
 ```
@@ -1745,7 +1745,7 @@ for (i in 1:nrow(sig.GO.Persist)){
   sig.GO.Persist$uniprot.name[i] <- paste(unname(ints_all.annot[grep(sig.GO.Persist$GO.IDs[i],ints_all.annot$GO.IDs),"Uniprot.Name"]), collapse = "; ")
 }
 
-write.csv(sig.GO.Persist , file = "RAnalysis/Output/sig.GO.Persistent.annot.csv")
+write.csv(sig.GO.Persist , file = "RAnalysis/Output/Supplemental_Tables/TableS19_sig.GO.Persistent.annot.csv")
 
 
 
