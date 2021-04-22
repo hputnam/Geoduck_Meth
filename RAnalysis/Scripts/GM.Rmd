@@ -28,7 +28,7 @@ library(lsmeans)
 library(data.table)
 library(RColorBrewer)
 library(randomcoloR)
-library(GSEABase)
+#library(GSEABase)
 library(ggpubr)
 library(hrbrthemes)
 library(viridis)
@@ -2058,7 +2058,7 @@ byGO_long_term_gene <- byGO_long_term_gene %>% arrange(GO.Slim.Term, over_repres
 
 ###make the same order number for duplicate terms so that terms found across timepoints can be plotted in the same row
 #extract the order number for the term with the lowest p.value
-byGO_long_term_gene_rank <- byGO_long_term_gene %>% group_by(term_gene) %>% slice(which.min(order))
+byGO_long_term_gene_rank <- byGO_long_term_gene %>% group_by(term_gene) %>% dplyr::slice(which.min(order))
 #save only the term_gene and order columns so these can be merged with the main df
 byGO_long_term_gene_rank <- byGO_long_term_gene_rank[,c("term_gene", "order")]
 #rename the order column that will be merged
