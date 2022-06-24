@@ -73,5 +73,3 @@ This repository includes data and analysis scripts to accompany:
 
 - [Geoduck_Meth.RProj](https://github.com/hputnam/Geoduck_Meth/blob/master/Geoduck_Meth.Rproj):  **Is this RProj needed?**
 
-## Citation
-Putnam HM*, Trigg SA, White SJ, Spencer L,  Vadopalas B, Natarajan A, Hetzel J, Jaeger E, Soohoo J, Gallardo C, Goetz FW,  Roberts S. (2020) Environmental “memory” through dynamic DNA methylation provides acclimatization of geoduck clams to seawater pH.
