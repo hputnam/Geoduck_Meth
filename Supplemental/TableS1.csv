@@ -1,9 +1,0 @@
-Table S1. Repeat content of the P. generosa genome determined by RepeatMasker. LINE = Long Interspersed Nuclear Elements. LTR = Long Terminal Repeats. SINE = Short Interspersed Nuclear Elements.,,,,,,
-Feature,Proportion of Genome (%),Total (bp),Min(bp),Max (bp),Mean (bp),Median (bp)
-DNA Transposon,1.01,"9,497,156",11,"7,012",409.48,248
-Rolling Circle,0.03,"258,182",13,674,429.59,464
-Simple repeat,0.55,"5,138,701",6,"5,981",258.71,124
-LINE,3.19,"30,035,624",11,"6,604",395.53,226
-LTR,0.25,"2,315,583",11,"6,541",711.83,323
-SINE,0.72,"6,737,909",11,934,156.23,165
-Unclassified,32.04,"301,852,000",11,"10,981",199.83,145
