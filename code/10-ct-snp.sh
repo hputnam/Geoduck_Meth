@@ -43,5 +43,7 @@ Pg_merged.bam \
 >SNP.vcf 2>SNP.log
 
 
+# grep $'C\tG' output/SNP.vcf > output/CT-SNP.vcf
+
 
 
