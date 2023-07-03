@@ -42,3 +42,6 @@ Pg_merged.bam \
 --mapvalue 20 \
 >SNP.vcf 2>SNP.log
 
+
+
+
