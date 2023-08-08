@@ -44,6 +44,7 @@ Pg_merged.bam \
 
 
 # grep $'C\tG' output/SNP.vcf > output/CT-SNP.vcf
+# wc -l output/CT-SNP.vcf
 
 
 
