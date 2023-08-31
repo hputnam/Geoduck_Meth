@@ -1,0 +1,1113 @@
+---
+title: "DMR_stats_and_anno"
+author: "Shelly Trigg"
+date: "4/13/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+load libraries
+```{r}
+library(data.table)
+library(gplots)
+library(ggplot2)
+library(dplyr)
+library(broom)
+library(RColorBrewer)
+library(egg)
+library(purrr)
+```
+
+# Part 1:  Filter methylated regions for regions that have coverage in 75% of samples per group
+
+read in data
+```{r}
+amb_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20230811/amb_AllTimes_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+day10_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20230811/day10_AllpH_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+day135_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20230811/day135_AllpH_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+day145_DMR <- fread('https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/analyses/20230811/day145_AllpH_DMR250bp_cov5x_rms_results_collapsed.tsv', sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+meta_data <- read.csv("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Data/Sample.Info.csv", stringsAsFactors = FALSE)
+
+#remove hash from column names
+colnames(amb_DMR)<- gsub("\\#", "", colnames(amb_DMR))
+colnames(day10_DMR)<- gsub("\\#", "", colnames(day10_DMR))
+colnames(day135_DMR)<- gsub("\\#", "", colnames(day135_DMR))
+colnames(day145_DMR)<- gsub("\\#", "", colnames(day145_DMR))
+
+```
+
+
+
+loop through tables and keep only lines where up to one sample contains NA for % methylation
+```{r}
+## For ambient DMR table
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(amb_DMR))){
+  day0 <- amb_DMR[i,7:10] #define columns from the category Day 0
+  day10 <- amb_DMR[i,11:14] #define columns from the category Day 10
+  day135 <- amb_DMR[i,15:18] #define columns from the category Day 135
+  day145 <- amb_DMR[i,19:22] #define columns from the category Day 145
+  if(length(which(is.na(day0))) < 2 & length(which(is.na(day10))) < 2 & length(which(is.na(day135))) < 2 & length(which(is.na(day145))) < 2){
+  df <- rbind(df,amb_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+
+#save df as a specific variable
+ambDMRs <- df
+
+## For day 10 DMR table
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(day10_DMR))){
+  LowpH <- day10_DMR[i,c(7,8,15,16)] #define columns from the category low pH
+  SuperLowpH <- day10_DMR[i,c(9,10,17,18)] #define columns from the category super low pH
+  amb <- day10_DMR[i,c(11:14)] #define columns from the category ambient
+  if(length(which(is.na(LowpH))) < 2 & length(which(is.na(SuperLowpH))) < 2 & length(which(is.na(amb))) < 2){
+    df <- rbind(df,day10_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+
+#save df as a specific variable
+d10DMRs <- df
+
+
+## For day 135 DMR table
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(day135_DMR))){
+  amb <- day135_DMR[i,7:10] #define columns from the category low pH
+  LowpH <- day135_DMR[i,11:14] #define columns from the category super low pH
+  SuperLowpH <- day135_DMR[i,15:18] #define columns from the category ambient
+  if(length(which(is.na(LowpH))) < 2 & length(which(is.na(SuperLowpH))) < 2 & length(which(is.na(amb))) < 2){
+    df <- rbind(df,day135_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+#save df as a specific variable
+d135DMRs <- df
+
+## For Day 145 DMR table 
+df <- data.frame() #create empty data frame to bind filtered rows into
+for(i in (1:nrow(day145_DMR))){
+  AmbAmb <- day145_DMR[i,9:12] #define columns from the category low pH
+  LowAmb <- day145_DMR[i,c(7,8,15,16)] #define columns from the category super low pH
+  SuperLowAmb <- day145_DMR[i,c(13,14,17,18)] #define columns from the category ambient
+  AmbLow <- day145_DMR[i,c(19,20,27,28)] #define columns from the category ambient
+  LowLow <- day145_DMR[i,c(21,22,29,30)] #define columns from the category ambient
+  SuperLowLow <- day145_DMR[i,23:26] #define columns from the category ambient
+  if(length(which(is.na(AmbAmb))) < 2 & length(which(is.na(LowAmb))) < 2 & length(which(is.na(SuperLowAmb))) < 2 & length(which(is.na(AmbLow))) < 2 & length(which(is.na(LowLow))) < 2 & length(which(is.na(SuperLowLow))) < 2){
+    df <- rbind(df,day145_DMR[i,]) #conditional statement: if less than 2 sameples/category have NA for % methylation bind the whole row to the new dataframe
+  }
+}
+#save df as a specific variable
+d145DMRs <- df
+```
+
+# Part 2: Run group statistics on regions to find regions that are significantly different among groups
+
+Make a unique ID column 
+```{r}
+#for all ambient sample comparison
+d10DMRs$ID <- paste(d10DMRs$chr,":",d10DMRs$start,"-",d10DMRs$end, sep = "")
+d10DMRs$ID <- gsub("__.*__.*:",":",d10DMRs$ID)
+
+d135DMRs$ID <- paste(d135DMRs$chr,":",d135DMRs$start,"-",d135DMRs$end, sep = "")
+d135DMRs$ID <- gsub("__.*__.*:",":",d135DMRs$ID)
+
+ambDMRs$ID <- paste(ambDMRs$chr,":",ambDMRs$start,"-",ambDMRs$end, sep = "")
+ambDMRs$ID <- gsub("__.*__.*:",":",ambDMRs$ID)
+
+d145DMRs$ID <- paste(d145DMRs$chr,":",d145DMRs$start,"-",d145DMRs$end, sep = "")
+d145DMRs$ID <- gsub("__.*__.*:",":",d145DMRs$ID)
+
+```
+
+reformat data for calculating group effect
+```{r}
+#reformat all to long format
+d10DMRs_STACKED <- tidyr::gather(d10DMRs[,7:ncol(d10DMRs)], "Sample.ID", "perc.meth",1:12)
+
+d135DMRs_STACKED <- tidyr::gather(d135DMRs[,7:ncol(d135DMRs)], "Sample.ID", "perc.meth",1:12)
+
+d145DMRs_STACKED <- tidyr::gather(d145DMRs[,7:ncol(d145DMRs)], "Sample.ID", "perc.meth",1:24)
+
+ambDMRs_STACKED <- tidyr::gather(ambDMRs[,7:ncol(ambDMRs)], "Sample.ID", "perc.meth",1:16)
+
+
+#simplify sample ID column
+d10DMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", d10DMRs_STACKED$Sample.ID)
+
+d135DMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", d135DMRs_STACKED$Sample.ID)
+
+d145DMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", d145DMRs_STACKED$Sample.ID)
+
+ambDMRs_STACKED$Sample.ID <- gsub("methylation_level_EPI-","EPI_", ambDMRs_STACKED$Sample.ID)
+
+#merge with meta data
+d10DMRs_STACKED <- merge(d10DMRs_STACKED, meta_data, by = "Sample.ID")
+
+d135DMRs_STACKED <- merge(d135DMRs_STACKED, meta_data, by = "Sample.ID")
+
+d145DMRs_STACKED <- merge(d145DMRs_STACKED, meta_data, by = "Sample.ID")
+#create column for initial and secondary treatment
+d145DMRs_STACKED$Treatment <- paste(d145DMRs_STACKED$Initial.Treatment,d145DMRs_STACKED$Secondary.Treatment, sep ="_")
+
+ambDMRs_STACKED <- merge(ambDMRs_STACKED, meta_data, by = "Sample.ID")
+
+```
+
+plot % meth dist.
+```{r}
+a <- ggplot(d10DMRs_STACKED) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Day 10") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+c <- ggplot(d135DMRs_STACKED) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Day 135") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+e <- ggplot(d145DMRs_STACKED) + geom_histogram(aes(perc.meth, group = Treatment, color = Treatment,fill = Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Day 145") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+g <- ggplot(ambDMRs_STACKED) + geom_histogram(aes(perc.meth, group = TimePoint, color = TimePoint,fill = TimePoint), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("fraction methylated CpGs") + ggtitle("Ambient") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+```
+
+arc sin sqrt transform the data
+```{r}
+#arcsin sqrt transformation function
+asinTransform <- function(p) { asin(sqrt(p))}
+
+#arcsin transform data 
+#day 10
+d10DMRs_STACKED_asin <- d10DMRs_STACKED
+d10DMRs_STACKED_asin$perc.meth <- asinTransform(d10DMRs_STACKED_asin$perc.meth)
+#day 135
+d135DMRs_STACKED_asin <- d135DMRs_STACKED
+d135DMRs_STACKED_asin$perc.meth <- asinTransform(d135DMRs_STACKED_asin$perc.meth)
+#day145
+d145DMRs_STACKED_asin <- d145DMRs_STACKED
+d145DMRs_STACKED_asin$perc.meth <- asinTransform(d145DMRs_STACKED_asin$perc.meth)
+#amb samples
+ambDMRs_STACKED_asin <- ambDMRs_STACKED
+ambDMRs_STACKED_asin$perc.meth <- asinTransform(ambDMRs_STACKED_asin$perc.meth)
+
+
+```
+
+plot distribution of TRANSFORMED % methylation in all DMRs in all samples
+```{r}
+b <- ggplot(d10DMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Day 10 transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+d <- ggplot(d135DMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = Initial.Treatment, color = Initial.Treatment,fill = Initial.Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Day 135 transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+f <- ggplot(d145DMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = Treatment, color = Treatment,fill = Treatment), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Day 145 transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8,face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+h <- ggplot(ambDMRs_STACKED_asin) + geom_histogram(aes(perc.meth, group = TimePoint, color = TimePoint,fill = TimePoint), bins = 10, position = "identity", alpha = 0.5) + theme_bw() + xlab("transformed fraction methylated CpGs") + ggtitle("Ambient transformed") + theme(text = element_text(size=8),plot.title = element_text(size = 8, face = "bold"),legend.title = element_text(size = 4),legend.text = element_text(size = 4))
+
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/DMR_mCpG_histograms_fEPI.jpg", width = 6, height = 8, units = "in", res = 300)
+ggarrange(a,b,c,d,e,f,g,h, nrow = 4)
+dev.off()
+```
+
+## Run anova on TRANSFORMED data to assess group differences for each DMR
+
+**Hypotehsis: there is no effect from pH at day10**
+```{r}
+d10DMR_1way_aov_pH <- d10DMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~Initial.Treatment, data =  . ))
+#summarize ANOVA data
+#d10DMR_1way_aov_pH_modelsumm <- data.frame(glance(d10DMR_1way_aov_pH, meth_aov_models))
+
+
+#summarize ANOVA data
+#DMR_2way_aov_modelsumm <- glance(DMR_2way_aov, meth_aov_models)
+d10DMR_1way_aov_pH_modelsumm  <- d10DMR_1way_aov_pH %>% ungroup %>% 
+    pull(meth_aov_models) %>% 
+    map_dfr(tidy, .id = 'grp')
+
+#spread out pvalues
+d10DMR_1way_aov_pH_modelsumm_wide <- data.frame(tidyr::pivot_wider(d10DMR_1way_aov_pH_modelsumm, names_from = term, values_from = c("df", "sumsq", "meansq","statistic","p.value"),names_sep = "_" ))
+
+d10DMR_1way_aov_pH_modelsumm_wide <- cbind(d10DMR_1way_aov_pH[,1], d10DMR_1way_aov_pH_modelsumm_wide[,-c(1)])
+
+```
+
+**Hypotehsis: there is no effect from pH at day135**
+```{r}
+d135DMR_1way_aov_pH <- d135DMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~Initial.Treatment, data =  . ))
+#summarize ANOVA data
+#d135DMR_1way_aov_pH_modelsumm <- data.frame(glance(d135DMR_1way_aov_pH, meth_aov_models))
+#summarize ANOVA data
+#DMR_2way_aov_modelsumm <- glance(DMR_2way_aov, meth_aov_models)
+d135DMR_1way_aov_pH_modelsumm  <- d135DMR_1way_aov_pH %>% ungroup %>% 
+    pull(meth_aov_models) %>% 
+    map_dfr(tidy, .id = 'grp')
+
+#spread out pvalues
+d135DMR_1way_aov_pH_modelsumm_wide <- data.frame(tidyr::pivot_wider(d135DMR_1way_aov_pH_modelsumm, names_from = term, values_from = c("df", "sumsq", "meansq","statistic","p.value"),names_sep = "_" ))
+
+d135DMR_1way_aov_pH_modelsumm_wide <- cbind(d135DMR_1way_aov_pH[,1], d135DMR_1way_aov_pH_modelsumm_wide[,-c(1)])
+```
+
+**Hypotehsis: there is no effect from initital pH, secondary pH, or their interaction at day145**
+```{r}
+d145DMR_2way_aov_pH <- d145DMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~Initial.Treatment*Secondary.Treatment, data =  . ))
+#summarize ANOVA data
+#d145DMR_2way_aov_pH_modelsumm <- data.frame(tidyr::pivot_wider(tidy(d145DMR_2way_aov_pH, meth_aov_models),names_from = term, values_from = c("df", "sumsq", "meansq","statistic","p.value"),names_sep = "_" ))
+
+#summarize ANOVA data
+#DMR_2way_aov_modelsumm <- glance(DMR_2way_aov, meth_aov_models)
+d145DMR_2way_aov_pH_modelsumm  <- d145DMR_2way_aov_pH %>% ungroup %>% 
+    pull(meth_aov_models) %>% 
+    map_dfr(tidy, .id = 'grp')
+
+#spread out pvalues
+d145DMR_2way_aov_pH_modelsumm_wide <- data.frame(tidyr::pivot_wider(d145DMR_2way_aov_pH_modelsumm, names_from = term, values_from = c("df", "sumsq", "meansq","statistic","p.value"),names_sep = "_" ))
+
+d145DMR_2way_aov_pH_modelsumm_wide <- cbind(d145DMR_2way_aov_pH[,1], d145DMR_2way_aov_pH_modelsumm_wide[,-c(1)])
+```
+
+
+**Hypotehsis: there is no effect from time in ambient samples**
+```{r}
+ambDMR_1way_aov_pH <- ambDMRs_STACKED_asin %>% group_by(ID) %>%
+do(meth_aov_models = aov(perc.meth~TimePoint, data =  . ))
+#summarize ANOVA data
+#ambDMR_1way_aov_pH_modelsumm <- data.frame(glance(ambDMR_1way_aov_pH, meth_aov_models))
+
+ambDMR_1way_aov_pH_modelsumm  <- ambDMR_1way_aov_pH %>% ungroup %>% 
+    pull(meth_aov_models) %>% 
+    map_dfr(tidy, .id = 'grp')
+
+#spread out pvalues
+ambDMR_1way_aov_pH_modelsumm_wide <- data.frame(tidyr::pivot_wider(ambDMR_1way_aov_pH_modelsumm, names_from = term, values_from = c("df", "sumsq", "meansq","statistic","p.value"),names_sep = "_" ))
+
+ambDMR_1way_aov_pH_modelsumm_wide <- cbind(ambDMR_1way_aov_pH[,1], ambDMR_1way_aov_pH_modelsumm_wide[,-c(1)])
+
+```
+
+
+plot heatmap of 1way aov for pH p.val 0.05 sig DMRs
+```{r}
+#create matrix for d10 samples
+aov_0.05pH_d10DMR_m <- as.matrix(d10DMRs[,7:18])
+rownames(aov_0.05pH_d10DMR_m) <- d10DMRs$ID
+
+aov_0.05pH_d10DMR_m <- aov_0.05pH_d10DMR_m[which(rownames(aov_0.05pH_d10DMR_m) %in% pull(d10DMR_1way_aov_pH_modelsumm_wide[which(d10DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_d10DMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_d10DMR_m))
+
+
+#reorder columns by pH treatment (amb, low, superlow)
+aov_0.05pH_d10DMR_m <- aov_0.05pH_d10DMR_m[,c(5,6,7,8,1,2,9,10,3,4,11,12)]
+
+###Visualize group means
+#calculate group means
+MeanD10pHamb <- rowMeans(aov_0.05pH_d10DMR_m[,grep("119|120|135|136", colnames(aov_0.05pH_d10DMR_m))], na.rm = TRUE)
+
+MeanD10pHlow <- rowMeans(aov_0.05pH_d10DMR_m[,grep("103|104|127|128", colnames(aov_0.05pH_d10DMR_m))], na.rm = TRUE)
+
+MeanD10pHslow <- rowMeans(aov_0.05pH_d10DMR_m[,grep("111|113|143|145", colnames(aov_0.05pH_d10DMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_d10DMR_mean_m <- as.matrix(data.frame(cbind(MeanD10pHamb,MeanD10pHlow, MeanD10pHslow)))
+
+#plot for day10 group mean comparison
+colnames(aov_0.05pH_d10DMR_mean_m) <- c("pH 7.9", "pH 7.4", "pH 7.0")
+
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/D10.DMR_heatmap_fEPI.jpg", width = 600, height = 1000)
+heatmap.2(aov_0.05pH_d10DMR_mean_m, cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d10DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d10DMR_mean_m),lmat = rbind(c(0,3),c(2,1),c(4,0)),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4))
+dev.off()
+
+### DAY 135 ###
+#create matrix for d135 samples
+aov_0.05pH_d135DMR_m <- as.matrix(d135DMRs[,7:18])
+rownames(aov_0.05pH_d135DMR_m) <- d135DMRs$ID
+
+aov_0.05pH_d135DMR_m <- aov_0.05pH_d135DMR_m[which(rownames(aov_0.05pH_d135DMR_m) %in% pull(d135DMR_1way_aov_pH_modelsumm_wide[which(d135DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_d135DMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_d135DMR_m))
+
+
+#columns are already ordered by pH treatment (amb, low, superlow)
+
+###Visualize group means
+#calculate group means
+Meand135pHamb <- rowMeans(aov_0.05pH_d135DMR_m[,grep("151|152|153|154", colnames(aov_0.05pH_d135DMR_m))], na.rm = TRUE)
+
+Meand135pHlow <- rowMeans(aov_0.05pH_d135DMR_m[,grep("159|160|161|162", colnames(aov_0.05pH_d135DMR_m))], na.rm = TRUE)
+
+Meand135pHslow <- rowMeans(aov_0.05pH_d135DMR_m[,grep("167|168|169|170", colnames(aov_0.05pH_d135DMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_d135DMR_mean_m <- as.matrix(data.frame(cbind(Meand135pHamb,Meand135pHlow, Meand135pHslow)))
+#plot for day135 group mean comparison
+colnames(aov_0.05pH_d135DMR_mean_m) <- c("pH 7.9", "pH 7.4", "pH 7.0")
+
+
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/D135.DMR_heatmap_fEPI.jpg", width = 600, height = 1000)
+heatmap.2(aov_0.05pH_d135DMR_mean_m, cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), na.color = "black", density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_d135DMR_mean_m),rowsep=1:nrow(aov_0.05pH_d135DMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+dev.off()
+
+
+##### DAY 145  ######
+#create matrix for d145 samples
+aov_0.05pH_d145DMR_m <- as.matrix(d145DMRs[,7:30])
+rownames(aov_0.05pH_d145DMR_m) <- d145DMRs$ID
+
+aov_0.05pH_d145DMR_m <- aov_0.05pH_d145DMR_m[which(rownames(aov_0.05pH_d145DMR_m) %in% pull(d145DMR_2way_aov_pH_modelsumm_wide[which(d145DMR_2way_aov_pH_modelsumm_wide$p.value_Initial.Treatment.Secondary.Treatment < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_d145DMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_d145DMR_m))
+
+
+#order columns by pH treatment (amb-amb, amb-low,low-amb, low-low, superlow-amb, superlow-low)
+aov_0.05pH_d145DMR_m <- aov_0.05pH_d145DMR_m[,c(3,4,5,6,13,14,21,22,1,2,9,10,15,16,23,24,7,8,11,12,17,18,19,20)]
+
+###Visualize group means
+#calculate group means
+
+Meand145pHambamb <- rowMeans(aov_0.05pH_d145DMR_m[,grep("181|182|184|185", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHamblow <- rowMeans(aov_0.05pH_d145DMR_m[,grep("205|206|226|227", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHlowamb <- rowMeans(aov_0.05pH_d145DMR_m[,grep("175|176|193|194", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHlowlow <- rowMeans(aov_0.05pH_d145DMR_m[,grep("208|209|229|230", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHSlowamb <- rowMeans(aov_0.05pH_d145DMR_m[,grep("187|188|199|200", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+Meand145pHSlowlow <- rowMeans(aov_0.05pH_d145DMR_m[,grep("214|215|220|221", colnames(aov_0.05pH_d145DMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_d145DMR_mean_m <- as.matrix(data.frame(cbind(Meand145pHambamb,Meand145pHamblow,Meand145pHlowamb,Meand145pHlowlow,Meand145pHSlowamb,Meand145pHSlowlow)))
+
+#plot for day145 group mean comparison
+colnames(aov_0.05pH_d145DMR_mean_m) <- c("pH 7.9 -> pH 7.9", "pH 7.9 -> pH 7.4","pH 7.4 -> pH 7.9","pH 7.4 -> pH 7.4", "pH 7.0 -> pH 7.9", "pH 7.0 -> pH 7.4")
+
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/D145.DMR_heatmap_fEPI.jpg", width = 600, height = 1000)
+heatmap.2(aov_0.05pH_d145DMR_mean_m, cexCol = 1.5, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), lmat = rbind(c(0,3),c(2,1),c(4,0)),na.color = "black", density.info = "none", trace = "none", scale = "row", keysize=0.5, key.par = list(cex=1),labRow = FALSE,sepwidth=c(0.1,0.01), lhei=c(1.5,4,1),lwid= c(1.5, 4),sepcolor="white",colsep=seq(2,ncol(aov_0.05pH_d145DMR_mean_m),2),rowsep=1:nrow(aov_0.05pH_d145DMR_mean_m))
+dev.off()
+
+#calculated fold change in methylation between column pairs for d145
+x <- (aov_0.05pH_d145DMR_mean_m[,2]/aov_0.05pH_d145DMR_mean_m[,1])-1
+mean(x[x>0])
+#SE
+sd(x[x>0])/(sqrt(length(x[x>0])))
+mean(x[x<0])
+#SE
+sd(x[x<0])/(sqrt(length(x[x<0])))
+
+y <- (aov_0.05pH_d145DMR_mean_m[,4]/aov_0.05pH_d145DMR_mean_m[,3])-1
+mean(y[y>0])
+#SE
+sd(y[y>0])/(sqrt(length(y[y>0])))
+mean(y[y<0])
+#SE
+sd(y[y<0])/(sqrt(length(y[y<0])))
+
+z <- (aov_0.05pH_d145DMR_mean_m[,6]/aov_0.05pH_d145DMR_mean_m[,5])-1
+mean(z[z>0])
+#SE
+sd(z[z>0])/(sqrt(length(z[z>0])))
+mean(z[z<0])
+#SE
+sd(z[z<0])/(sqrt(length(z[z<0])))
+
+##### AMBIENT SAMPLES ######
+
+#create matrix for amb samples
+aov_0.05pH_ambDMR_m <- as.matrix(ambDMRs[,7:22])
+rownames(aov_0.05pH_ambDMR_m) <- ambDMRs$ID
+
+aov_0.05pH_ambDMR_m <- aov_0.05pH_ambDMR_m[which(rownames(aov_0.05pH_ambDMR_m) %in% pull(ambDMR_1way_aov_pH_modelsumm_wide[which(ambDMR_1way_aov_pH_modelsumm_wide$p.value_TimePoint < 0.05),],ID)),]
+#remove extra text from column names
+colnames(aov_0.05pH_ambDMR_m) <- gsub("methylation_level_","",colnames(aov_0.05pH_ambDMR_m))
+
+
+#columns are already ordered by time (day0, day10,day135,day145)
+
+###Visualize group means
+#calculate group means
+Meanambd0 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("41|42|43|44", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+Meanambd10 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("119|120|135|136", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+
+Meanambd135 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("151|152|153|154", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+Meanambd145 <- rowMeans(aov_0.05pH_ambDMR_m[,grep("181|182|184|185", colnames(aov_0.05pH_ambDMR_m))], na.rm = TRUE)
+
+#bind all group means together
+aov_0.05pH_ambDMR_mean_m <- as.matrix(data.frame(cbind(Meanambd0,Meanambd10, Meanambd135,Meanambd145)))
+
+#plot for ambient group mean comparison
+colnames(aov_0.05pH_ambDMR_mean_m) <- c("Day 0", "Day 10", "Day 135", "Day 145")
+
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/Time.DMR_heatmap_fEPI.jpg", width = 700, height = 1000)
+heatmap.2(aov_0.05pH_ambDMR_mean_m,margins = c(10,20), cexCol = 2, distfun = function(x) as.dist(1 - cor(t(x), use = "pa")), hclustfun = function(x) hclust(x,method = 'average'),key.xtickfun = function() {
+  breaks = pretty(parent.frame()$breaks)
+  #breaks = breaks[c(1,length(breaks))]
+  list(at = parent.frame()$scale01(breaks),labels = breaks)},Colv=NA, col= rev(colorRampPalette(brewer.pal(10, "RdYlBu"))(256)), density.info = "none", trace = "none", scale = "row", labRow = FALSE,sepwidth=c(0.01,0.01),sepcolor="white",colsep=1:ncol(aov_0.05pH_ambDMR_mean_m),rowsep=1:nrow(aov_0.05pH_ambDMR_mean_m),keysize=0.5, key.par = list(cex=1),lhei=c(1.5,4,1), lwid = c(1.5,4),lmat = rbind(c(0,3),c(2,1),c(4,0)))
+dev.off()
+```
+
+Write out ANOVA summary stats tables
+```{r}
+#write out d10 DMR bed file
+d10DMR_1way_aov_pH_modelsumm_wide$scaffold <- gsub("\\:.*","", d10DMR_1way_aov_pH_modelsumm_wide$ID)
+d10DMR_1way_aov_pH_modelsumm_wide$start <- gsub(".*\\:","", d10DMR_1way_aov_pH_modelsumm_wide$ID)
+d10DMR_1way_aov_pH_modelsumm_wide$start <- gsub("-.*","", d10DMR_1way_aov_pH_modelsumm_wide$start)
+d10DMR_1way_aov_pH_modelsumm_wide$end <- gsub(".*-","",  d10DMR_1way_aov_pH_modelsumm_wide$ID)
+d10DMR_1way_aov_pH_modelsumm_wide <- d10DMR_1way_aov_pH_modelsumm_wide[,c(1,(ncol(d10DMR_1way_aov_pH_modelsumm_wide)-2):ncol(d10DMR_1way_aov_pH_modelsumm_wide),2:(ncol(d10DMR_1way_aov_pH_modelsumm_wide)-3))]
+#order by pvalue
+d10DMR_1way_aov_pH_modelsumm_wide <- d10DMR_1way_aov_pH_modelsumm_wide[order(d10DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment),]
+write.csv(d10DMR_1way_aov_pH_modelsumm_wide,"/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_pH_d10DMR_fEPI.csv", row.names = FALSE, quote = FALSE)
+
+#write out d135 DMR bed file
+d135DMR_1way_aov_pH_modelsumm_wide$scaffold <- gsub("\\:.*","", d135DMR_1way_aov_pH_modelsumm_wide$ID)
+d135DMR_1way_aov_pH_modelsumm_wide$start <- gsub(".*\\:","", d135DMR_1way_aov_pH_modelsumm_wide$ID)
+d135DMR_1way_aov_pH_modelsumm_wide$start <- gsub("-.*","", d135DMR_1way_aov_pH_modelsumm_wide$start)
+d135DMR_1way_aov_pH_modelsumm_wide$end <- gsub(".*-","",  d135DMR_1way_aov_pH_modelsumm_wide$ID)
+d135DMR_1way_aov_pH_modelsumm_wide <- d135DMR_1way_aov_pH_modelsumm_wide[,c(1,(ncol(d135DMR_1way_aov_pH_modelsumm_wide)-2):ncol(d135DMR_1way_aov_pH_modelsumm_wide),2:(ncol(d135DMR_1way_aov_pH_modelsumm_wide)-3))]
+#order by pvalue
+d135DMR_1way_aov_pH_modelsumm_wide <- d135DMR_1way_aov_pH_modelsumm_wide[order(d135DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment),]
+write.csv(d135DMR_1way_aov_pH_modelsumm_wide,"/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_pH_d135DMR_fEPI.csv", row.names = FALSE, quote = FALSE)
+
+#write out d145 DMR bed file
+d145DMR_2way_aov_pH_modelsumm_wide$scaffold <- gsub("\\:.*","", d145DMR_2way_aov_pH_modelsumm_wide$ID)
+d145DMR_2way_aov_pH_modelsumm_wide$start <- gsub(".*\\:","", d145DMR_2way_aov_pH_modelsumm_wide$ID)
+d145DMR_2way_aov_pH_modelsumm_wide$start <- gsub("-.*","", d145DMR_2way_aov_pH_modelsumm_wide$start)
+d145DMR_2way_aov_pH_modelsumm_wide$end <- gsub(".*-","",  d145DMR_2way_aov_pH_modelsumm_wide$ID)
+d145DMR_2way_aov_pH_modelsumm_wide <- d145DMR_2way_aov_pH_modelsumm_wide[,c(1,(ncol(d145DMR_2way_aov_pH_modelsumm_wide)-2):ncol(d145DMR_2way_aov_pH_modelsumm_wide),2:(ncol(d145DMR_2way_aov_pH_modelsumm_wide)-3))]
+#order by pvalue
+d145DMR_2way_aov_pH_modelsumm_wide <- d145DMR_2way_aov_pH_modelsumm_wide[order(d145DMR_2way_aov_pH_modelsumm_wide$p.value_Initial.Treatment.Secondary.Treatment),]
+write.csv(d145DMR_2way_aov_pH_modelsumm_wide,"/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_pH_d145DMR_fEPI.csv", row.names = FALSE, quote = FALSE)
+
+
+#write out amb DMR bed file
+ambDMR_1way_aov_pH_modelsumm_wide$scaffold <- gsub("\\:.*","", ambDMR_1way_aov_pH_modelsumm_wide$ID)
+ambDMR_1way_aov_pH_modelsumm_wide$start <- gsub(".*\\:","", ambDMR_1way_aov_pH_modelsumm_wide$ID)
+ambDMR_1way_aov_pH_modelsumm_wide$start <- gsub("-.*","", ambDMR_1way_aov_pH_modelsumm_wide$start)
+ambDMR_1way_aov_pH_modelsumm_wide$end <- gsub(".*-","",  ambDMR_1way_aov_pH_modelsumm_wide$ID)
+ambDMR_1way_aov_pH_modelsumm_wide <- ambDMR_1way_aov_pH_modelsumm_wide[,c(1,(ncol(ambDMR_1way_aov_pH_modelsumm_wide)-2):ncol(ambDMR_1way_aov_pH_modelsumm_wide),2:(ncol(ambDMR_1way_aov_pH_modelsumm_wide)-3))]
+#order by pvalue
+ambDMR_1way_aov_pH_modelsumm_wide <- ambDMR_1way_aov_pH_modelsumm_wide[order(ambDMR_1way_aov_pH_modelsumm_wide$p.value_TimePoint),]
+write.csv(ambDMR_1way_aov_pH_modelsumm_wide,"/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_pH_timeDMR_fEPI.csv", row.names = FALSE, quote = FALSE)
+
+```
+
+Create boxplots of significant DMR sizes (not very interesting)
+```{r}
+#bind together all DMR files
+aov_0.05_DMRs <- rbind(cbind(d10DMR_1way_aov_pH_modelsumm_wide[which(d10DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),c("scaffold","start","end")],comparison = rep("day10", nrow(d10DMR_1way_aov_pH_modelsumm_wide[which(d10DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),]))), cbind(d135DMR_1way_aov_pH_modelsumm_wide[which(d135DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),c("scaffold","start","end")],comparison = rep("day135", nrow(d135DMR_1way_aov_pH_modelsumm_wide[which(d135DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),]))),cbind(d145DMR_2way_aov_pH_modelsumm_wide[which(d145DMR_2way_aov_pH_modelsumm_wide$p.value_Initial.Treatment.Secondary.Treatment < 0.05),c("scaffold","start","end")],comparison = rep("day145", nrow(d145DMR_2way_aov_pH_modelsumm_wide[which(d145DMR_2way_aov_pH_modelsumm_wide$p.value_Initial.Treatment.Secondary.Treatment < 0.05),]))),cbind(ambDMR_1way_aov_pH_modelsumm_wide[which(ambDMR_1way_aov_pH_modelsumm_wide$p.value_TimePoint < 0.05),c("scaffold","start","end")],comparison = rep("time", nrow(ambDMR_1way_aov_pH_modelsumm_wide[which(ambDMR_1way_aov_pH_modelsumm_wide$p.value_TimePoint < 0.05),]))))
+                       
+#create a column for DMR length
+aov_0.05_DMRs$length <- (as.numeric(aov_0.05_DMRs$end) - as.numeric(aov_0.05_DMRs$start))
+
+#make violin plots
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/DMR_size_distributions_fEPI.jpg", width = 6, height = 4.5, units = "in", res = 300)
+ggplot(aov_0.05_DMRs,aes(comparison,length, fill = comparison)) + geom_violin(trim = FALSE) + geom_boxplot(width=0.1) + theme_bw() + theme(axis.text = element_text(size = 10))
+dev.off()
+
+#transform to normalize
+ggplot(aov_0.05_DMRs,aes(log(length,2), fill = comparison, color = comparison)) + geom_density(alpha = 0.25)
+
+#test if a pH or time ever has an affect on DMR length
+summary(aov(log(length,2)~comparison, data =  aov_0.05_DMRs ))
+
+
+#plot distribution of DMRs across scaffolds
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/DMR_distribution_across_scaffolds_fEPI.jpg", width = 10, height = 5, units = "in", res = 300)
+ggplot(aov_0.05_DMRs, aes(substr(scaffold,10,11), group = comparison, color = comparison, fill = comparison)) + geom_bar(aes(y = (..prop..)*100), stat="count", position = "dodge") + xlab("Scaffold") + ylab("% DMRs") + theme_bw()
+dev.off()
+
+#read in file with scaffold lengths
+pgen_scaffolds <- fread("https://gannet.fish.washington.edu/metacarcinus/Pgenerosa/GENOMES/Panopea-generosa-v1.0.fa.fai", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+#remove extraneous info
+pgen_scaffolds <- pgen_scaffolds[,c(1,2)]
+#rename columns
+colnames(pgen_scaffolds) <- c("scaffold", "total_scaff_length")
+#add scaffold lengths to DMR table
+aov_0.05_DMRs <- merge(aov_0.05_DMRs,pgen_scaffolds, by = "scaffold")
+#create a scaffold position column
+aov_0.05_DMRs$scaffold_position <- (as.numeric(aov_0.05_DMRs$start)/as.numeric(aov_0.05_DMRs$total_scaff_length))
+
+#plot histograms showing the number of DMRs x scaffold position for each comparison facetted by scaffold
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/DMR_distribution_by_scaffold_position_fEPI.jpg", width = 6, height = 7, units = "in", res = 300)
+ggplot(aov_0.05_DMRs) + geom_histogram(aes(scaffold_position, fill = comparison), position = "dodge", bins = 10) + facet_wrap(~scaffold, nrow = 5) + xlab("relative scaffold position") + ylab("number of DMRs") + theme_bw() + theme(axis.text.x = element_text(size = 8, angle = 60, hjust= 1),axis.text.y = element_text(size = 10))
+dev.off()
+
+```
+
+
+
+# Genomic Feature Analysis
+
+generate bedfiles to be used in bedtools intersect to determine features that overlap with regions
+```{r}
+
+
+#subset model data for scaffold start and end positions for DMRs significant at p < 0.05
+d10DMR_sig.bed <- d10DMR_1way_aov_pH_modelsumm_wide[which(d10DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),c("scaffold","start", "end")]
+
+#add column denoting tested effect
+d10DMR_sig.bed$test <- "pH_d10"
+
+#write out date
+write.table(d10DMR_sig.bed, "/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_pH_d10DMR_fEPI.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+
+#subset model data for scaffold start and end positions for DMRs significant at p < 0.05
+d135DMR_sig.bed <- d135DMR_1way_aov_pH_modelsumm_wide[which(d135DMR_1way_aov_pH_modelsumm_wide$p.value_Initial.Treatment < 0.05),c("scaffold","start", "end")]
+
+#add column denoting tested effect
+d135DMR_sig.bed$test <- "pH_d135"
+
+#write out date
+write.table(d135DMR_sig.bed, "/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_pH_d135DMR_fEPI.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+
+#subset model data for scaffold start and end positions for DMRs significant at p < 0.05
+d145DMR_sig.bed <- d145DMR_2way_aov_pH_modelsumm_wide[which(d145DMR_2way_aov_pH_modelsumm_wide$p.value_Initial.Treatment.Secondary.Treatment < 0.05),c("scaffold","start", "end")]
+
+#add column denoting tested effect
+d145DMR_sig.bed$test <- "pH_d145"
+
+#write out date
+write.table(d145DMR_sig.bed, "/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_pH_d145DMR_fEPI.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+
+
+#subset model data for scaffold start and end positions for DMRs significant at p < 0.05
+ambDMR_sig.bed <- ambDMR_1way_aov_pH_modelsumm_wide[which(ambDMR_1way_aov_pH_modelsumm_wide$p.value_TimePoint < 0.05),c("scaffold","start", "end")]
+
+#add column denoting tested effect
+ambDMR_sig.bed$test <- "time"
+
+#write out date
+write.table(ambDMR_sig.bed, "/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_time_ambDMR_fEPI.bed", sep = "\t",row.names = F, col.names = F, quote = F)
+
+```
+
+# Match Significant DMRs to genomic features
+```{bash}
+FILES="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/*DMR_fEPI.bed"
+
+for f in $FILES
+do
+/home/shared/bedtools2/bin/intersectBed \
+-a ${f} \
+-b /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.2Kbin.uniq.bed \
+-wao \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/$(basename ${f%DMR.bed})_0817.txt
+done
+```
+
+
+# Determine background regions
+
+```{bash}
+## remake feature file using 200 bp window instead of 2K windows
+
+cat /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.sort.bed |\
+uniq |\
+/home/shared/bedtools2/bin/windowMaker \
+-b - \
+-w 200 \
+-i src |\
+/home/shared/bedtools2/bin/sortBed \
+-i - |\
+uniq \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.200bin.uniq.bed
+
+## STEP 1. find all CpGs covered by at least 3/4 samples per group (use merge.tab files)
+
+set -ex
+
+#first create variables for each file grouping
+declare -a amb_day0="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-41_S38_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-42_S39_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-43_S40_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-44_S41_L005_5x.tab"
+
+declare -a amb_day10="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-119_S31_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-120_S32_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-135_S35_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-136_S36_L005_5x.tab"
+
+declare -a amb_day135="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-151_S2_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-152_S3_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-153_S4_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-154_S5_L002_5x.tab"
+
+declare -a amb_day145="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-181_S16_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-182_S17_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-184_S18_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-185_S19_L003_5x.tab"
+
+declare -a low_day10="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-103_S27_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-104_S28_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-127_S33_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-128_S34_L005_5x.tab"
+
+declare -a low_day135="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-160_S7_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-161_S8_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-162_S9_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-159_S6_L002_5x.tab"
+
+declare -a slow_day10="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-111_S29_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-113_S30_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-143_S37_L005_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-145_S38_L005_5x.tab"
+
+declare -a slow_day135="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-167_S10_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-168_S11_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-169_S12_L002_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-170_S13_L002_5x.tab"
+
+declare -a lamb_day145="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-175_S14_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-176_S15_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-193_S22_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-194_S23_L003_5x.tab"
+
+declare -a slamb_day145="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-187_S20_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-188_S21_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-199_S24_L003_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-200_S25_L003_5x.tab"
+
+declare -a ambl_day145="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-205_S26_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-206_S27_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-226_S34_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-227_S35_L004_5x.tab"
+
+declare -a lowlow_day145="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-208_S28_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-209_S29_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-229_S36_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-230_S37_L004_5x.tab"
+
+declare -a sllow_day145="/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-214_S30_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-215_S31_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-220_S32_L004_5x.tab 
+/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/fEPI-221_S33_L004_5x.tab"
+
+#next create another list of variable names
+
+groups=(amb_day0 amb_day10 amb_day135 amb_day145 low_day10 low_day135 slow_day10 slow_day135 lamb_day145 slamb_day145 ambl_day145 lowlow_day145 sllow_day145)
+
+#next loop through variable names to combine the files within each experimental group
+#cat all group files together
+#if the context is CG print the chromosome and position
+#sort data
+#unique and count the frequency of positions
+#if the position is overlapping in 3/4 samples keep
+
+
+for f in "${groups[@]}"
+do
+x="${f}" 
+cat ${!x} | \
+awk '{print $1,$2,$3}' | \
+sort | \
+uniq -c | \
+awk '{if($1>2)print $2"\t"$3"\t"$4}' \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/${f}.3xCpG.bed
+done
+
+
+## STEP 2. find CpGs common to all groups in comparison (e.g. all ambient samples over time, all day 10 samples, etc.)
+
+# day 10 comparison
+
+cat /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/*day10*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==3)print $2"\t"$3"\t"$4}' \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day10.3xCpG.allgrps.bed
+
+# day 135 comparison
+
+cat /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/*day135*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==3)print $2"\t"$3"\t"$4}' \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day135.3xCpG.allgrps.bed
+
+#day 145 comparison
+
+cat /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/*day145*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==6)print $2"\t"$3"\t"$4}' \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day145.3xCpG.allgrps.bed
+
+#all ambient samples over time comparison
+
+cat /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/amb_*.3xCpG.bed |\
+sort | \
+uniq -c | \
+awk '{if($1==4)print $2"\t"$3"\t"$4}' \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/amb.3xCpG.allgrps.bed
+
+
+## STEP 3. determine binned features that common CpGs overlap with (bedtools intersect)
+
+
+FILES=/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/*.3xCpG.allgrps.bed
+
+for f in $FILES
+do
+/home/shared/bedtools2/bin/intersectBed \
+-a ${f} \
+-b /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.2Kbin.uniq.bed \
+-wb \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/$(basename ${f%.3xCpG.allgrps.bed})_features.txt
+done
+
+
+FILES=/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/*.3xCpG.allgrps.bed
+
+for f in $FILES
+do
+/home/shared/bedtools2/bin/intersectBed \
+-a ${f} \
+-b /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Data/Genome/Panopea-generosa-v1.0.a4.200bin.uniq.bed \
+-wb \
+> /home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/$(basename ${f%.3xCpG.allgrps.bed})_200bpfeatures.txt
+done
+
+
+
+## STEP 4. filter features for those with at least 3 CpGs
+
+
+FILES=/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/*_features.txt
+
+for f in $FILES
+do
+cat ${f} |\
+awk -F"\t" '{print $4,$5,$6,$7}' |\
+sort |\
+uniq -c |\
+awk '{if($1>2)print $2"\t"$3"\t"$4"\t"$5}'\
+>/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/$(basename ${f%_features.txt})_features.3CpG.txt
+done
+
+
+FILES=/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/*_200bpfeatures.txt
+
+for f in $FILES
+do
+cat ${f} |\
+awk -F"\t" '{print $4,$5,$6,$7}' |\
+sort |\
+uniq -c |\
+awk '{if($1>2)print $2"\t"$3"\t"$4"\t"$5}'\
+>/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/$(basename ${f%_features.txt})_200bpfeatures.3CpG.txt
+done
+```
+
+
+read in data
+```{r}
+# read in features that DMRs overlap with
+amb_DMR_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_time_ambDMR_fEPI.bed_0817.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d10_DMR_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_pH_d10DMR_fEPI.bed_0817.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d135_DMR_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_pH_d135DMR_fEPI.bed_0817.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d145_DMR_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/aov_0.05_pH_d145DMR_fEPI.bed_0817.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+# # read in features that covered regions (background) overlap with
+# amb_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/amb_features.3CpG.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+# 
+# d10_feat <-read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day10_features.3CpG.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+# 
+# d135_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day135_features.3CpG.txt", header = FALSE,sep = "\t", stringsAsFactors = FALSE)
+# 
+# d145_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day145_features.3CpG.txt", header = FALSE,sep = "\t", stringsAsFactors = FALSE)
+
+
+
+
+
+amb_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/amb_200bpfeatures.3CpG.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d10_feat <-read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day10_200bpfeatures.3CpG.txt", header = FALSE, sep = "\t", stringsAsFactors = FALSE)
+
+d135_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day135_200bpfeatures.3CpG.txt", header = FALSE,sep = "\t", stringsAsFactors = FALSE)
+
+d145_feat <- read.table("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/output/day145_200bpfeatures.3CpG.txt", header = FALSE,sep = "\t", stringsAsFactors = FALSE)
+```
+
+
+format data for plotting
+```{r}
+# retain only the comparison, the genome coordinates of the feature, and the feature
+
+amb_DMR_feat <- amb_DMR_feat[,-c(1:3,9)]
+d10_DMR_feat <- d10_DMR_feat[,-c(1:3,9)]
+d135_DMR_feat <- d135_DMR_feat[,-c(1:3,9)]
+d145_DMR_feat <- d145_DMR_feat[,-c(1:3,9)]
+
+DMR_feat <- rbind(amb_DMR_feat,d10_DMR_feat,d135_DMR_feat,d145_DMR_feat)
+
+colnames(DMR_feat) <- c("comparison", "scaffold", "start", "end", "feature")
+
+DMR_feat$comparison <- gsub("pH_d", "day ", DMR_feat$comparison)
+
+amb_feat$comparison <- "time"
+d10_feat$comparison <- "day 10"
+d135_feat$comparison <- "day 135"
+d145_feat$comparison <- "day 145"
+
+feat <- rbind(amb_feat,d10_feat, d135_feat, d145_feat)
+
+colnames(feat) <- c("scaffold", "start", "end", "feature","comparison")
+
+feat <- feat[,c(5,1:4)]
+  
+DMR_feat$region <- "DMRs"
+feat$region <- "all.regions"
+
+#combine all features and DMRs
+feat_combined <- rbind(DMR_feat, feat)
+feat_combined$feature <- gsub("3prime_UTR", "put.3primeUTR",feat_combined$feature)
+feat_combined$feature <- gsub("put_promoter", "put.promoter",feat_combined$feature)
+feat_combined$feature <- gsub("repeat_region", "repeat.reagion",feat_combined$feature)
+
+
+feat_combined_noTime <- feat_combined[which(feat_combined$comparison!="time"),]
+
+feat_combined_TIME <- feat_combined[which(feat_combined$comparison=="time"),]
+
+#plot all pH comparions
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/pH.DMR_genom_feat_stacked_barplot_fEPI.jpg", width = 6, height = 5, units = "in", res =300)
+ggplot(feat_combined_noTime,aes(x = region, y = ..count.., fill = factor(feature), group = feature)) + geom_bar(position = "fill", color = "black") + scale_y_continuous(labels=scales::percent) + ylab("% of total regions") + facet_wrap(~comparison,ncol = 4) + theme_bw() + theme(axis.text.x = element_text(size = 7, angle = 60, hjust = 1), axis.title = element_text(size = 12, face = "bold")) + scale_fill_manual("Feature",values = RColorBrewer::brewer.pal(9,"BuGn"))
+dev.off()
+
+#plot only time comparison
+jpeg("/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/Time.DMR_genom_feat_stacked_barplot_fEPI.jpg", width = 4, height = 7, units = "in", res =300)
+ggplot(feat_combined_TIME,aes(x = region, y = ..count.., fill = factor(feature), group = feature)) + geom_bar(position = "fill", color = "black") + scale_y_continuous(labels=scales::percent) + ylab("% of total regions") + facet_wrap(~comparison,ncol = 4) + theme_bw() + theme(axis.text.x = element_text(size = 7, angle = 60, hjust = 1), axis.title = element_text(size = 12, face = "bold")) + scale_fill_manual("Feature",values = RColorBrewer::brewer.pal(9,"BuGn"))
+dev.off()
+
+
+```
+
+
+# Run Chi square test on feature proportions
+
+
+```{r}
+# create table with feature totals for DMRs
+amb_DMR_feat_summary <- data.frame(table(amb_DMR_feat$V8))
+#rename columns
+colnames(amb_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+amb_feat_summary <- data.frame(table(amb_feat$V4))
+#rename columns
+colnames(amb_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+amb_feat_summ <- merge(amb_DMR_feat_summary, amb_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+amb_feat_summ[is.na(amb_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+amb_feat_DMR_total <- sum(amb_feat_summ$numDMR)
+amb_feat_region_total <- sum(amb_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(amb_feat_summ)){ #loop through each feature
+  numBKGDReg <-amb_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- amb_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (amb_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (amb_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(amb_feat_summ$feature[i]),paste0("Not",amb_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(amb_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(amb_feat_summ,chi_table, by = "feature")
+
+amb_chi_table <- chi_table
+amb_chi_table$comparison <- "amb"
+```
+
+day 10
+```{r}
+# create table with feature totals for DMRs
+d10_DMR_feat_summary <- data.frame(table(d10_DMR_feat$V8))
+#rename columns
+colnames(d10_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+d10_feat_summary <- data.frame(table(d10_feat$V4))
+#rename columns
+colnames(d10_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+d10_feat_summ <- merge(d10_DMR_feat_summary, d10_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+d10_feat_summ[is.na(d10_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+d10_feat_DMR_total <- sum(d10_feat_summ$numDMR)
+d10_feat_region_total <- sum(d10_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(d10_feat_summ)){ #loop through each feature
+  numBKGDReg <-d10_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- d10_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (d10_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (d10_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(d10_feat_summ$feature[i]),paste0("Not",d10_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(d10_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(d10_feat_summ,chi_table, by = "feature")
+
+d10_chi_table <- chi_table
+d10_chi_table$comparison <- "d10"
+```
+
+day 135
+```{r}
+# create table with feature totals for DMRs
+d135_DMR_feat_summary <- data.frame(table(d135_DMR_feat$V8))
+#rename columns
+colnames(d135_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+d135_feat_summary <- data.frame(table(d135_feat$V4))
+#rename columns
+colnames(d135_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+d135_feat_summ <- merge(d135_DMR_feat_summary, d135_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+d135_feat_summ[is.na(d135_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+d135_feat_DMR_total <- sum(d135_feat_summ$numDMR)
+d135_feat_region_total <- sum(d135_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(d135_feat_summ)){ #loop through each feature
+  numBKGDReg <-d135_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- d135_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (d135_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (d135_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(d135_feat_summ$feature[i]),paste0("Not",d135_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(d135_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(d135_feat_summ,chi_table, by = "feature")
+
+d135_chi_table <- chi_table
+d135_chi_table$comparison <- "d135"
+```
+
+day 145
+```{r}
+# create table with feature totals for DMRs
+d145_DMR_feat_summary <- data.frame(table(d145_DMR_feat$V8))
+#rename columns
+colnames(d145_DMR_feat_summary) <- c("feature", "numDMR")
+ 
+# create table with feature totals for background regions
+d145_feat_summary <- data.frame(table(d145_feat$V4))
+#rename columns
+colnames(d145_feat_summary) <- c("feature", "numRegion")
+
+#merge background and DMR feature totals 
+d145_feat_summ <- merge(d145_DMR_feat_summary, d145_feat_summary, by = "feature", all = TRUE)
+
+#replace NAs with 0
+d145_feat_summ[is.na(d145_feat_summ)] <- 0
+
+#create variables for the sum of all DMR and background features
+d145_feat_DMR_total <- sum(d145_feat_summ$numDMR)
+d145_feat_region_total <- sum(d145_feat_summ$numRegion)
+
+#create a table with Chi stats for each feature
+chi_table <- data.frame() #create empty df
+for(i in 1:nrow(d145_feat_summ)){ #loop through each feature
+  numBKGDReg <-d145_feat_summ$numRegion[i] # variable for number of background regions for specific feature
+  numDMRreg <- d145_feat_summ$numDMR[i] # variable for number of DMRs for specific feature
+  totDMR <- (d145_feat_DMR_total - numDMRreg) # variable for total number background regions in all features minus the number of background regions for specific feature
+  totBKGD <- (d145_feat_region_total - numBKGDReg)  # variable for total number DMRs in all features minus the number of DMRs for specific feature
+  ct <- matrix(c(numBKGDReg,numDMRreg,totBKGD,totDMR), ncol = 2) # create contingency table
+  colnames(ct) <- c(as.character(d145_feat_summ$feature[i]),paste0("Not",d145_feat_summ$feature[i])) #label columns of contingency table
+  rownames(ct) <- c("Region", "DMR") #lab rows of contingency table
+  print(ct)
+  x <-  data.frame(broom::tidy(prop.test(ct, correct = FALSE))) # create data frame storing the Chi sq stats results
+  x$feature <- as.character(d145_feat_summ$feature[i]) # add feature name to chi sq df
+  chi_table <- rbind(chi_table,x) #add chi sq stats to master table
+}
+
+#adjust chi pvalues
+chi_table$p.adj <- p.adjust(chi_table$p.value, method = "fdr")
+
+#merge chi table with region counts
+chi_table <- merge(d145_feat_summ,chi_table, by = "feature")
+
+d145_chi_table <- chi_table
+d145_chi_table$comparison <- "d145"
+```
+
+combine all chi sq comparisons together
+```{r}
+all_chi <- rbind(amb_chi_table,d10_chi_table,d135_chi_table,d145_chi_table)
+
+all_chi$feature <- gsub("3prime_UTR", "put.3primeUTR",all_chi$feature)
+all_chi$feature <- gsub("put_promoter", "put.promoter",all_chi$feature)
+all_chi$feature <- gsub("repeat_region", "repeat.reagion",all_chi$feature)
+all_chi$comparison <- gsub("amb", "time", all_chi$comparison)
+all_chi$comparison <- gsub("d", "day_", all_chi$comparison)
+
+write.csv(all_chi,"/home/shared/8TB_HDD_02/strigg/Geoduck_Meth/RAnalysis/Output/DMR_genom_feat_chi_table_fEPI.csv", row.names = FALSE, quote = FALSE)
+
+```
+
+
