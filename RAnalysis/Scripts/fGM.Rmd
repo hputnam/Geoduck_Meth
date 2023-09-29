@@ -387,9 +387,15 @@ Fig.Exp1.size <- ggplot(Init.Shell.size, aes(x=Day.Num, y=avg.Arel, group=Treatm
   annotate("text", x=22.5, y=1.25, label = "bc", size = 3) + #add text to the graphic for posthoc letters
   annotate("text", x=22, y=1.6, label = "c", size = 3) + 
   #add text to the graphic for posthoc letters
-  annotate("text",x = 3, y = 3.5, label = "n = 4", size = 3) +
-  annotate("text",x = 12, y = 3.5, label = "n = 16", size = 3) +
-  annotate("text",x = 22, y = 3.5, label = "n = 16", size = 3) +
+  annotate("text",x = 3, y = 3.5, label = "n = 4", size = 3, color = "blue") +
+  annotate("text",x = 3, y = 3.35, label = "n = 4", size = 3, color = "mediumvioletred") +
+  annotate("text",x = 3, y = 3.2, label = "n = 4", size = 3, color = "red") +
+  annotate("text",x = 12, y = 3.5, label = "n = 16", size = 3, color = "blue") +
+  annotate("text",x = 12, y = 3.35, label = "n = 16", size = 3, color = "mediumvioletred") +
+  annotate("text",x = 12, y = 3.2, label = "n = 16", size = 3, color = "red") +
+  annotate("text",x = 22, y = 3.5, label = "n = 16", size = 3, color = "blue") +
+  annotate("text",x = 22, y = 3.35, label = "n = 16", size = 3, color = "mediumvioletred") +
+  annotate("text",x = 22, y = 3.2, label = "n = 16", size = 3, color = "red") +
   xlab("Days") +
   ylab("fold change in sizerelative to day 1") +
   ylim(0.5,3.5) +
