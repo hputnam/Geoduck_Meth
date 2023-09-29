@@ -387,9 +387,9 @@ Fig.Exp1.size <- ggplot(Init.Shell.size, aes(x=Day.Num, y=avg.Arel, group=Treatm
   annotate("text", x=22.5, y=1.25, label = "bc", size = 3) + #add text to the graphic for posthoc letters
   annotate("text", x=22, y=1.6, label = "c", size = 3) + 
   #add text to the graphic for posthoc letters
-  annotate("text",x = 3, y = 3, label = "n = 4", size = 3) +
-  annotate("text",x = 12, y = 3, label = "n = 16", size = 3) +
-  annotate("text",x = 22, y = 3, label = "n = 16", size = 3) +
+  annotate("text",x = 3, y = 3.5, label = "n = 4", size = 3) +
+  annotate("text",x = 12, y = 3.5, label = "n = 16", size = 3) +
+  annotate("text",x = 22, y = 3.5, label = "n = 16", size = 3) +
   xlab("Days") +
   ylab("fold change in sizerelative to day 1") +
   ylim(0.5,3.5) +
@@ -556,7 +556,7 @@ Fig.Exp2.D10.size <- ggplot(Day145, aes(x=Secondary, y=avg.Arel, group=Treatment
   annotate("text", x=2.2, y=1.5, label = "n = 12", size = 3, color = "red") + #add text to the graphic for sample size
   xlab("Secondary Treatment") +
   ylab("fold change in size relative to day 135") +
-  ylim(0.5,1.7) +
+  ylim(0.5,1.6) +
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5), #Set the text angle
         axis.line = element_line(color = 'black'), #Set the axes color
@@ -589,7 +589,7 @@ Fig.Exp2.D23.size <- ggplot(Day158, aes(x=Secondary, y=avg.Arel, group=Treatment
   annotate("text", x=2.2, y=1.5, label = "n = 16", size = 3, color = "red") + #add text to the graphic for sample size
   xlab("Secondary Treatment") +
   ylab("fold change in size relative to day 135") +
-  ylim(0.5,1.7) +
+  ylim(0.5,1.6) +
   theme_bw() + #Set the background color
   theme(axis.text.x = element_text(angle = 0, vjust = 0.5, hjust=0.5), #Set the text angle
         axis.line = element_line(color = 'black'), #Set the axes color
