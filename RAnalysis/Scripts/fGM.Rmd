@@ -1937,7 +1937,10 @@ D145.mat.1 <- D145.mat[,c(1:2)]
 D145.mat.1 <- as.data.frame(D145.mat.1)
 D145.mat.1$gene <-rownames(D145.mat.1)
 D145.mat.1$diff <- D145.mat.1$`pH 7.9 -> pH 7.9` - D145.mat.1$`pH 7.9 -> pH 7.4`
+D145.mat.1[D145.mat.1 == 0] <- 0.01
+D145.mat.1$FC <- D145.mat.1$`pH 7.9 -> pH 7.4`/D145.mat.1$`pH 7.9 -> pH 7.9`
 A <- round(mean(D145.mat.1$diff),2)
+a <- round(mean(D145.mat.1$FC),2)
 std.error(D145.mat.1$diff)
 var(D145.mat.1$diff)
 
@@ -1945,7 +1948,10 @@ D145.mat.2 <- D145.mat[,c(3:4)]
 D145.mat.2 <- as.data.frame(D145.mat.2)
 D145.mat.2$gene <-rownames(D145.mat.2)
 D145.mat.2$diff <- D145.mat.2$`pH 7.4 -> pH 7.9` - D145.mat.2$`pH 7.4 -> pH 7.4`
+D145.mat.2[D145.mat.2 == 0] <- 0.01
+D145.mat.2$FC <- D145.mat.2$`pH 7.4 -> pH 7.4`/D145.mat.2$`pH 7.4 -> pH 7.9` 
 M <-round(mean(D145.mat.2$diff),2)
+m <-round(mean(D145.mat.2$FC),2)
 std.error(D145.mat.2$diff)
 var(D145.mat.2$diff)
 
@@ -1953,7 +1959,10 @@ D145.mat.3 <- D145.mat[,c(5:6)]
 D145.mat.3 <- as.data.frame(D145.mat.3)
 D145.mat.3$gene <-rownames(D145.mat.3)
 D145.mat.3$diff <- D145.mat.3$`pH 7.0 -> pH 7.9` - D145.mat.3$`pH 7.0 -> pH 7.4`
+D145.mat.3[D145.mat.3 == 0] <- 0.01
+D145.mat.3$FC <- D145.mat.3$`pH 7.0 -> pH 7.4`/ D145.mat.3$`pH 7.0 -> pH 7.9`
 L <-round(mean(D145.mat.3$diff), 2)
+l <-round(mean(D145.mat.3$FC), 2)
 std.error(D145.mat.3$diff)
 var(D145.mat.3$diff)
 
